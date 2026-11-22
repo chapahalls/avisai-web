@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": ".cache/tests",
+    "types": []
+  },
+  "include": ["src/services/mock/**/*.ts", "src/services/api/**/*.ts", "src/services/operations/adapter.ts", "src/services/operations/runtime.ts", "src/features/dispatch/model.ts", "src/types/**/*.ts", "src/utils/**/*.ts", "src/lib/config.ts", "src/lib/googleMaps.ts"]
+}

@@ -1,45 +1,63 @@
-# AvisAI — Design system
+# AvisAI Web · Design
 
-Inspirado na Agora (azul oficial **#099DFD**, superfícies escuras). O produto é o AvisAI: não usar o logo da Agora como se fosse nosso; o selo "Powered by Agora" só conforme as regras de marca da Agora. Os mesmos tokens valem no mobile (NativeWind, `tailwind.config.js`) e no web (Tailwind v4, `src/index.css`).
+Painel escuro de CCO com mapa como área principal, inspirado na referência visual de monitoramento da frota e na paleta da Agora, com identidade AvisAI. Os tokens ficam no `@theme` de `src/index.css`, após `@import "tailwindcss";`; `src/cco.css` organiza o shell e o Dashboard. Não há `tailwind.config.js` nem `postcss.config.js`.
 
-## Cores
+A interface identifica a fonte operacional **API** ou **Demo**. No modo API, métricas/ranking e anexos usam o servidor; SSO, NF-e/CT-e e complementos ilustrativos continuam marcados como **MOCK**. Cor ou aparência semelhante não substitui a indicação de origem.
 
-| Token | Hex | Uso |
+## Tokens
+
+| Token | Valor | Uso |
 |---|---|---|
-| `brand-500` | `#099DFD` | ação primária, microfone ativo, links |
-| `brand-600` | `#0780D0` | pressionado, fala do motorista |
-| `brand-50` | `#E6F5FF` | destaque no tema claro |
-| `ink-950` | `#0B1220` | fundo |
-| `ink-900` | `#121A2B` | cards |
-| `ink-800` | `#1A2438` | campos, fala do agente |
-| `ink-700` | `#2A3550` | bordas |
-| `ink-300` | `#A7B1C6` | texto secundário |
-| `ink-50` | `#F4F6FA` | texto principal |
-| `wait-500` | `#F5A524` | espera, estadia correndo, rede fraca |
-| `alert-500` | `#F04438` | escalonamento, não atendeu, sem rede |
-| `ok-500` | `#17B26A` | confirmado, descarga, sincronizado |
+| `brand-500` | `#099DFD` | Ação primária e links |
+| `brand-600` | `#0780D0` | Hover e ação pressionada |
+| `brand-50` | `#E6F5FF` | Destaque suave |
+| `ink-950` | `#0B1220` | Fundo da aplicação |
+| `ink-900` | `#121A2B` | Cards e menu lateral |
+| `ink-800` | `#1A2438` | Campos e superfícies internas |
+| `ink-700` | `#2A3550` | Bordas e divisores |
+| `ink-300` | `#A7B1C6` | Texto secundário |
+| `ink-50` | `#F4F6FA` | Texto principal |
+| `wait-500` | `#F5A524` | Espera e estadia |
+| `alert-500` | `#F04438` | Escalada e falha de atendimento |
+| `ok-500` | `#17B26A` | Task assumida e descarga confirmada |
+| `font-sans` | Inter, sans-serif | Texto e controles |
+| `font-display` | Space Grotesk, sans-serif | Títulos, relógio e números |
+| `radius-card` | 12 px | Cards |
+| `radius-input` | 8 px | Campos e botões |
 
-Regra: cor nunca comunica sozinha. Todo estado tem texto ao lado.
+Fontes da aplicação são locais, sem requisições ao Google Fonts para carregá-las. O SDK do Google Maps faz suas próprias requisições externas para o mapa. Espaçamento usa múltiplos de 4 px; números de KPIs e tempo recebem destaque sem competir com as ações da fila.
 
-## Tipografia
+## Telas e componentes
 
-- Texto: Inter (no mobile, fonte do sistema até carregar a Inter).
-- Números grandes (contador, KPIs): Space Grotesk.
-- Escala: 12 / 14 / 16 / 20 / 28 / 40 / 48.
+- **Login:** card central com AvisAI, contexto do CCO, e-mail no modo API, ação SSO e indicação explícita de autenticação MOCK. Carregamento/erro não vira sessão fictícia automaticamente.
+- **Shell:** sidebar compacta de monitoramento; cabeçalho com fonte, conexão, relógio, idioma e perfil. Controles da simulação pertencem à Demo. O espaço principal pertence à operação da frota.
+- **Dashboard:** quatro indicadores resumidos acima; painel de monitoramento em largura; fila de Tasks e eventos abaixo; resumo de desempenho ao fim. API preserva rótulos/unidades do backend: escaladas históricas, contatos resolvidos e latência LLM; nulos são `—`.
+- **Monitoramento:** barra de busca/filtros, lista da frota à esquerda, mapa no centro e dossiê do caminhão selecionado à direita. Seleção pela lista, rota ou marcador destaca a mesma viagem; a busca também encontra números de nota. Na Demo, o caminho percorrido é contínuo e o restante tracejado; Seguir centraliza o caminhão e sua orientação acompanha os segmentos. No modo API, posições ausentes recebem rótulo explícito e o trajeto mantém a geometria recebida.
+- **Google Maps:** mapa base real com origem e destinos. A Demo usa snapshots OSRM/OpenStreetMap e avanço simulado; API usa o `trajeto` e último GPS do backend. Uma linha fornecida pelo seed não é apresentada como caminho rodoviário validado.
+- **Dossiê:** campos de rota API, NF-e/CT-e recebidas como MOCK, anexos reais e pedidos/respostas da central. Metadados fiscais sem `fileUri` não recebem download fictício; arquivos binários têm nome, categoria, tamanho e ação própria. Complementos ilustrativos mantêm selo MOCK.
+- **Tasks:** status, placa, recebedor, tempo parado, estadia, tentativas e **Assumir**. API usa a contagem e o resumo do servidor, com ação pendente/erro; Demo usa suas regras locais.
+- **Métricas:** Demo usa seus KPIs/gráficos; API usa indicadores do backend com atualização/erro/desatualização e amostras. Sem série temporal ou estadia cobrada, mostrar indisponibilidade em vez de gráfico preenchido por mock.
+- **Recebedores:** Demo mantém espera típica/selo acima da franquia; API mostra ranking agrupado e ordenado pelo servidor, sem aplicar o selo de 300 min da Demo.
+- **Ligações:** horário, recebedor, placa, momento, status, resultado e transcrição. A origem acompanha o modo; conteúdo recebido da API não implica que o painel iniciou uma ligação.
+- **Viagem:** estado, motorista/destino, mapa específico, dossiê, estadia, eventos e ligações filtrados por ID. API oferece **Confirmar descarga** conforme o estado recebido, com pendência/erro visível. Viagem ausente oferece retorno ao Dashboard.
+- **Rotas e anexos:** `/dispatch` permite publicar sem motorista, atribuir depois e cadastrar motorista. Upload real tem campo de arquivo, categoria/descrição, limite/formato, pendência/erro e download por ID; ações não se repetem automaticamente. Demo identifica a indisponibilidade dessas ações do backend.
 
-## Forma
+## Responsividade e acessibilidade
 
-- Raio: 8 (inputs, botões), 12 (cards), 999 (microfone, badges, chips).
-- Espaçamento: múltiplos de 4; telas com padding 16.
+A sidebar usa 208 px a partir de 1440 px e uma faixa de ícones de 64 px entre 768 e 1439 px, com nomes acessíveis e tooltips. Abaixo de 768 px, a navegação fica numa faixa horizontal; idioma e controles permanecem no cabeçalho.
 
-## Componentes-chave
+O monitoramento redistribui lista, mapa e dossiê em telas menores, mantendo acesso a filtros e seleção. Fila/eventos e resumo de KPIs viram menos colunas. Tabelas largas permitem rolagem sem ultrapassar a tela.
 
-| Componente | Comportamento |
-|---|---|
-| Botão do microfone | 80 px, redondo. Toque = falar; toque com o agente falando = **interromper** (barge-in) |
-| Indicador de voz | `pronto` → `ouvindo` → `pensando` → `falando` → `interrompido`, com a latência em ms |
-| Transcrição | balões: agente à esquerda (`ink-800`), motorista à direita (`brand-600`) |
-| Banner de rede | topo da tela: "Sem conexão · 3 na fila" / "Rede fraca: só eventos críticos" |
-| Contador de espera | número grande; fica âmbar depois da franquia e mostra a estadia em R$; barra de tentativas ao CCO (1/3, 2/3, 3/3) |
-| Card do recebedor | badge: não avisado / ligando… / doca 4, 15:00 / não recebe hoje / não atendeu |
-| Controles da demo | borda tracejada para deixar claro que é simulação: rede, CCO responde, +1 h |
+Cor nunca comunica sozinha. Fases, resultados, fontes de eventos e status têm rótulos traduzidos. Elementos interativos usam foco visível e nomes acessíveis; os marcadores de caminhão podem ser operados por teclado. O slider tem rótulo e percentual explícitos. Gráficos mostram legendas e valores com unidade.
+
+O painel do mapa tem estados traduzidos para carregamento, chave ausente e falha do SDK. Sem chave, mostra uma visão vetorial local das mesmas geometrias e informa a limitação, mantendo lista, seleção e dossiê disponíveis. As rotas da demo são identificadas como locais; não há aviso de dependência de Routes API. A indisponibilidade do mapa não bloqueia a fila, o relógio ou as demais telas.
+
+O modo API apresenta carregamento inicial, erro e **Tentar novamente**, sem substituir a operação pela Demo. **Usar demo** exige escolha explícita. A conexão SSE interrompida identifica o estado como desatualizado; controles não fingem avanço de GPS, estadia ou eventos recebidos. Mensagens e ações usam pt-BR/en e continuam acessíveis por teclado.
+
+Na Demo, os controles abrem pelo botão **“Simulação”** no cabeçalho, por teclado ou clique. O painel tem borda tracejada e o título **“Controles da demo (simulação)”**; inclui pausar/continuar e chance de resposta do operador. Esses controles não alteram o backend.
+
+## Traduções e formatos
+
+pt-BR e inglês cobrem interface, estados, canais e resultados da Demo. Identificadores como placas permanecem iguais. Mensagens e transcrições recebidas da API preservam o conteúdo original, sem tradução inventada. Data, hora, números, percentuais e moeda usam o idioma selecionado; valores de estadia permanecem denominados em BRL e valores API não são recalculados.
+
+O idioma inicial segue o navegador quando suportado, com fallback pt-BR. A troca no cabeçalho atualiza evidências geradas pela Demo e os rótulos próprios do painel do mapa. Os controles e textos internos do SDK Google seguem o idioma escolhido no carregamento inicial; mudar o idioma da aplicação não recarrega o SDK.

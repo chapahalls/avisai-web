@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-/* Tokens do AvisAI (inspirados na Agora). Mesmos valores do repositório mobile. */
 @theme {
   --color-brand-50: #e6f5ff;
   --color-brand-500: #099dfd;
@@ -20,6 +19,58 @@
   --radius-input: 8px;
 }
 
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/SpaceGrotesk-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
 body {
+  margin: 0;
+  min-width: 0;
   font-family: var(--font-sans);
+}
+
+button, input, select, summary, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled), select, input[type='range'] {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 4px;
+}
+
+::selection {
+  background: var(--color-brand-600);
+  color: var(--color-ink-50);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-700) transparent;
+}
+
+input[type='range'] {
+  min-height: 24px;
 }

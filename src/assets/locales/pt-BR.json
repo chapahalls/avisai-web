@@ -1,21 +1,39 @@
 {
   "app": {
-    "subtitle": "Torre de controle · demo",
-    "simClock": "relógio simulado (1 s = 1 min)"
+    "subtitle": "Central de operação",
+    "simClock": "1 segundo = 1 minuto simulado",
+    "name": "AvisAI",
+    "pageTitle": "AvisAI · Central de operação",
+    "language": "Idioma",
+    "languages": {
+      "pt": "PT",
+      "en": "EN"
+    },
+    "skipContent": "Ir para o conteúdo",
+    "localMock": "Demo local · dados fictícios"
   },
   "nav": {
     "dashboard": "Operação",
     "metrics": "Métricas",
     "receivers": "Recebedores",
-    "calls": "Ligações"
+    "calls": "Ligações",
+    "workspace": "Central de controle",
+    "main": "Navegação principal"
   },
   "auth": {
-    "title": "Central de operação",
-    "subtitle": "Tasks, espera e estadia que o agente mede.",
+    "title": "Cada hora parada tem uma história.",
+    "subtitle": "A central do AvisAI transforma avisos de chegada e conversas em visibilidade para sua operação.",
     "sso": "Entrar com SSO",
     "loading": "Entrando…",
-    "mockNotice": "SSO simulado para a demo.",
-    "logout": "Sair"
+    "mockNotice": "SSO simulado. Acesso local, sem senha ou credencial.",
+    "logout": "Sair",
+    "operator": "Operador CCO",
+    "eyebrow": "Transporte rodoviário",
+    "benefits": {
+      "arrival": "Avise o recebedor antes da chegada.",
+      "waiting": "Acompanhe o tempo de espera da frota.",
+      "evidence": "Mantenha os eventos e transcrições visíveis."
+    }
   },
   "kpi": {
     "stopped": "Horas paradas por entrega",
@@ -30,12 +48,14 @@
     "latencyHint": "p95 {{p95}} s",
     "answered": "Ligações atendidas",
     "completeFirst": "Reporte completo na 1ª",
-    "escalated": "Tasks escaladas (3/3)",
-    "escalatedHint": "agente ligou ao recebedor",
+    "escalated": "Tasks escaladas agora",
+    "escalatedHint": "{{n}} no histórico de entregas",
     "contactsAvoided": "Contatos evitados",
     "contactsAvoidedHint": "ligações CCO↔motorista",
     "deliveries": "Entregas",
-    "deliveriesHint": "7 dias + hoje"
+    "deliveriesHint": "7 dias + hoje",
+    "answeredHint": "histórico + ligações da demo",
+    "completeFirstHint": "sem pergunta de complemento"
   },
   "charts": {
     "stoppedVsNotified": "Horas paradas × recebedores avisados antes",
@@ -43,14 +63,18 @@
     "notifiedPct": "% avisados antes",
     "stayDueVsCharged": "Estadia devida × cobrada (R$)",
     "due": "Devida",
-    "charged": "Cobrada"
+    "charged": "Cobrada",
+    "today": "Hoje",
+    "relativeDay": "D{{day}}",
+    "stoppedDescription": "Média de espera por entrega e percentual de aviso prévio, por dia.",
+    "stayDescription": "Valores calculados pela regra da demo; cobrança registrada no histórico fictício."
   },
   "tasks": {
     "title": "Tasks de chegada",
-    "count": "{{n}} abertas",
+    "count": "{{n}} em acompanhamento",
     "empty": "Nenhum caminhão esperando.",
     "waiting": "parado há {{time}}",
-    "attempts": "{{n}} de {{max}} avisos",
+    "attempts": "{{n}}/{{max}} avisos",
     "take": "Assumir",
     "status": {
       "open": "aberta",
@@ -65,11 +89,18 @@
     "origin": "CD Origem",
     "driving": "em viagem",
     "waiting": "esperando",
-    "unloaded": "descarregado"
+    "unloaded": "descarregado",
+    "mapDescription": "Mapa do Google Maps com trajetos rodoviários locais e tracking simulado. Selecione um caminhão ou uma rota.",
+    "openTrip": "Abrir viagem {{plate}}: {{phase}}",
+    "routeTitle": "Rota da viagem",
+    "maps": {
+      "retry": "Tentar novamente"
+    }
   },
   "feed": {
     "title": "Eventos do agente",
-    "empty": "Sem eventos ainda."
+    "empty": "Sem eventos ainda.",
+    "recent": "Mais recentes primeiro"
   },
   "sources": {
     "driver": "motorista",
@@ -85,10 +116,11 @@
     "stoppedHours": "Horas paradas",
     "stayDue": "Estadia devida",
     "answered": "Atende o agente",
-    "overFranchise": "acima da franquia"
+    "overFranchise": "acima da franquia",
+    "eyebrow": "Desempenho de recebimento"
   },
   "calls": {
-    "hint": "Ligações do agente ao recebedor, com a transcrição. É a prova do outro lado.",
+    "hint": "Avisos prévios e contatos após o escalonamento, com resultados e transcrições simuladas.",
     "empty": "Nenhuma ligação ainda.",
     "moment": {
       "approach": "aviso prévio",
@@ -97,15 +129,38 @@
     "who": {
       "agent": "Agente",
       "receiver": "Recebedor"
+    },
+    "eyebrow": "Registro do agente",
+    "transcriptTitle": "Transcrição simulada",
+    "noReply": "Tentativa registrada. O recebedor não respondeu.",
+    "results": {
+      "dock_confirmed": "Doca {{dock}} · 30 min",
+      "next_day": "Recebe amanhã às 7h",
+      "no_answer": "Não atendeu"
+    },
+    "transcript": {
+      "approach": "Olá, sou o assistente virtual da transportadora. O caminhão {{plate}} está se aproximando. Qual doca e horário para recebimento?",
+      "escalation": "Olá, sou o assistente virtual da transportadora. O caminhão {{plate}} está aguardando na portaria. Pode confirmar a doca e o horário para recebimento?",
+      "dockConfirmed": "Pode mandar, doca {{dock}} libera em 30 minutos.",
+      "nextDay": "Hoje não recebemos mais, só amanhã às 7h."
     }
   },
   "metricsPage": {
-    "hint": "Tudo o que o agente consegue medir. Dados simulados."
+    "hint": "Histórico fictício de 7 dias e entregas concluídas na simulação. Indicadores atualizados pelo motor local.",
+    "eyebrow": "Resultado da operação"
   },
   "trip": {
-    "gone": "Viagem encerrada.",
+    "gone": "Esta viagem foi encerrada.",
     "stopped": "Tempo parado",
-    "stay": "Estadia: {{value}} (veículo de {{t}} t)"
+    "stay": "Estadia: {{value}} (veículo de {{t}} t)",
+    "eyebrow": "Detalhes da viagem",
+    "goneHint": "O caminhão iniciou uma nova entrega. Consulte a operação para acompanhar a rota atual.",
+    "back": "Voltar para a operação",
+    "route": "{{driver}} · {{receiver}}",
+    "detention": "Estadia devida na demo",
+    "capacity": "Capacidade total do veículo: {{tons}} t",
+    "franchise": "Franquia da demo: {{hours}} horas",
+    "clockStopped": "Contador encerrado na confirmação da descarga."
   },
   "phase": {
     "driving": "em viagem",
@@ -117,7 +172,11 @@
     "title": "Controles da demo (simulação)",
     "pause": "Pausar",
     "play": "Continuar",
-    "responsiveness": "Operador responde: {{v}}%"
+    "responsiveness": "Operador responde: {{v}}%",
+    "hint": "A resposta do operador é simulada a cada aviso. Use 0% para acompanhar o escalonamento.",
+    "operator": "Resposta do operador",
+    "running": "Simulação ativa",
+    "paused": "Pausado"
   },
   "events": {
     "RouteAssigned": "Rota recebida",
@@ -134,5 +193,310 @@
     "TaskAcknowledged": "CCO assumiu",
     "UnloadConfirmed": "Descarga confirmada",
     "DocumentQuestionAnswered": "Pergunta sobre documento"
+  },
+  "dashboard": {
+    "title": "Operação em tempo real",
+    "eyebrow": "Visão da central",
+    "hint": "Acompanhe as chegadas, assuma os avisos e registre cada minuto de espera."
+  },
+  "common": {
+    "unavailable": "—"
+  },
+  "units": {
+    "minutes": "{{value}} min",
+    "seconds": "{{value}} s",
+    "hours": "{{value}} h"
+  },
+  "drivers": {
+    "name": "Motorista {{letter}}"
+  },
+  "channels": {
+    "push": "push",
+    "panel": "painel",
+    "call": "ligação"
+  },
+  "occurrences": {
+    "gateQueue": "Fila na portaria, sem previsão"
+  },
+  "cco": {
+    "monitoring": "Monitoramento da frota",
+    "monitoringHint": "Rotas, chegadas e espera em uma única visão da operação.",
+    "workspace": "Monitoramento",
+    "demoWorkspace": "Ambiente de demonstração",
+    "controlRoom": "Central de controle",
+    "roadOperations": "Operação rodoviária",
+    "demoControls": "Simulação",
+    "operatorRole": "Operação CCO",
+    "viewMetrics": "Ver métricas",
+    "summary": "Resumo da operação",
+    "followUp": "Avisos e eventos da operação",
+    "performance": "Resumo de desempenho",
+    "performanceHint": "Indicadores das entregas concluídas · histórico e demonstração",
+    "stats": {
+      "notified": "Recebedores avisados",
+      "notifiedHint": "antes da chegada",
+      "stopped": "Espera por entrega",
+      "stoppedHint": "média do histórico e da demo",
+      "stay": "Estadia devida",
+      "stayHint": "regra da demonstração",
+      "escalated": "Tasks escaladas",
+      "escalatedHint": "aguardando ação do CCO"
+    }
+  },
+  "dossier": {
+    "title": "Dossiê da viagem",
+    "mockBadge": "Dados fictícios",
+    "mockNotice": "NFs, produtos e mensagens fictícios para esta demonstração. Nenhum documento fiscal é consultado ou emitido.",
+    "gone": "Esta viagem foi encerrada ou substituída pelo simulador.",
+    "kg": "{{value}} kg",
+    "totalWeight": "Peso total da carga",
+    "declaredValue": "Valor da carga",
+    "manifestSummary": "{{invoices}} NFs · {{packages}} volumes · veículo de {{tons}} t",
+    "tabsLabel": "Conteúdo do dossiê",
+    "tabs": {
+      "cargo": "Carga",
+      "invoices": "Notas fiscais",
+      "communications": "Comunicações"
+    },
+    "originLabel": "Origem",
+    "receiverLabel": "Destinatário",
+    "origin": "CD AvisAI Campinas — fictício",
+    "cargoHint": "Manifesto local gerado por viagem. Os pesos, volumes e valores correspondem às NFs fictícias abaixo.",
+    "itemPackaging": "{{count}} volumes × {{weight}} kg",
+    "itemUnitValue": "{{value}} / volume",
+    "invoiceTitle": "NF {{number}}",
+    "invoiceStatuses": {
+      "simulated": "Simulada"
+    },
+    "series": "Série",
+    "issueDate": "Data de emissão fictícia",
+    "invoiceSummary": "{{packages}} volumes · {{weight}} kg",
+    "products": {
+      "rice": "Arroz embalado",
+      "beverages": "Bebidas não alcoólicas",
+      "cleaning": "Produtos de limpeza",
+      "packagedFood": "Alimentos embalados",
+      "paperGoods": "Produtos de papel",
+      "dryGoods": "Mercearia seca"
+    },
+    "communications": {
+      "summaryTitle": "Situação no simulador",
+      "summaries": {
+        "driving": "{{driver}} está em rota para {{receiver}}.",
+        "approaching": "{{driver}} está próximo de {{receiver}}. O aviso de aproximação faz parte do cenário simulado.",
+        "waiting": "{{driver}} aguarda descarga em {{receiver}}. A chegada e as ocorrências aparecem na linha do tempo.",
+        "unloaded": "A descarga de {{driver}} em {{receiver}} foi concluída no simulador."
+      },
+      "hint": "Relatos fictícios e eventos locais do simulador. Nenhuma mensagem foi enviada ao motorista.",
+      "kinds": {
+        "event": "Evento",
+        "message": "Relato fictício"
+      },
+      "driverReport": "Relato do motorista",
+      "agentNote": "Registro do agente"
+    },
+    "messages": {
+      "cargoChecked": "Carga e volumes conferidos na origem. Relato fictício associado à saída da viagem.",
+      "onRoute": "Viagem em andamento. Relato fictício liberado conforme o progresso da rota.",
+      "approaching": "Próximo ao destinatário. Aguardando a orientação de entrada no cenário simulado.",
+      "atGate": "Chegada à portaria registrada. Aguardando a liberação para descarga no cenário simulado.",
+      "waitingEvidence": "Horário de chegada registrado pelo simulador para acompanhar a espera e a estadia.",
+      "unloaded": "Descarga concluída e viagem finalizada no cenário simulado.",
+      "reportIncomplete": "Relatório de chegada incompleto no simulador. Os campos pendentes são tratados pelo fluxo de ocorrências.",
+      "reportComplete": "Relatório de chegada completo no simulador.",
+      "taskEscalated": "Ocorrência escalada ao CCO no cenário simulado.",
+      "taskAttempt": "Tentativa {{attempt}} de aviso ao CCO no cenário simulado."
+    }
+  },
+  "tracking": {
+    "title": "Monitoramento de frota",
+    "subtitle": "Trajetos rodoviários reais · operação e GPS simulados",
+    "region": "Campinas e região · SP",
+    "localMap": "Visão local",
+    "localDescription": "Geometrias rodoviárias locais com posições simuladas. Selecione um caminhão.",
+    "loading": "Carregando Google Maps. O tracking local já está disponível.",
+    "keyMissing": "Mapa local ativo. Configure a chave para exibir o Google Maps.",
+    "mapUnavailable": "Google Maps indisponível. O tracking continua na visão local.",
+    "traveled": "Percorrido",
+    "remaining": "A percorrer",
+    "mockGps": "GPS simulado",
+    "selectTruck": "Selecionar caminhão {{plate}}: {{phase}}",
+    "fitFleet": "Ver toda a frota",
+    "follow": "Seguir caminhão",
+    "fleetList": "Frota em operação",
+    "vehicleCount": "{{count}} veículos",
+    "search": "Placa, motorista ou NF-e",
+    "filters": "Filtrar frota",
+    "filter": {
+      "all": "Todos",
+      "alerts": "Alertas",
+      "waiting": "Em espera",
+      "driving": "Em rota"
+    },
+    "eta": "{{minutes}} min",
+    "arrived": "No destino",
+    "noResults": "Nenhum veículo corresponde à busca.",
+    "fleetHint": "Clique no caminhão ou na rota para consultar a viagem.",
+    "entireFleet": "Toda a frota",
+    "routeDirection": "CD Origem → {{city}}",
+    "distanceLeft": "Distância restante",
+    "arrivalEstimate": "Chegada estimada · demo",
+    "km": "{{value}} km",
+    "routeData": "Trajetos locais de demonstração",
+    "selectedTruck": "Detalhes do caminhão {{plate}}",
+    "selectedVehicle": "Veículo selecionado",
+    "closeDetails": "Fechar detalhes do caminhão",
+    "fullTrip": "Abrir viagem completa",
+    "vehicleCount_one": "{{count}} veículo",
+    "vehicleCount_other": "{{count}} veículos"
+  },
+  "api": {
+    "workspace": "Operação conectada",
+    "clock": "Horário local · backend",
+    "summaryMock": "Indicadores simulados · sem API de métricas",
+    "rankingMock": "Ranking simulado · sem API de recebedores",
+    "callsHint": "Ligações, resultados e transcrições recebidos do backend.",
+    "loginHint": "Acesso local; a API não oferece autenticação SSO.",
+    "trackingSubtitle": "Posições e estado recebidos do backend",
+    "arrivalEstimate": "Previsão de chegada · backend",
+    "gps": "Posição do backend",
+    "region": "Área da operação",
+    "backendRoute": "Trajeto fornecido pelo backend",
+    "noGeometry": "Trajeto indisponível",
+    "noPosition": "Sem posição GPS",
+    "lastPosition": "GPS atualizado {{time}}",
+    "stalePosition": "Última posição · sem atualização recente",
+    "connection": {
+      "title": "Conexão operacional",
+      "loading": "Carregando dados da API…",
+      "empty": "Nenhuma viagem recebida",
+      "emptyHint": "O backend está conectado, mas não retornou viagens para exibir.",
+      "error": "Não foi possível conectar à API.",
+      "retry": "Tentar novamente",
+      "useDemo": "Usar demo local",
+      "useApi": "Conectar à API",
+      "mockAreas": "SSO e documentos fiscais gerados são mock. Anexos enviados são arquivos reais.",
+      "lastSync": "Atualizado {{time}}",
+      "status": {
+        "connecting": "Conectando",
+        "connected": "Conectado",
+        "reconnecting": "Reconectando",
+        "error": "Falha de conexão",
+        "closed": "Desconectado"
+      }
+    },
+    "routeStatus": {
+      "planejada": "planejada",
+      "em_transito": "em trânsito",
+      "aproximando": "aproximando",
+      "no_destino": "no destino",
+      "descarregada": "descarregada",
+      "publicada": "aguardando motorista",
+      "na_origem": "na origem"
+    },
+    "events": {
+      "sessao_iniciada": "Sessão iniciada",
+      "aproximacao": "Aproximação detectada",
+      "chegada": "Chegada registrada",
+      "chegada_confirmada_voz": "Chegada confirmada por voz",
+      "notificacao_cco": "Aviso ao CCO",
+      "escalada_recebedor": "Escalada ao recebedor",
+      "task_confirmada": "Task confirmada",
+      "ligacao_recebedor": "Ligação ao recebedor",
+      "ligacao_falhou": "Falha na ligação",
+      "fallback_plano_b": "Alternativa de contato acionada",
+      "ligacao_nao_atendida": "Ligação não atendida",
+      "resposta_recebedor": "Resposta do recebedor",
+      "ocorrencia": "Ocorrência registrada",
+      "descarga": "Descarga confirmada",
+      "fala_motorista": "Fala do motorista",
+      "fala_recebedor": "Fala do recebedor",
+      "fala_agente": "Fala do agente",
+      "rota_publicada": "Viagem publicada",
+      "rota_atribuida": "Motorista atribuído",
+      "arquivo_adicionado": "Arquivo disponibilizado ao motorista",
+      "sessao_encerrada": "Sessão encerrada",
+      "retirada_detectada": "Caminhão na origem",
+      "retirada": "Retirada confirmada",
+      "relatorio": "Relatório do motorista",
+      "campo_faltante": "Reporte com campo faltante",
+      "task_criada": "Task criada",
+      "aviso_recebedor": "Aviso ao recebedor registrado",
+      "nao_recebe_hoje": "Recebedor não recebe hoje",
+      "pedido_central": "Pergunta da central",
+      "resposta_central": "Resposta à central",
+      "divergencia_gps": "Divergência entre fontes GPS",
+      "evento_app": "Evento do aplicativo",
+      "pergunta_documento": "Consulta a documento"
+    },
+    "actions": {
+      "failed": "A ação não foi confirmada pelo backend.",
+      "taking": "Assumindo…",
+      "confirmUnload": "Confirmar descarga",
+      "confirmingUnload": "Confirmando descarga…"
+    },
+    "tasks": {
+      "waitingUnavailable": "Tempo de espera indisponível",
+      "attempts": "{{n}} avisos registrados"
+    },
+    "trip": {
+      "eyebrow": "Viagem recebida do backend",
+      "unavailable": "Viagem indisponível",
+      "unavailableHint": "A viagem não está disponível nos dados recebidos. Consulte a operação e o estado da conexão.",
+      "stayUnavailable": "Estadia ainda não informada pelo backend.",
+      "franchise": "Franquia informada pelo backend: {{hours}} horas",
+      "detention": "Estadia calculada pelo backend",
+      "calculationTons": "Tonelagem considerada pelo backend: {{tons}} t",
+      "serverState": "Estado no backend:"
+    },
+    "dossier": {
+      "basicData": "Dados básicos da API",
+      "basicNotice": "Campos recebidos do backend. Informações não fornecidas permanecem indisponíveis.",
+      "cargoWeight": "Peso da carga informado",
+      "invoiceNumber": "Referência da NF",
+      "tons": "{{tons}} t",
+      "origin": "Origem",
+      "destination": "Destino",
+      "driver": "Motorista",
+      "arrivalWindow": "Janela de descarga",
+      "receiverContact": "Contato do recebedor",
+      "cargoDescription": "Descrição da carga",
+      "invoiceReference": "Referência NF {{number}}",
+      "receivedReference": "Referência recebida",
+      "invoiceNotice": "O número foi informado no cadastro da viagem. A API não fornece o documento fiscal completo nem sua validação.",
+      "communicationsNotice": "Eventos e transcrições recebidos do backend. Os textos capturados são preservados no idioma original.",
+      "mockComplements": "Complementos mock · dados fictícios",
+      "mockNotice": "Exemplos locais de carga e notas, independentes dos dados da API. Pesos, volumes, valores e documentos são fictícios, sem validade fiscal.",
+      "mockReceiver": "Destinatário fictício do complemento"
+    },
+    "calls": {
+      "transcriptTitle": "Transcrição recebida do backend",
+      "noTranscript": "Nenhuma transcrição recebida para esta ligação.",
+      "statusLabel": "Estado:",
+      "moment": {
+        "approach": "aviso de aproximação",
+        "escalation": "contato após falta de resposta do CCO"
+      },
+      "results": {
+        "dock_confirmed": "Doca {{dock}} informada",
+        "next_day": "Recebimento no próximo dia informado",
+        "no_answer": "Não atendeu",
+        "answered": "Atendida",
+        "in_progress": "Em andamento",
+        "failed": "Falhou"
+      },
+      "status": {
+        "chamando": "chamando",
+        "em_andamento": "em andamento",
+        "respondida": "respondida",
+        "nao_atendida": "não atendida",
+        "falhou": "falhou"
+      }
+    },
+    "positionSource": "Fonte GPS: {{source}}",
+    "positionSources": {
+      "celular": "celular",
+      "rastreador": "rastreador do caminhão"
+    }
   }
 }

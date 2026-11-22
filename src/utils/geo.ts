@@ -1,4 +1,4 @@
-import type { LatLng } from '../types/geo';
+import type { LatLng } from '../types/geo.js';
 
 export function distanceKm(a: LatLng, b: LatLng) {
   const R = 6371;

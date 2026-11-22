@@ -1,7 +1,19 @@
-export const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-export const hhmm = (min: number) => `${Math.floor(min / 60)}h${String(Math.floor(min % 60)).padStart(2, '0')}`;
-export const pct = (v: number) => `${Math.round(v * 100)}%`;
-export const clock = (simMin: number) => {
-  const m = (8 * 60 + simMin) % (24 * 60);
-  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
+import { SIMULATION } from '../lib/config.js';
+
+export const brl = (value: number, locale = 'pt-BR') =>
+  new Intl.NumberFormat(locale, { style: 'currency', currency: 'BRL' }).format(value);
+
+export const hhmm = (minutes: number, locale = 'pt-BR') => {
+  const value = Math.max(0, Math.floor(minutes));
+  return locale.startsWith('pt')
+    ? `${Math.floor(value / 60)}h${String(value % 60).padStart(2, '0')}`
+    : `${Math.floor(value / 60)}h ${String(value % 60).padStart(2, '0')}m`;
+};
+
+export const pct = (value: number, locale = 'pt-BR') =>
+  new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(value);
+
+export const clock = (simMinutes: number) => {
+  const minute = ((SIMULATION.startHour * 60 + Math.floor(simMinutes)) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`;
 };

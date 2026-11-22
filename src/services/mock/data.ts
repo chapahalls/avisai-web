@@ -1,4 +1,4 @@
-import type { Receiver } from '../../types/ops';
+import type { Receiver } from '../../types/ops.js';
 
 /** Dados FICTÍCIOS (declarados no README). */
 export const RECEIVERS: Receiver[] = [

@@ -1,0 +1,5 @@
+interface:
+  display_name: "AvisAI Web Maintenance"
+  short_description: "Ajuste CCO, API/mobile, simulador, métricas e traduções"
+policy:
+  allow_implicit_invocation: true

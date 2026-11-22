@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Charts, KpiGrid } from '../features/metrics';
+import { PageHeader } from '../components/PageHeader';
+import { useMode } from '../services/operations';
 
 export function MetricsPage() {
   const { t } = useTranslation();
+  const mode = useMode();
   return (
     <>
-      <h1 className="text-xl font-semibold">{t('nav.metrics')}</h1>
-      <p className="text-sm text-ink-300">{t('metricsPage.hint')}</p>
+      <PageHeader title={t('nav.metrics')} description={t(mode === 'api' ? 'backendMetrics.hint' : 'metricsPage.hint')} eyebrow={t(mode === 'api' ? 'backendMetrics.source' : 'metricsPage.eyebrow')} />
       <KpiGrid />
       <Charts />
     </>

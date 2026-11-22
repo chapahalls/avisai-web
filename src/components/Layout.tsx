@@ -1,61 +1,89 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useOps } from '../services/mock/engine';
+import { useConnection, useOps } from '../services/operations';
 import { useSession } from '../features/auth';
 import { clock } from '../utils/format';
+import { DemoControls } from './DemoControls';
+import { Icon } from './Icon';
+import { ConnectionBanner } from './ConnectionBanner';
+import '../cco.css';
 
 const links = [
-  { to: '/', key: 'nav.dashboard' },
-  { to: '/metrics', key: 'nav.metrics' },
-  { to: '/receivers', key: 'nav.receivers' },
-  { to: '/calls', key: 'nav.calls' },
-];
+  { to: '/', key: 'cco.monitoring', icon: 'truck' },
+  { to: '/dispatch', key: 'dispatch.nav', icon: 'dashboard' },
+  { to: '/metrics', key: 'nav.metrics', icon: 'metrics' },
+  { to: '/receivers', key: 'nav.receivers', icon: 'receivers' },
+  { to: '/calls', key: 'nav.calls', icon: 'calls' },
+] as const;
 
 export function Layout() {
   const { t, i18n } = useTranslation();
-  const { simMinutes, running, toggle, operatorResponsiveness, setResponsiveness } = useOps();
-  const { session, logout } = useSession();
+  const simMinutes = useOps((state) => state.simMinutes);
+  const running = useOps((state) => state.running);
+  const connection = useConnection();
+  const connectedMode = connection.mode === 'api';
+  const logout = useSession((state) => state.logout);
+  const session = useSession((state) => state.session);
+
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 border-r border-ink-700 bg-ink-900 p-4 md:block">
-        <p className="font-display text-xl font-bold text-brand-500">AvisAI</p>
-        <p className="mb-6 text-xs text-ink-300">{t('app.subtitle')}</p>
-        <nav className="space-y-1">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end className={({ isActive }) => `block rounded-input px-3 py-2 text-sm ${isActive ? 'bg-brand-500 text-ink-50' : 'text-ink-300 hover:bg-ink-800'}`}>
-              {t(l.key)}
+    <div className="cco-shell">
+      <a href="#main-content" className="sr-only z-50 rounded-input bg-brand-500 p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">{t('app.skipContent')}</a>
+      <aside className="cco-sidebar">
+        <Link to="/" className="cco-brand" aria-label={t('app.name')}>
+          <span className="cco-brand-mark"><Icon name="truck" className="h-5 w-5" /></span>
+          <span className="cco-brand-text">{t('app.name')}<span>{t('app.subtitle')}</span></span>
+        </Link>
+        <p className="cco-nav-group">{t('cco.workspace')}</p>
+        <nav aria-label={t('nav.main')} className="cco-side-nav">
+          {links.map((link) => (
+            <NavLink key={link.to} to={link.to} end title={t(link.key)} aria-label={t(link.key)} className={({ isActive }) => `cco-nav-link${isActive ? ' is-active' : ''}`}>
+              <Icon name={link.icon} className="h-[18px] w-[18px]" />
+              <span>{t(link.key)}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="mt-8 space-y-3 rounded-card border border-dashed border-ink-700 p-3 text-xs text-ink-300">
-          <p>{t('demo.title')}</p>
-          <button onClick={toggle} className="w-full rounded-input border border-ink-700 px-2 py-1 text-ink-50 hover:bg-ink-800">
-            {running ? t('demo.pause') : t('demo.play')}
-          </button>
-          <label className="block">
-            {t('demo.responsiveness', { v: Math.round(operatorResponsiveness * 100) })}
-            <input type="range" min={0} max={1} step={0.05} value={operatorResponsiveness} onChange={(e) => setResponsiveness(Number(e.target.value))} className="w-full accent-brand-500" />
-          </label>
+        <div className="cco-sidebar-footer">
+          <span className="cco-sidebar-status" aria-hidden="true"><Icon name="clock" className="h-4 w-4" /></span>
+          <div><p>{t(connectedMode ? 'api.workspace' : 'cco.demoWorkspace')}</p><span>{t(connectedMode ? 'api.connection.mockAreas' : 'app.localMock')}</span></div>
         </div>
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-ink-700 px-6 py-3">
-          <div className="flex items-center gap-3 text-sm text-ink-300">
-            <span className="font-display text-lg text-ink-50">{clock(simMinutes)}</span>
-            <span>{t('app.simClock')}</span>
+      <div className="cco-workspace">
+        <header className="cco-topbar">
+          <div className="cco-topbar-left">
+            <Link to="/" className="cco-mobile-brand" aria-label={t('app.name')}><Icon name="truck" className="h-5 w-5" /><span>{t('app.name')}</span></Link>
+            <div className="cco-topbar-title"><span>{t('cco.controlRoom')}</span><strong>{t('cco.roadOperations')}</strong></div>
+            <span className="cco-topbar-divider" aria-hidden="true" />
+            <div className="cco-clock">
+              <Icon name="clock" className="h-4 w-4" />
+              <div><time>{clock(simMinutes)}</time><span>{t(connectedMode ? 'api.clock' : 'app.simClock')}</span></div>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <select value={i18n.language} onChange={(e) => i18n.changeLanguage(e.target.value)} className="rounded-input border border-ink-700 bg-ink-900 px-2 py-1">
-              <option value="pt-BR">PT</option>
-              <option value="en">EN</option>
-            </select>
-            <span className="text-ink-300">{session?.name}</span>
-            <button onClick={logout} className="text-ink-300 hover:text-ink-50">{t('auth.logout')}</button>
+          <div className="cco-topbar-actions">
+            <div className="cco-running-state" data-running={connectedMode ? connection.status === 'connected' : running} role="status"><span aria-hidden="true" />{connectedMode ? t(`api.connection.status.${connection.status}`) : running ? t('demo.running') : t('demo.paused')}</div>
+            {!connectedMode && <details className="cco-demo-menu">
+              <summary><Icon name={running ? 'pause' : 'play'} className="h-3.5 w-3.5" /><span>{t('cco.demoControls')}</span><Icon name="chevron" className="h-3 w-3" /></summary>
+              <div className="cco-demo-panel"><DemoControls /></div>
+            </details>}
+            <div className="cco-language-picker">
+              <select aria-label={t('app.language')} value={i18n.resolvedLanguage === 'en' ? 'en' : 'pt-BR'} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
+                <option value="pt-BR">{t('app.languages.pt')}</option>
+                <option value="en">{t('app.languages.en')}</option>
+              </select>
+              <Icon name="chevron" className="h-3 w-3" />
+            </div>
+            <div className="cco-profile">
+              <span className="cco-profile-avatar" aria-hidden="true"><Icon name="receivers" className="h-4 w-4" /></span>
+              <div><strong>{session?.name ?? t('auth.operator')}</strong><span>{t('cco.operatorRole')}</span></div>
+            </div>
+            <button onClick={logout} className="cco-logout" title={t('auth.logout')} aria-label={t('auth.logout')}><Icon name="logout" className="h-4 w-4" /><span>{t('auth.logout')}</span></button>
           </div>
         </header>
-        <main className="flex-1 space-y-4 p-6">
-          <Outlet />
-        </main>
+        <nav aria-label={t('nav.main')} className="cco-mobile-nav">
+          {links.map((link) => (
+            <NavLink key={link.to} to={link.to} end className={({ isActive }) => `cco-mobile-nav-link${isActive ? ' is-active' : ''}`}><Icon name={link.icon} className="h-4 w-4" />{t(link.key)}</NavLink>
+          ))}
+        </nav>
+        <main id="main-content" tabIndex={-1} className="cco-main"><ConnectionBanner /><Outlet /></main>
       </div>
     </div>
   );

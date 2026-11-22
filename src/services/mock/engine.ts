@@ -1,217 +1,249 @@
-import { create } from 'zustand';
-import { BUSINESS, SIM_MINUTES_PER_SECOND } from '../../lib/config';
-import type { DomainEvent, EventType } from '../../types/events';
-import type { CallLog, Delivery, Task, Trip } from '../../types/ops';
-import { distanceKm, lerp } from '../../utils/geo';
-import { buildHistory } from './history';
-import { DRIVERS, ORIGIN, PLATES, RECEIVERS } from './data';
+import { useStore } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { BUSINESS, SIM_MINUTES_PER_SECOND, SIMULATION } from '../../lib/config.js';
+import type { DomainEvent, EventType } from '../../types/events.js';
+import type { CallLog, Delivery, Task, Trip, TripMetadata } from '../../types/ops.js';
+import { interpolateRoute } from '../../utils/routePath.js';
+import { buildCall } from './calls.js';
+import { DRIVERS, ORIGIN, PLATES, RECEIVERS, seeded } from './data.js';
+import { buildHistoricalData } from './history.js';
+import { getMockRoadRoute } from './routes.js';
 
-/**
- * Motor MOCK do CCO: simula a frota, os eventos que o agente gera e as ações da central.
- * Na versão real, os eventos chegam do agent-server (polling) ou por Agora Signaling.
- */
 export interface FeedEvent extends DomainEvent {
   simMin: number;
 }
 
-interface OpsState {
+export interface OpsState {
   simMinutes: number;
   running: boolean;
-  /** Demo: chance de o operador assumir uma Task a cada tentativa. */
   operatorResponsiveness: number;
   trips: Trip[];
+  tripMeta: Record<string, TripMetadata>;
   tasks: Task[];
   calls: CallLog[];
+  historicalCalls: CallLog[];
   feed: FeedEvent[];
   history: Delivery[];
-  tick: (dMin: number) => void;
+  tick: (minutes: number) => void;
   acknowledge: (taskId: string) => void;
-  setResponsiveness: (v: number) => void;
+  setResponsiveness: (value: number) => void;
   toggle: () => void;
 }
 
-const SPEED_KMH = 70;
-let seq = 0;
-const uid = (p: string) => `${p}-${Date.now().toString(36)}-${(seq++).toString(36)}`;
-
-function makeTrip(i: number, progress = Math.random() * 0.6): Trip {
-  const r = RECEIVERS[i % RECEIVERS.length];
-  return {
-    id: uid('trip'),
-    plate: PLATES[i % PLATES.length],
-    driver: DRIVERS[i % DRIVERS.length],
-    receiverId: r.id,
-    origin: ORIGIN,
-    capacityTons: i % 3 === 0 ? 14 : 30,
-    progress,
-    routeKm: distanceKm(ORIGIN, r.position),
-    phase: 'driving',
-    position: lerp(ORIGIN, r.position, progress),
-    notifiedBeforeArrival: false,
-  };
+export interface EngineOptions {
+  seed?: number;
+  startDate?: Date;
+  operatorResponsiveness?: number;
 }
 
-const RECEIVER_LINES = {
-  confirmed: (dock: number) => `Pode mandar, doca ${dock} libera em 30 minutos.`,
-  notToday: 'Hoje não recebemos mais, só amanhã às 7h.',
-};
+/** Store independente permite testar o motor sem React, temporizadores ou rede. */
+export function createOpsStore(options: EngineOptions = {}) {
+  const seed = options.seed ?? SIMULATION.seed;
+  const baseTime = new Date(options.startDate ?? new Date());
+  baseTime.setHours(SIMULATION.startHour, 0, 0, 0);
+  let sequence = 0;
+  const id = (prefix: string) => `${prefix}-${++sequence}`;
+  // As chances de resposta de um caminhão não dependem dos sorteios de outro domínio.
+  const operatorRandom = PLATES.map((_, index) => seeded(seed + index));
+  const routeRandom = PLATES.map((_, index) => seeded(seed + 100 + index));
+  const callRandom = PLATES.map((_, index) => seeded(seed + 200 + index));
+  const waitRandom = PLATES.map((_, index) => seeded(seed + 300 + index));
+  const occurrenceRandom = seeded(seed + 400);
+  const metricRandom = seeded(seed + 500);
+  const reports: Record<string, boolean> = {};
 
-export const useOps = create<OpsState>((set, get) => {
-  const event = (tripId: string, type: EventType, payload: Record<string, unknown>, source: DomainEvent['source']): FeedEvent => ({
-    id: uid('ev'),
-    idempotencyKey: uid('ik'),
-    tripId,
-    type,
-    occurredAt: new Date().toISOString(),
-    receivedAt: new Date().toISOString(),
-    source,
-    payload,
-    simMin: get().simMinutes,
+  const makeTrip = (index: number, initial: boolean): Trip => {
+    const receiver = RECEIVERS[initial ? index % RECEIVERS.length : Math.floor(routeRandom[index]() * RECEIVERS.length)];
+    const progress = initial ? routeRandom[index]() * 0.6 : 0;
+    const path = getMockRoadRoute(receiver.id);
+    return {
+      id: id('trip'), vehicleId: `vehicle-${index}`, plate: PLATES[index], driver: DRIVERS[index],
+      receiverId: receiver.id, origin: ORIGIN, capacityTons: index % 3 === 0 ? 14 : 30,
+      progress, routeKm: path.totalKm, phase: 'driving',
+      position: interpolateRoute(path, progress)!, notifiedBeforeArrival: false,
+    };
+  };
+  const event = (trip: TripMetadata & { id: string }, type: EventType, atMin: number, payload: Record<string, unknown>, source: DomainEvent['source']): FeedEvent => {
+    const eventId = id('event');
+    const timestamp = new Date(baseTime.getTime() + atMin * 60_000).toISOString();
+    return {
+      id: eventId, idempotencyKey: eventId, tripId: trip.id, type,
+      occurredAt: timestamp, receivedAt: timestamp, source,
+      payload: { ...payload, plate: trip.plate }, simMin: atMin,
+    };
+  };
+  const historical = buildHistoricalData();
+  const trips = PLATES.map((_, index) => makeTrip(index, true));
+  const tripMeta: Record<string, TripMetadata> = {};
+  trips.forEach((trip) => { tripMeta[trip.id] = { plate: trip.plate, driver: trip.driver, receiverId: trip.receiverId }; });
+  historical.calls.forEach((call) => {
+    tripMeta[call.tripId] = { plate: call.plate, driver: DRIVERS[PLATES.indexOf(call.plate)], receiverId: call.receiverId };
   });
 
-  const callReceiver = (trip: Trip, moment: CallLog['moment']): { call: CallLog; ev: FeedEvent } => {
-    const r = RECEIVERS.find((x) => x.id === trip.receiverId)!;
-    const answered = Math.random() < r.answerRate;
-    const notToday = answered && Math.random() < 0.12;
-    const dock = 1 + Math.floor(Math.random() * 6);
-    const transcript: CallLog['transcript'] = [
-      { who: 'agent', text: `Olá, aqui é o assistente virtual da transportadora. O caminhão ${trip.plate} chega em ${moment === 'approach' ? '15 minutos' : 'está na porta há um tempo'}. Qual doca e horário?` },
-    ];
-    if (answered) transcript.push({ who: 'receiver', text: notToday ? RECEIVER_LINES.notToday : RECEIVER_LINES.confirmed(dock) });
-    const result = !answered ? 'não atendeu' : notToday ? 'não recebe hoje' : `doca ${dock}, 30 min`;
-    const call: CallLog = { id: uid('call'), tripId: trip.id, receiverId: r.id, moment, atMin: get().simMinutes, answered, result, transcript };
-    return { call, ev: event(trip.id, 'ReceiverCallResult', { moment, answered, result }, 'agent') };
-  };
+  return createStore<OpsState>((set, get) => {
+    const addCall = (trip: Trip, moment: CallLog['moment'], atMin: number, index: number, calls: CallLog[], feed: FeedEvent[]) => {
+      const call = buildCall({
+        id: id('call'), tripId: trip.id, trip, receiver: receiverById(trip.receiverId),
+        moment, atMin, random: callRandom[index],
+      });
+      calls.push(call);
+      feed.push(event(trip, 'ReceiverCallResult', atMin, {
+        moment, answered: call.answered, resultCode: call.resultCode, dock: call.dock,
+      }, 'agent'));
+      return call;
+    };
+    const autoAcknowledge = (task: Task, trip: Trip, now: number, index: number, responsiveness: number, feed: FeedEvent[]): Task => {
+      if (operatorRandom[index]() >= responsiveness) return task;
+      feed.push(event(trip, 'TaskAcknowledged', now, { by: 'operator_mock' }, 'cco'));
+      return { ...task, status: 'acknowledged', acknowledgedAtMin: now };
+    };
 
-  return {
-    simMinutes: 0,
-    running: true,
-    operatorResponsiveness: 0.35,
-    trips: Array.from({ length: 8 }, (_, i) => makeTrip(i)),
-    tasks: [],
-    calls: [],
-    feed: [],
-    history: buildHistory(),
-
-    tick: (dMin) => {
-      const s = get();
-      if (!s.running) return;
-      const now = s.simMinutes + dMin;
+    const advance = (step: number) => {
+      const state = get();
+      const now = state.simMinutes + step;
       const feed: FeedEvent[] = [];
       const calls: CallLog[] = [];
-      let tasks = [...s.tasks];
-      const history = [...s.history];
-
-      const trips = s.trips.map((t, idx) => {
-        const r = RECEIVERS.find((x) => x.id === t.receiverId)!;
-        if (t.phase === 'driving' || t.phase === 'approaching') {
-          const progress = Math.min(1, t.progress + ((SPEED_KMH / 60) * dMin) / t.routeKm);
-          const position = lerp(t.origin, r.position, progress);
-          const leftKm = t.routeKm * (1 - progress);
-          let next: Trip = { ...t, progress, position };
-          if (t.phase === 'driving' && leftKm <= BUSINESS.approachKm) {
-            next = { ...next, phase: 'approaching', notifiedBeforeArrival: true };
-            feed.push(event(t.id, 'ApproachDetected', { leftKm: Math.round(leftKm) }, 'system'));
-            feed.push(event(t.id, 'ReceiverNotified', { channel: 'ligação' }, 'agent'));
-            const c = callReceiver(next, 'approach');
-            calls.push(c.call);
-            feed.push(c.ev);
+      let tasks = [...state.tasks];
+      const history = [...state.history];
+      const metadata = { ...state.tripMeta };
+      const nextTrips = state.trips.map((trip, index): Trip => {
+        const receiver = receiverById(trip.receiverId);
+        if (trip.phase === 'driving' || trip.phase === 'approaching') {
+          const progress = Math.min(1, trip.progress + SIMULATION.speedKmh * step / (60 * trip.routeKm));
+          let next: Trip = { ...trip, progress, position: interpolateRoute(getMockRoadRoute(receiver.id), progress)! };
+          const leftKm = trip.routeKm * (1 - progress);
+          if (trip.phase === 'driving' && leftKm <= BUSINESS.approachKm) {
+            feed.push(event(trip, 'ApproachDetected', now, { leftKm }, 'system'));
+            const call = addCall(trip, 'approach', now, index, calls, feed);
+            // Mesmo sem atendimento, a tentativa permanece como evidência no log.
+            next = { ...next, phase: 'approaching', notifiedBeforeArrival: call.answered && progress < 1 };
+            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: progress < 1 }, 'agent'));
           }
-          if (progress >= 1) {
-            const wait = Math.max(40, r.typicalWaitMin * (next.notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + Math.random() * 0.8));
-            next = { ...next, phase: 'waiting', arrivedAtMin: now, unloadAtMin: now + wait };
-            feed.push(event(t.id, 'ArrivalRegistered', { geofence: true, voiceCheckin: true }, 'driver'));
-            feed.push(event(t.id, 'TaskCreated', { priority: 'baixa' }, 'system'));
-            tasks.push({ id: uid('task'), tripId: t.id, createdAtMin: now, attempts: 1, status: 'open' });
+          if (progress === 1) {
+            const waitMin = Math.round(receiver.typicalWaitMin * (next.notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + waitRandom[index]() * 0.8));
+            next = { ...next, phase: 'waiting', arrivedAtMin: now, unloadAtMin: now + waitMin };
+            feed.push(event(trip, 'ArrivalRegistered', now, { geofence: true, voiceCheckin: true }, 'driver'));
+            let task: Task = { id: id('task'), tripId: trip.id, createdAtMin: now, attempts: 1, status: 'open' };
+            feed.push(event(trip, 'TaskCreated', now, { attempt: 1, channel: 'push' }, 'system'));
+            task = autoAcknowledge(task, next, now, index, state.operatorResponsiveness, feed);
+            tasks.push(task);
+            reports[trip.id] = metricRandom() < 0.75;
+            feed.push(event(trip, 'ReportSubmitted', now, { completeFirst: reports[trip.id] }, 'driver'));
+            if (!reports[trip.id]) feed.push(event(trip, 'ReportFieldMissing', now, { field: 'cargoCondition' }, 'agent'));
           }
           return next;
         }
-
-        if (t.phase === 'waiting') {
-          const task = tasks.find((k) => k.tripId === t.id && k.status !== 'closed');
-          if (task && task.status === 'open') {
-            const due = 1 + Math.floor((now - task.createdAtMin) / BUSINESS.ccoAttemptIntervalMin);
-            if (due > task.attempts) {
-              if (Math.random() < s.operatorResponsiveness) {
-                tasks = tasks.map((k) => (k.id === task.id ? { ...k, status: 'acknowledged', acknowledgedAtMin: now } : k));
-                feed.push(event(t.id, 'TaskAcknowledged', { by: 'operador' }, 'cco'));
-              } else if (task.attempts >= BUSINESS.maxCcoAttempts) {
-                tasks = tasks.map((k) => (k.id === task.id ? { ...k, status: 'escalated' } : k));
-                const c = callReceiver(t, 'escalation');
-                calls.push(c.call);
-                feed.push(c.ev);
-              } else {
-                const attempt = task.attempts + 1;
-                tasks = tasks.map((k) => (k.id === task.id ? { ...k, attempts: attempt } : k));
-                feed.push(event(t.id, 'TaskEscalated', { attempt, channel: ['push', 'painel', 'ligação'][attempt - 1] }, 'system'));
-              }
+        if (trip.phase === 'waiting') {
+          const task = tasks.find((candidate) => candidate.tripId === trip.id && candidate.status !== 'closed');
+          // A descarga encerra a espera antes de qualquer aviso devido no mesmo instante.
+          if (trip.unloadAtMin !== undefined && now >= trip.unloadAtMin) {
+            const unloadedAtMin = trip.unloadAtMin;
+            const waitMin = unloadedAtMin - (trip.arrivedAtMin ?? unloadedAtMin);
+            feed.push(event(trip, 'UnloadConfirmed', unloadedAtMin, { waitMin }, 'driver'));
+            tasks = tasks.map((candidate) => candidate.tripId === trip.id ? { ...candidate, status: 'closed', closedAtMin: unloadedAtMin } : candidate);
+            history.push({
+              tripId: trip.id, receiverId: trip.receiverId,
+              day: Math.floor((SIMULATION.startHour * 60 + unloadedAtMin) / 1440), waitMin,
+              capacityTons: trip.capacityTons, notifiedBeforeArrival: trip.notifiedBeforeArrival,
+              callAnswered: [...state.calls, ...calls].some((call) => call.tripId === trip.id && call.answered),
+              ccoActionMin: task?.acknowledgedAtMin === undefined ? null : task.acknowledgedAtMin - task.createdAtMin,
+              escalated: task?.escalatedAtMin !== undefined,
+              reportCompleteFirst: reports[trip.id] ?? true, stayCharged: false,
+              contactsAvoided: 2 + Math.floor(metricRandom() * 4), voiceLatencyMs: Math.round(700 + metricRandom() * 1300),
+            });
+            delete reports[trip.id];
+            return { ...trip, phase: 'unloaded', unloadedAtMin };
+          }
+          if (task?.status === 'open') {
+            const elapsed = now - task.createdAtMin;
+            if (task.attempts < BUSINESS.maxCcoAttempts && elapsed >= task.attempts * BUSINESS.ccoAttemptIntervalMin) {
+              const attempt = task.attempts + 1;
+              const channel = attempt === 2 ? 'panel' : 'call';
+              feed.push(event(trip, 'TaskEscalated', now, { attempt, channel, status: 'open' }, 'system'));
+              const updated = autoAcknowledge({ ...task, attempts: attempt }, trip, now, index, state.operatorResponsiveness, feed);
+              tasks = tasks.map((candidate) => candidate.id === task.id ? updated : candidate);
+            } else if (task.attempts === BUSINESS.maxCcoAttempts && elapsed >= BUSINESS.maxCcoAttempts * BUSINESS.ccoAttemptIntervalMin) {
+              tasks = tasks.map((candidate) => candidate.id === task.id ? { ...candidate, status: 'escalated', escalatedAtMin: now } : candidate);
+              feed.push(event(trip, 'TaskEscalated', now, { attempt: task.attempts, channel: 'call', status: 'escalated' }, 'system'));
+              addCall(trip, 'escalation', now, index, calls, feed);
             }
           }
-          if (t.unloadAtMin !== undefined && now >= t.unloadAtMin) {
-            const waitMin = now - (t.arrivedAtMin ?? now);
-            const tk = tasks.find((k) => k.tripId === t.id);
-            feed.push(event(t.id, 'UnloadConfirmed', { waitMin: Math.round(waitMin) }, 'driver'));
-            tasks = tasks.map((k) => (k.tripId === t.id ? { ...k, status: 'closed', closedAtMin: now } : k));
-            history.push({
-              tripId: t.id,
-              receiverId: t.receiverId,
-              day: 0,
-              waitMin: Math.round(waitMin),
-              capacityTons: t.capacityTons,
-              notifiedBeforeArrival: t.notifiedBeforeArrival,
-              callAnswered: calls.concat(s.calls).some((c) => c.tripId === t.id && c.answered),
-              ccoActionMin: tk?.acknowledgedAtMin !== undefined ? Math.round(tk.acknowledgedAtMin - tk.createdAtMin) : null,
-              escalated: tk?.status === 'escalated',
-              reportCompleteFirst: Math.random() < 0.75,
-              stayCharged: false,
-              contactsAvoided: 3,
-              voiceLatencyMs: Math.round(700 + Math.random() * 1100),
-            });
-            return { ...t, phase: 'unloaded' as const, unloadedAtMin: now };
-          }
-          return t;
+          return trip;
         }
-
-        // Descarga feita: depois de 30 min, o caminhão sai para uma nova entrega.
-        if (t.phase === 'unloaded' && now - (t.unloadedAtMin ?? now) > 30) return makeTrip(idx + Math.floor(now), 0);
-        return t;
+        if (now - (trip.unloadedAtMin ?? now) >= SIMULATION.nextTripAfterMin) {
+          const next = makeTrip(index, false);
+          metadata[next.id] = { plate: next.plate, driver: next.driver, receiverId: next.receiverId };
+          feed.push(event(next, 'RouteAssigned', now, { receiverId: next.receiverId }, 'cco'));
+          feed.push(event(next, 'PickupConfirmed', now, { capacityTons: next.capacityTons }, 'driver'));
+          return next;
+        }
+        return trip;
       });
-
-      if (Math.random() < 0.01 * dMin) {
-        const t = trips[Math.floor(Math.random() * trips.length)];
-        feed.push(event(t.id, 'OccurrenceCreated', { text: 'Fila na portaria, sem previsão' }, 'driver'));
+      const waiting = nextTrips.filter((trip) => trip.phase === 'waiting');
+      if (waiting.length && occurrenceRandom() < SIMULATION.occurrenceRatePerMin * step) {
+        const trip = waiting[Math.floor(occurrenceRandom() * waiting.length)];
+        feed.push(event(trip, 'OccurrenceCreated', now, { messageKey: 'occurrences.gateQueue' }, 'driver'));
       }
-
       set({
-        simMinutes: now,
-        trips,
-        tasks: tasks.filter((k) => k.status !== 'closed' || now - (k.closedAtMin ?? now) < 60),
-        calls: [...calls, ...s.calls].slice(0, 100),
-        feed: [...feed.reverse(), ...s.feed].slice(0, 200),
-        history,
+        simMinutes: now, trips: nextTrips, tripMeta: metadata,
+        tasks: tasks.filter((task) => task.status !== 'closed' || now - (task.closedAtMin ?? now) < 60),
+        calls: [...calls.reverse(), ...state.calls],
+        feed: [...feed.reverse(), ...state.feed].slice(0, SIMULATION.feedLimit), history,
       });
-    },
+    };
 
-    acknowledge: (taskId) => {
-      const now = get().simMinutes;
-      const task = get().tasks.find((k) => k.id === taskId);
-      if (!task || task.status !== 'open') return;
-      set((s) => ({
-        tasks: s.tasks.map((k) => (k.id === taskId ? { ...k, status: 'acknowledged', acknowledgedAtMin: now } : k)),
-        feed: [{ ...s.feed[0], id: uid('ev'), idempotencyKey: uid('ik'), tripId: task.tripId, type: 'TaskAcknowledged', source: 'cco', payload: { by: 'você' }, simMin: now, occurredAt: new Date().toISOString() } as FeedEvent, ...s.feed],
-      }));
-    },
+    return {
+      simMinutes: 0, running: true,
+      operatorResponsiveness: options.operatorResponsiveness ?? SIMULATION.operatorResponsiveness,
+      trips, tripMeta, tasks: [], calls: [], historicalCalls: historical.calls, history: historical.deliveries,
+      feed: trips.flatMap((trip) => [
+        event(trip, 'PickupConfirmed', 0, { capacityTons: trip.capacityTons }, 'driver'),
+        event(trip, 'RouteAssigned', 0, { receiverId: trip.receiverId }, 'cco'),
+      ]),
+      tick: (minutes) => {
+        if (!get().running || !Number.isFinite(minutes) || minutes <= 0) return;
+        // Processa fronteiras de minuto mesmo ao avançar vários minutos em um teste.
+        let remaining = minutes;
+        while (remaining > 0) {
+          const step = Math.min(1, remaining);
+          advance(step);
+          remaining -= step;
+        }
+      },
+      acknowledge: (taskId) => {
+        const state = get();
+        const task = state.tasks.find((candidate) => candidate.id === taskId);
+        if (!task || (task.status !== 'open' && task.status !== 'escalated')) return;
+        const trip = state.trips.find((candidate) => candidate.id === task.tripId);
+        if (!trip || trip.phase !== 'waiting') return;
+        set({
+          tasks: state.tasks.map((candidate) => candidate.id === taskId ? { ...candidate, status: 'acknowledged', acknowledgedAtMin: state.simMinutes } : candidate),
+          feed: [event(trip, 'TaskAcknowledged', state.simMinutes, { by: 'operator' }, 'cco'), ...state.feed].slice(0, SIMULATION.feedLimit),
+        });
+      },
+      setResponsiveness: (value) => { if (Number.isFinite(value)) set({ operatorResponsiveness: Math.max(0, Math.min(1, value)) }); },
+      toggle: () => set((state) => ({ running: !state.running })),
+    };
+  });
+}
 
-    setResponsiveness: (v) => set({ operatorResponsiveness: v }),
-    toggle: () => set((s) => ({ running: !s.running })),
-  };
-});
+export const opsStore = createOpsStore();
 
-/** Loop do simulador: 1 s real = SIM_MINUTES_PER_SECOND min. */
+export function useOps(): OpsState;
+export function useOps<T>(selector: (state: OpsState) => T): T;
+export function useOps<T>(selector?: (state: OpsState) => T) {
+  return useStore(opsStore, selector ?? ((state: OpsState) => state as T));
+}
+
+/** A limpeza do efeito mantém somente um timer ativo, inclusive em React StrictMode. */
 export function startEngine() {
-  const timer = setInterval(() => useOps.getState().tick(SIM_MINUTES_PER_SECOND), 1000);
+  const timer = setInterval(() => opsStore.getState().tick(SIM_MINUTES_PER_SECOND), 1000);
   return () => clearInterval(timer);
 }
 
-export const receiverById = (id: string) => RECEIVERS.find((r) => r.id === id)!;
+export const receiverById = (id: string) => {
+  const receiver = RECEIVERS.find((candidate) => candidate.id === id);
+  if (!receiver) throw new Error(`Unknown mock receiver: ${id}`);
+  return receiver;
+};
 export { RECEIVERS };

@@ -1,21 +1,39 @@
 {
   "app": {
-    "subtitle": "Control tower · demo",
-    "simClock": "simulated clock (1 s = 1 min)"
+    "subtitle": "Operations center",
+    "simClock": "1 second = 1 simulated minute",
+    "name": "AvisAI",
+    "pageTitle": "AvisAI · Operations center",
+    "language": "Language",
+    "languages": {
+      "pt": "PT",
+      "en": "EN"
+    },
+    "skipContent": "Skip to content",
+    "localMock": "Local demo · fictional data"
   },
   "nav": {
     "dashboard": "Operations",
     "metrics": "Metrics",
     "receivers": "Receivers",
-    "calls": "Calls"
+    "calls": "Calls",
+    "workspace": "Control center",
+    "main": "Main navigation"
   },
   "auth": {
-    "title": "Operations center",
-    "subtitle": "Tasks, waiting time and detention measured by the agent.",
+    "title": "Every waiting hour tells a story.",
+    "subtitle": "The AvisAI control center turns arrival alerts and conversations into visibility for your operation.",
     "sso": "Sign in with SSO",
     "loading": "Signing in…",
-    "mockNotice": "Simulated SSO for the demo.",
-    "logout": "Sign out"
+    "mockNotice": "Simulated SSO. Local access, no password or credentials.",
+    "logout": "Sign out",
+    "operator": "Operations operator",
+    "eyebrow": "Road transportation",
+    "benefits": {
+      "arrival": "Notify the receiver before arrival.",
+      "waiting": "Track fleet waiting times.",
+      "evidence": "Keep events and transcripts visible."
+    }
   },
   "kpi": {
     "stopped": "Stopped hours per delivery",
@@ -30,12 +48,14 @@
     "latencyHint": "p95 {{p95}} s",
     "answered": "Calls answered",
     "completeFirst": "Report complete on 1st try",
-    "escalated": "Escalated tasks (3/3)",
-    "escalatedHint": "agent called the receiver",
+    "escalated": "Currently escalated tasks",
+    "escalatedHint": "{{n}} in completed deliveries",
     "contactsAvoided": "Contacts avoided",
     "contactsAvoidedHint": "control center ↔ driver calls",
     "deliveries": "Deliveries",
-    "deliveriesHint": "7 days + today"
+    "deliveriesHint": "7 days + today",
+    "answeredHint": "history + demo calls",
+    "completeFirstHint": "without a follow-up question"
   },
   "charts": {
     "stoppedVsNotified": "Stopped hours × receivers warned in advance",
@@ -43,14 +63,18 @@
     "notifiedPct": "% warned in advance",
     "stayDueVsCharged": "Detention owed × charged (R$)",
     "due": "Owed",
-    "charged": "Charged"
+    "charged": "Charged",
+    "today": "Today",
+    "relativeDay": "D{{day}}",
+    "stoppedDescription": "Average wait per delivery and advance notification rate, by day.",
+    "stayDescription": "Amounts calculated using the demo rule; charges recorded in the fictional history."
   },
   "tasks": {
     "title": "Arrival tasks",
-    "count": "{{n}} open",
+    "count": "{{n}} being monitored",
     "empty": "No truck waiting.",
     "waiting": "stopped for {{time}}",
-    "attempts": "{{n}} of {{max}} alerts",
+    "attempts": "{{n}}/{{max}} alerts",
     "take": "Take",
     "status": {
       "open": "open",
@@ -65,11 +89,18 @@
     "origin": "Origin DC",
     "driving": "on the road",
     "waiting": "waiting",
-    "unloaded": "unloaded"
+    "unloaded": "unloaded",
+    "mapDescription": "Google Maps with local road paths and simulated tracking. Select a truck or a route.",
+    "openTrip": "Open trip {{plate}}: {{phase}}",
+    "routeTitle": "Trip route",
+    "maps": {
+      "retry": "Try again"
+    }
   },
   "feed": {
     "title": "Agent events",
-    "empty": "No events yet."
+    "empty": "No events yet.",
+    "recent": "Newest first"
   },
   "sources": {
     "driver": "driver",
@@ -85,10 +116,11 @@
     "stoppedHours": "Stopped hours",
     "stayDue": "Detention owed",
     "answered": "Answers the agent",
-    "overFranchise": "over free time"
+    "overFranchise": "over free time",
+    "eyebrow": "Receiving performance"
   },
   "calls": {
-    "hint": "Agent calls to the receiver, with transcript. Proof from the other side.",
+    "hint": "Advance notices and calls after escalation, with simulated results and transcripts.",
     "empty": "No calls yet.",
     "moment": {
       "approach": "advance notice",
@@ -97,15 +129,38 @@
     "who": {
       "agent": "Agent",
       "receiver": "Receiver"
+    },
+    "eyebrow": "Agent records",
+    "transcriptTitle": "Simulated transcript",
+    "noReply": "Attempt recorded. The receiver did not answer.",
+    "results": {
+      "dock_confirmed": "Dock {{dock}} · 30 min",
+      "next_day": "Receiving tomorrow at 7 a.m.",
+      "no_answer": "No answer"
+    },
+    "transcript": {
+      "approach": "Hello, I am the carrier's virtual assistant. Truck {{plate}} is approaching. Which dock and receiving time should we use?",
+      "escalation": "Hello, I am the carrier's virtual assistant. Truck {{plate}} is waiting at the gate. Could you confirm the dock and receiving time?",
+      "dockConfirmed": "Send it in; dock {{dock}} will be available in 30 minutes.",
+      "nextDay": "We are no longer receiving today; tomorrow at 7 a.m. only."
     }
   },
   "metricsPage": {
-    "hint": "Everything the agent can measure. Simulated data."
+    "hint": "Fictional 7-day history and deliveries completed in the simulation. Indicators updated by the local engine.",
+    "eyebrow": "Operational performance"
   },
   "trip": {
-    "gone": "Trip finished.",
+    "gone": "This trip has ended.",
     "stopped": "Time stopped",
-    "stay": "Detention: {{value}} ({{t}} t vehicle)"
+    "stay": "Detention: {{value}} ({{t}} t vehicle)",
+    "eyebrow": "Trip details",
+    "goneHint": "The truck has started a new delivery. Check operations to follow its current route.",
+    "back": "Back to operations",
+    "route": "{{driver}} · {{receiver}}",
+    "detention": "Detention owed in the demo",
+    "capacity": "Total vehicle capacity: {{tons}} t",
+    "franchise": "Demo free waiting time: {{hours}} hours",
+    "clockStopped": "Counter stopped at unloading confirmation."
   },
   "phase": {
     "driving": "on the road",
@@ -117,7 +172,11 @@
     "title": "Demo controls (simulation)",
     "pause": "Pause",
     "play": "Resume",
-    "responsiveness": "Operator answers: {{v}}%"
+    "responsiveness": "Operator answers: {{v}}%",
+    "hint": "An operator response is simulated at each alert. Use 0% to observe escalation.",
+    "operator": "Operator response",
+    "running": "Simulation running",
+    "paused": "Paused"
   },
   "events": {
     "RouteAssigned": "Route received",
@@ -134,5 +193,310 @@
     "TaskAcknowledged": "Control center took it",
     "UnloadConfirmed": "Unloading confirmed",
     "DocumentQuestionAnswered": "Document question"
+  },
+  "dashboard": {
+    "title": "Live operations",
+    "eyebrow": "Control center overview",
+    "hint": "Track arrivals, acknowledge alerts and record every minute of waiting."
+  },
+  "common": {
+    "unavailable": "—"
+  },
+  "units": {
+    "minutes": "{{value}} min",
+    "seconds": "{{value}} s",
+    "hours": "{{value}} h"
+  },
+  "drivers": {
+    "name": "Driver {{letter}}"
+  },
+  "channels": {
+    "push": "push",
+    "panel": "panel",
+    "call": "call"
+  },
+  "occurrences": {
+    "gateQueue": "Queue at the gate, no estimated time"
+  },
+  "cco": {
+    "monitoring": "Fleet monitoring",
+    "monitoringHint": "Routes, arrivals and waiting in a single operational view.",
+    "workspace": "Monitoring",
+    "demoWorkspace": "Demo workspace",
+    "controlRoom": "Control center",
+    "roadOperations": "Road operations",
+    "demoControls": "Simulation",
+    "operatorRole": "Operations center",
+    "viewMetrics": "View metrics",
+    "summary": "Operational summary",
+    "followUp": "Operational alerts and events",
+    "performance": "Performance summary",
+    "performanceHint": "Completed delivery indicators · history and demo",
+    "stats": {
+      "notified": "Receivers notified",
+      "notifiedHint": "before arrival",
+      "stopped": "Wait per delivery",
+      "stoppedHint": "history and demo average",
+      "stay": "Detention owed",
+      "stayHint": "demo calculation",
+      "escalated": "Escalated tasks",
+      "escalatedHint": "awaiting operator action"
+    }
+  },
+  "dossier": {
+    "title": "Trip dossier",
+    "mockBadge": "Fictional data",
+    "mockNotice": "Invoices, products and messages are fictional demonstration data. No tax document is retrieved or issued.",
+    "gone": "The simulator has completed or replaced this trip.",
+    "kg": "{{value}} kg",
+    "totalWeight": "Total cargo weight",
+    "declaredValue": "Cargo value",
+    "manifestSummary": "{{invoices}} invoices · {{packages}} packages · {{tons}} t vehicle",
+    "tabsLabel": "Dossier contents",
+    "tabs": {
+      "cargo": "Cargo",
+      "invoices": "Invoices",
+      "communications": "Communications"
+    },
+    "originLabel": "Origin",
+    "receiverLabel": "Receiver",
+    "origin": "AvisAI Campinas distribution center — fictional",
+    "cargoHint": "A local manifest generated for this trip. Weights, packages and values match the fictional invoices below.",
+    "itemPackaging": "{{count}} packages × {{weight}} kg",
+    "itemUnitValue": "{{value}} / package",
+    "invoiceTitle": "Invoice {{number}}",
+    "invoiceStatuses": {
+      "simulated": "Simulated"
+    },
+    "series": "Series",
+    "issueDate": "Fictional issue date",
+    "invoiceSummary": "{{packages}} packages · {{weight}} kg",
+    "products": {
+      "rice": "Packaged rice",
+      "beverages": "Non-alcoholic beverages",
+      "cleaning": "Cleaning products",
+      "packagedFood": "Packaged food",
+      "paperGoods": "Paper products",
+      "dryGoods": "Dry groceries"
+    },
+    "communications": {
+      "summaryTitle": "Simulator status",
+      "summaries": {
+        "driving": "{{driver}} is en route to {{receiver}}.",
+        "approaching": "{{driver}} is approaching {{receiver}}. The approach notice is part of the simulated scenario.",
+        "waiting": "{{driver}} is waiting to unload at {{receiver}}. Arrival and incidents appear in the timeline.",
+        "unloaded": "{{driver}} has finished unloading at {{receiver}} in the simulator."
+      },
+      "hint": "Fictional reports and local simulator events. No message has been sent to the driver.",
+      "kinds": {
+        "event": "Event",
+        "message": "Fictional report"
+      },
+      "driverReport": "Driver report",
+      "agentNote": "Agent record"
+    },
+    "messages": {
+      "cargoChecked": "Cargo and packages checked at origin. A fictional report associated with this trip’s departure.",
+      "onRoute": "Trip in progress. A fictional report appears as the route progresses.",
+      "approaching": "Approaching the receiver. Waiting for entry guidance in the simulated scenario.",
+      "atGate": "Arrival at the gate recorded. Waiting for unloading clearance in the simulated scenario.",
+      "waitingEvidence": "The simulator recorded the arrival time to track waiting and detention.",
+      "unloaded": "Unloading completed and trip finished in the simulated scenario.",
+      "reportIncomplete": "The simulated arrival report is incomplete. Pending fields are handled through the incident flow.",
+      "reportComplete": "The simulated arrival report is complete.",
+      "taskEscalated": "Incident escalated to the control center in the simulated scenario.",
+      "taskAttempt": "Control center notification attempt {{attempt}} in the simulated scenario."
+    }
+  },
+  "tracking": {
+    "title": "Fleet monitoring",
+    "subtitle": "Real road paths · simulated operations and GPS",
+    "region": "Campinas region · SP",
+    "localMap": "Local view",
+    "localDescription": "Local road paths with simulated positions. Select a truck.",
+    "loading": "Loading Google Maps. Local tracking is already available.",
+    "keyMissing": "Local view active. Configure the key to display Google Maps.",
+    "mapUnavailable": "Google Maps unavailable. Tracking continues in the local view.",
+    "traveled": "Traveled",
+    "remaining": "Remaining",
+    "mockGps": "Simulated GPS",
+    "selectTruck": "Select truck {{plate}}: {{phase}}",
+    "fitFleet": "Show entire fleet",
+    "follow": "Follow truck",
+    "fleetList": "Fleet in operation",
+    "vehicleCount": "{{count}} vehicles",
+    "search": "Plate, driver or invoice",
+    "filters": "Filter fleet",
+    "filter": {
+      "all": "All",
+      "alerts": "Alerts",
+      "waiting": "Waiting",
+      "driving": "On route"
+    },
+    "eta": "{{minutes}} min",
+    "arrived": "At destination",
+    "noResults": "No vehicles match your search.",
+    "fleetHint": "Click a truck or a route to inspect the trip.",
+    "entireFleet": "Entire fleet",
+    "routeDirection": "Origin DC → {{city}}",
+    "distanceLeft": "Distance remaining",
+    "arrivalEstimate": "Estimated arrival · demo",
+    "km": "{{value}} km",
+    "routeData": "Local demonstration routes",
+    "selectedTruck": "Details for truck {{plate}}",
+    "selectedVehicle": "Selected vehicle",
+    "closeDetails": "Close truck details",
+    "fullTrip": "Open full trip",
+    "vehicleCount_one": "{{count}} vehicle",
+    "vehicleCount_other": "{{count}} vehicles"
+  },
+  "api": {
+    "workspace": "Connected operations",
+    "clock": "Local time · backend",
+    "summaryMock": "Simulated indicators · no metrics API",
+    "rankingMock": "Simulated ranking · no receivers API",
+    "callsHint": "Calls, results and transcripts received from the backend.",
+    "loginHint": "Local access; the API does not provide SSO authentication.",
+    "trackingSubtitle": "Positions and status received from the backend",
+    "arrivalEstimate": "Estimated arrival · backend",
+    "gps": "Backend position",
+    "region": "Operations area",
+    "backendRoute": "Route supplied by the backend",
+    "noGeometry": "Route unavailable",
+    "noPosition": "No GPS position",
+    "lastPosition": "GPS updated {{time}}",
+    "stalePosition": "Last position · no recent update",
+    "connection": {
+      "title": "Operations connection",
+      "loading": "Loading API data…",
+      "empty": "No trips received",
+      "emptyHint": "The backend is connected but returned no trips to display.",
+      "error": "Could not connect to the API.",
+      "retry": "Try again",
+      "useDemo": "Use local demo",
+      "useApi": "Connect to API",
+      "mockAreas": "SSO and generated fiscal documents are mocks. Uploaded attachments are real files.",
+      "lastSync": "Updated {{time}}",
+      "status": {
+        "connecting": "Connecting",
+        "connected": "Connected",
+        "reconnecting": "Reconnecting",
+        "error": "Connection failed",
+        "closed": "Disconnected"
+      }
+    },
+    "routeStatus": {
+      "planejada": "planned",
+      "em_transito": "in transit",
+      "aproximando": "approaching",
+      "no_destino": "at destination",
+      "descarregada": "unloaded",
+      "publicada": "awaiting driver",
+      "na_origem": "at origin"
+    },
+    "events": {
+      "sessao_iniciada": "Session started",
+      "aproximacao": "Approach detected",
+      "chegada": "Arrival recorded",
+      "chegada_confirmada_voz": "Arrival confirmed by voice",
+      "notificacao_cco": "Control center notification",
+      "escalada_recebedor": "Escalated to receiver",
+      "task_confirmada": "Task confirmed",
+      "ligacao_recebedor": "Receiver call",
+      "ligacao_falhou": "Call failed",
+      "fallback_plano_b": "Alternative contact activated",
+      "ligacao_nao_atendida": "Call unanswered",
+      "resposta_recebedor": "Receiver response",
+      "ocorrencia": "Incident recorded",
+      "descarga": "Unloading confirmed",
+      "fala_motorista": "Driver speech",
+      "fala_recebedor": "Receiver speech",
+      "fala_agente": "Agent speech",
+      "rota_publicada": "Trip published",
+      "rota_atribuida": "Driver assigned",
+      "arquivo_adicionado": "File available to driver",
+      "sessao_encerrada": "Session ended",
+      "retirada_detectada": "Truck at origin",
+      "retirada": "Pickup confirmed",
+      "relatorio": "Driver report",
+      "campo_faltante": "Report missing a field",
+      "task_criada": "Task created",
+      "aviso_recebedor": "Receiver notification recorded",
+      "nao_recebe_hoje": "Receiver unavailable today",
+      "pedido_central": "Control center question",
+      "resposta_central": "Answer to control center",
+      "divergencia_gps": "GPS source mismatch",
+      "evento_app": "App event",
+      "pergunta_documento": "Document query"
+    },
+    "actions": {
+      "failed": "The backend did not confirm the action.",
+      "taking": "Taking ownership…",
+      "confirmUnload": "Confirm unloading",
+      "confirmingUnload": "Confirming unloading…"
+    },
+    "tasks": {
+      "waitingUnavailable": "Waiting time unavailable",
+      "attempts": "{{n}} notifications recorded"
+    },
+    "trip": {
+      "eyebrow": "Trip received from backend",
+      "unavailable": "Trip unavailable",
+      "unavailableHint": "This trip is not available in the received data. Check operations and connection status.",
+      "stayUnavailable": "Detention has not yet been provided by the backend.",
+      "franchise": "Free time reported by the backend: {{hours}} hours",
+      "detention": "Detention calculated by backend",
+      "calculationTons": "Tonnage used by backend: {{tons}} t",
+      "serverState": "Backend status:"
+    },
+    "dossier": {
+      "basicData": "Basic API data",
+      "basicNotice": "Fields received from the backend. Missing information remains unavailable.",
+      "cargoWeight": "Reported cargo weight",
+      "invoiceNumber": "Invoice reference",
+      "tons": "{{tons}} t",
+      "origin": "Origin",
+      "destination": "Destination",
+      "driver": "Driver",
+      "arrivalWindow": "Unloading window",
+      "receiverContact": "Receiver contact",
+      "cargoDescription": "Cargo description",
+      "invoiceReference": "Invoice reference {{number}}",
+      "receivedReference": "Received reference",
+      "invoiceNotice": "The number was provided in the trip record. The API does not provide the complete tax document or its validation.",
+      "communicationsNotice": "Events and transcripts received from the backend. Captured text is preserved in its original language.",
+      "mockComplements": "Mock supplements · fictional data",
+      "mockNotice": "Local cargo and invoice examples, independent of API data. Weights, packages, values and documents are fictional and have no tax validity.",
+      "mockReceiver": "Fictional supplement receiver"
+    },
+    "calls": {
+      "transcriptTitle": "Transcript received from backend",
+      "noTranscript": "No transcript received for this call.",
+      "statusLabel": "Status:",
+      "moment": {
+        "approach": "approach notification",
+        "escalation": "contact after no control center response"
+      },
+      "results": {
+        "dock_confirmed": "Dock {{dock}} reported",
+        "next_day": "Next-day receiving reported",
+        "no_answer": "Unanswered",
+        "answered": "Answered",
+        "in_progress": "In progress",
+        "failed": "Failed"
+      },
+      "status": {
+        "chamando": "calling",
+        "em_andamento": "in progress",
+        "respondida": "responded",
+        "nao_atendida": "unanswered",
+        "falhou": "failed"
+      }
+    },
+    "positionSource": "GPS source: {{source}}",
+    "positionSources": {
+      "celular": "phone",
+      "rastreador": "truck tracker"
+    }
   }
 }

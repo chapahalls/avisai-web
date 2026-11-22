@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { useSession } from '../features/auth';
 import { Layout } from '../components/Layout';
 import { LoginPage } from '../pages/LoginPage';
@@ -7,19 +7,36 @@ import { MetricsPage } from '../pages/MetricsPage';
 import { ReceiversPage } from '../pages/ReceiversPage';
 import { CallsPage } from '../pages/CallsPage';
 import { TripPage } from '../pages/TripPage';
+import { DispatchPage } from '../pages/DispatchPage';
+
+function RequireSession() {
+  const session = useSession((s) => s.session);
+  const location = useLocation();
+  return session ? <Outlet /> : <Navigate to="/login" state={{ from: location.pathname }} replace />;
+}
+
+function LoginRoute() {
+  const session = useSession((s) => s.session);
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
+  return session ? <Navigate to={from?.startsWith('/') && from !== '/login' ? from : '/'} replace /> : <LoginPage />;
+}
 
 export function AppRouter() {
-  const session = useSession((s) => s.session);
-  if (!session) return <LoginPage />;
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="metrics" element={<MetricsPage />} />
-          <Route path="receivers" element={<ReceiversPage />} />
-          <Route path="calls" element={<CallsPage />} />
-          <Route path="trips/:id" element={<TripPage />} />
+        <Route path="/login" element={<LoginRoute />} />
+        <Route element={<RequireSession />}>
+          <Route element={<Layout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="metrics" element={<MetricsPage />} />
+            <Route path="receivers" element={<ReceiversPage />} />
+            <Route path="calls" element={<CallsPage />} />
+            <Route path="dispatch" element={<DispatchPage />} />
+            <Route path="trips/:id" element={<TripPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

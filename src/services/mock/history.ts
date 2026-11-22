@@ -1,33 +1,59 @@
-import type { Delivery } from '../../types/ops';
-import { RECEIVERS, seeded } from './data';
+import type { CallLog, Delivery } from '../../types/ops.js';
+import { stayValue } from '../../utils/stay.js';
+import { buildCall } from './calls.js';
+import { PLATES, RECEIVERS, seeded } from './data.js';
 
-/** 7 dias de entregas FICTÍCIAS para as métricas e o ranking terem histórico. */
-export function buildHistory(): Delivery[] {
-  const rnd = seeded(42);
-  const out: Delivery[] = [];
-  for (let day = -6; day <= 0; day++) {
-    for (let i = 0; i < 9; i++) {
-      const r = RECEIVERS[Math.floor(rnd() * RECEIVERS.length)];
-      // A adoção do aviso prévio cresce ao longo da semana (efeito do AvisAI no mock).
-      const notified = rnd() < 0.45 + (day + 6) * 0.08;
-      const wait = Math.max(30, r.typicalWaitMin * (notified ? 0.8 : 1.1) + (rnd() - 0.5) * 120);
-      const escalated = rnd() < 0.25;
-      out.push({
-        tripId: `h${day}-${i}`,
-        receiverId: r.id,
-        day,
-        waitMin: Math.round(wait),
-        capacityTons: rnd() < 0.6 ? 30 : 14,
-        notifiedBeforeArrival: notified,
-        callAnswered: rnd() < r.answerRate,
-        ccoActionMin: escalated ? null : Math.round(5 + rnd() * 50),
-        escalated,
-        reportCompleteFirst: rnd() < 0.72,
-        stayCharged: rnd() < 0.15,
-        contactsAvoided: 2 + Math.floor(rnd() * 4),
-        voiceLatencyMs: Math.round(700 + rnd() * 1300),
+const NOTIFIED_COUNTS = [4, 5, 6, 6, 7, 8, 8] as const;
+
+/** Composição estável: a tendência não depende de trocar o perfil dos recebedores. */
+export function buildHistoricalData(): { deliveries: Delivery[]; calls: CallLog[] } {
+  const random = seeded(42);
+  const templates = Array.from({ length: 9 }, (_, index) => ({
+    receiver: RECEIVERS[index % RECEIVERS.length],
+    capacityTons: (random() < 0.6 ? 30 : 14) as 14 | 30,
+    waitFactor: 0.75 + random() * 0.5,
+    order: random(),
+  })).sort((a, b) => a.order - b.order);
+  const deliveries: Delivery[] = [];
+  const calls: CallLog[] = [];
+  for (let index = 0; index < 7; index += 1) {
+    const day = index - 6;
+    templates.forEach((template, slot) => {
+      const { receiver, capacityTons, waitFactor } = template;
+      const tripId = `history-${index}-${slot}`;
+      const notified = slot < NOTIFIED_COUNTS[index];
+      const escalated = random() < 0.25;
+      const trip = { plate: PLATES[slot % PLATES.length], driver: `Motorista ${String.fromCharCode(65 + slot % 8)}`, receiverId: receiver.id };
+      const approach = buildCall({
+        id: `${tripId}-approach`, tripId, trip, receiver, moment: 'approach',
+        atMin: day * 1440 + slot * 12, random, answered: notified,
       });
-    }
+      calls.push(approach);
+      let callAnswered = approach.answered;
+      if (escalated) {
+        const escalation = buildCall({
+          id: `${tripId}-escalation`, tripId, trip, receiver, moment: 'escalation',
+          atMin: day * 1440 + slot * 12 + 75, random,
+        });
+        calls.push(escalation);
+        callAnswered ||= escalation.answered;
+      }
+      deliveries.push({
+        tripId, receiverId: receiver.id, day, capacityTons,
+        waitMin: Math.round(receiver.typicalWaitMin * waitFactor * (notified ? 0.8 : 1.1) * (1 - index * 0.025)),
+        notifiedBeforeArrival: notified, callAnswered, escalated,
+        ccoActionMin: escalated ? null : Math.round(5 + random() * 35),
+        reportCompleteFirst: random() < 0.75,
+        stayCharged: false,
+        contactsAvoided: 2 + Math.floor(random() * 4),
+        voiceLatencyMs: Math.round(700 + random() * 1300),
+      });
+    });
   }
-  return out;
+  const eligible = deliveries.filter((delivery) => stayValue(delivery.waitMin, delivery.capacityTons) > 0)
+    .map((delivery) => ({ delivery, order: random() })).sort((a, b) => a.order - b.order);
+  eligible.slice(0, Math.round(eligible.length * 0.15)).forEach(({ delivery }) => { delivery.stayCharged = true; });
+  return { deliveries, calls };
 }
+
+export const buildHistory = () => buildHistoricalData().deliveries;

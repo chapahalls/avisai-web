@@ -9,3 +9,14 @@ export const BUSINESS = {
 
 /** Relógio simulado: 1 s real = 1 min. */
 export const SIM_MINUTES_PER_SECOND = 1;
+
+export const SIMULATION = {
+  seed: 42,
+  startHour: 8,
+  speedKmh: 70,
+  nextTripAfterMin: 30,
+  operatorResponsiveness: 0.35,
+  occurrenceRatePerMin: 0.01,
+  nextDayAnswerRate: 0.12,
+  feedLimit: 200,
+} as const;

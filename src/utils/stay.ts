@@ -1,4 +1,4 @@
-import { BUSINESS } from '../lib/config';
+import { BUSINESS } from '../lib/config.js';
 
 /** Estadia (R5): horas acima da franquia, "ou fração", × capacidade × valor por t/h. */
 export function stayValue(waitMin: number, capacityTons: number) {

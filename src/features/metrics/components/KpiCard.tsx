@@ -9,10 +9,10 @@ const toneClass = { default: 'text-ink-50', wait: 'text-wait-500', alert: 'text-
 
 export function KpiCard({ label, value, hint, tone = 'default' }: Props) {
   return (
-    <div className="rounded-card border border-ink-700 bg-ink-900 p-4">
-      <p className="text-sm text-ink-300">{label}</p>
-      <p className={`mt-1 font-display text-3xl font-bold ${toneClass[tone]}`}>{value}</p>
-      {hint && <p className="mt-1 text-xs text-ink-300">{hint}</p>}
+    <div className="flex min-w-0 flex-col rounded-card border border-ink-700 bg-ink-900 p-4 transition hover:border-ink-300/40">
+      <p className="min-h-10 text-sm leading-5 text-ink-300">{label}</p>
+      <p className={`mt-3 break-words font-display text-[clamp(1.25rem,2vw,1.8rem)] font-semibold leading-tight tabular-nums ${toneClass[tone]}`}>{value}</p>
+      {hint && <p className="mt-3 text-xs leading-5 text-ink-300">{hint}</p>}
     </div>
   );
 }
