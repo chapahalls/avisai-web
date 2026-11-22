@@ -1,6 +1,6 @@
 # AvisAI · Contrato para o app do motorista
 
-Este modelo considera o usuário mobile como **motorista**. O CCO publica/atribui a rota; o app recebe a identidade de demonstração, consulta sua rota e acompanha atualizações. Não existe um papel `operador_rota` no backend: os papéis do login atual são `driver` e `cco`.
+Este modelo considera o usuário mobile como **motorista**. O CCO publica/atribui a rota; o app recebe a identidade de demonstração, consulta sua rota e acompanha atualizações. Os papéis de login continuam `driver` e `cco`; `operador` é apenas uma sessão técnica do agente usada no fallback RTC e não é uma identidade de login mobile.
 
 Os contratos foram conferidos por leitura em `avisai/backend/app/api`, `servicos/{usuarios,publicacao}.py`, `dominio/documentos.py`, `infra/eventos.py` e nos exemplos `clients/tipos.ts`, `clients/react-native/useAvisaiVoz.ts` e `clients/web/avisaiStream.ts`. O exemplo é validado com transportes simulados; isso não representa validação de um aplicativo mobile instalado.
 
@@ -10,8 +10,8 @@ Os contratos foram conferidos por leitura em `avisai/backend/app/api`, `servicos
 |---|---|---|---|
 | Perfis de demonstração | `GET /usuarios?role=driver`; alias `/api/users?role=driver` | Array de `UserProfile`, com ID persistido, nome, e-mail, papel, motorista e viagem atual | Lista pública, sem token. Filtro opcional `driver` ou `cco`; inválido retorna 422. |
 | Identidade | `POST /auth/sso`, JSON `{"email":"motorista@empresa.test"}` | `token` e `user: UserProfile` | Login MOCK; e-mail não cadastrado retorna 404. Token fake, sem autenticação/autorização real. |
-| Cadastro do motorista | `GET /motoristas`; CCO pode usar `POST /motoristas` | `id`, `empresa_id`, `nome`, `telefone_e164`, `email` | Com e-mail válido, cria também perfil; sem e-mail, não aparece no seletor. E-mail em uso retorna 409. Cadastro não inicia sessão. |
-| Publicação da rota pelo CCO | `POST /rotas` | Rota publicada; `motorista_id` pode ser nulo ou informado | Trajeto gerado linearmente no backend; não recebe anexos. |
+| Cadastro do motorista | `GET /motoristas`; `POST /motoristas` fora da tela CCO web | `id`, `empresa_id`, `nome`, `telefone_e164`, `email` | Com e-mail válido, cria também perfil; sem e-mail, não aparece no seletor. E-mail em uso retorna 409. Cadastro não inicia sessão. |
+| Publicação da rota pelo CCO | `POST /rotas` | Rota publicada com `motorista_id` de perfil `driver` persistido | O backend ainda aceita rotas sem motorista por compatibilidade, mas o painel CCO exige seleção de usuário cadastrado. Trajeto gerado linearmente no backend; não recebe anexos. |
 | Atribuição pelo CCO | `POST /rotas/{rota_id}/atribuir`, JSON `{"motorista_id":1}` | Rota atribuída e evento `rota_atribuida` | Não existe confirmação de aceite da atribuição pelo mobile. |
 | Rota atual mobile | `GET /api/route?driverId={driverId}` | Contrato camelCase descrito abaixo | Só a mais recente não descarregada; 404 quando não há rota. |
 | Rota específica mobile | `GET /api/route?tripId={tripId}` | Mesmo contrato | Consulta por ID, sem verificação de propriedade no servidor. |
@@ -22,6 +22,8 @@ Os contratos foram conferidos por leitura em `avisai/backend/app/api`, `servicos
 | Upload pelo CCO | `POST /rotas/{rota_id}/arquivos`, multipart `arquivo` | Metadados, HTTP 201 e evento `arquivo_adicionado` | Envio pertence ao fluxo CCO; não é necessário ao app do motorista para recebê-lo. |
 | Novas atribuições | WebSocket `/ws?motorista_id={driverId}` | `{"canal":"evento","dado":EventoStream}` | Sem replay; exige refetch após reconexão. |
 | Atualizações de uma rota | SSE `/cco/stream?rota_id={rotaId}` ou WS `/ws?rota_id={rotaId}` | Snapshot, eventos, Tasks, posição, falas e contador | SSE não aceita `motorista_id`; somente WS acompanha atribuições novas. |
+| Mensagem da CCO | `POST /rotas/{rota_id}/mensagens` pelo painel; sessão de voz do motorista | Texto falado: remetente, mensagem e pergunta de resposta | O app deve manter a sessão Agora ativa para ouvir/falar; sem sessão ativa, o backend marca `offline` e tenta a cascata de chamada do operador. |
+| Resposta à mensagem | Fala seguinte do motorista na sessão do agente | Evento `mensagem_motorista_respondida` vinculado a `mensagem_id` | O agente usa a ferramenta `responder_mensagem_motorista`; o app não envia um POST separado. |
 | Timeline normalizada | `GET /events?tripId={tripId}&since={receivedAt}` | `DomainEvent[]`, incluindo `RouteAssigned` | `since` é exclusivo e temporal; não é cursor de sequência. |
 | Timeline original | `GET /eventos?rota_id={rotaId}&limite=100` | `EventoStream[]` | Eventos recentes, ID decrescente; não substituir o contrato `/events` por este. |
 | GPS do celular | `POST /rotas/{rota_id}/posicao` | Distância em metros, ETA em minutos, status e disparos | Envio do mobile, com permissão do aparelho; não inferir GPS de uma linha no mapa. |
@@ -98,7 +100,7 @@ A consulta por motorista escolhe a rota não descarregada mais recente por data 
 1. Consultar `GET /usuarios?role=driver`, apresentar os perfis e selecionar pelo `id` retornado. Enviar seu e-mail no login MOCK; conferir `role: driver`, ID de usuário, e-mail e `driverId` correspondentes. O controlador não aceita perfil CCO.
 2. Abrir `/ws?motorista_id={driverId}` e consultar `/api/route?driverId={driverId}`. Na abertura/reconexão e periodicamente, repetir a consulta: não depender do `tripId` recebido no login. O exemplo faz reconciliação a cada 15 segundos.
 3. Com rota, validar `route.driverId === session.user.driverId`, guardar `tripId` e buscar os metadados MOCK em `/api/documents?tripId={tripId}` e os anexos reais em `/rotas/{tripId}/arquivos`.
-4. Acompanhar eventos da rota via WS ou, se o ambiente tiver cliente SSE, `/cco/stream?rota_id={Number(tripId)}`.
+4. Acompanhar eventos da rota via WS ou, se o ambiente tiver cliente SSE, `/cco/stream?rota_id={Number(tripId)}`. Tratar `alerta_motorista`, `mensagem_motorista_*` e `decisao_agente` como eventos de timeline; `mensagem_id` preserva a thread.
 5. Ao receber `rota_atribuida`, refazer a consulta autoritativa da rota atual, documentos e anexos. Isso cobre atribuição nova e reatribuição de uma rota antes acompanhada. Atualizar a seleção e reabrir o acompanhamento por rota se seu ID mudar.
 6. Em descarga, reset ou reconexão, consultar novamente a rota atual. Antes de trocar perfil, fechar WS/SSE, cancelar leituras/downloads pendentes e limpar a viagem exibida. Cada sessão/leitura recebe uma geração: respostas e callbacks antigos são descartados mesmo se o transporte não respeitar o cancelamento.
 7. Durante uma desconexão, mostrar o último dado como desatualizado. Preservar valores financeiros e contadores do backend; não aplicar o relógio nem a fórmula da Demo do painel web.

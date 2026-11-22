@@ -96,7 +96,7 @@
 .cco-stat-strip [data-tone='wait'] dd { color: var(--color-wait-500); }
 .cco-stat-strip [data-tone='brand'] dd { color: var(--color-brand-500); }
 .cco-stat-strip [data-tone='alert'] dd { color: var(--color-alert-500); }
-.cco-operation-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 18px; }
+.cco-operation-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 18px; }
 .cco-operation-panels > * { min-width: 0; }
 .cco-operation-panels h2 { font-size: 15px; }
 .cco-operation-panels > * > :is(ul, ol) { max-height: 380px; }

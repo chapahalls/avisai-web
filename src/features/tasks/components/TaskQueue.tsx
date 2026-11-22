@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { BUSINESS } from '../../../lib/config';
 import { receiverById, useConnection, useOps } from '../../../services/operations';
 import { hhmm } from '../../../utils/format';
-import { stayValue } from '../../../utils/stay';
 import { brl } from '../../../utils/format';
 import { Badge } from '../../../components/Badge';
 
@@ -30,7 +29,7 @@ export function TaskQueue() {
         {rows.map((task) => {
           const trip = trips.find((x) => x.id === task.tripId);
           const waited = isApi ? trip?.stay?.waitMin : (trip?.unloadedAtMin ?? simMinutes) - task.createdAtMin;
-          const stay = isApi ? trip?.stay?.valueBRL : trip && waited !== undefined && waited > BUSINESS.franchiseHours * 60 ? stayValue(waited, trip.capacityTons) : undefined;
+          const stay = isApi ? trip?.stay?.valueBRL : undefined;
           const pending = connection.pendingTaskIds.includes(task.id);
           const disabled = pending || isApi && connection.status !== 'connected';
           const meta = tripMeta[task.tripId];

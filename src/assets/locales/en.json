@@ -83,6 +83,99 @@
       "closed": "closed"
     }
   },
+  "driverRequests": {
+    "title": "Driver requests",
+    "count": "{{n}} open",
+    "empty": "No driver request is waiting for the control center.",
+    "route": "Route {{id}}",
+    "locationMissing": "location not provided",
+    "attempts": "{{n}}/{{max}} reminders",
+    "replyPlaceholder": "Message for the driver",
+    "reply": "Reply",
+    "replying": "Sending…",
+    "loadError": "Could not load driver requests.",
+    "replyError": "Could not send the reply.",
+    "status": {
+      "coletando": "collecting details",
+      "aguardando_cco": "awaiting reply",
+      "respondido": "answered",
+      "timeout": "timed out"
+    }
+  },
+  "alerts": {
+    "live": "Real-time alerts",
+    "received": "Alert received from the backend.",
+    "dismiss": "Dismiss alert",
+    "openTrip": "Open trip",
+    "sendMessage": "Reply to driver",
+    "replyToAlert": "Open a message for the driver of trip {{plate}}",
+    "openOperator": "Open operator",
+    "supervisor": "Supervisor escalation",
+    "priority": {
+      "info": "Information",
+      "atencao": "Attention",
+      "critico": "Critical"
+    },
+    "types": {
+      "aproximacao": "Approach",
+      "atraso": "Delay",
+      "chegada": "Arrival",
+      "problema": "Problem",
+      "descarga": "Unloading"
+    }
+  },
+  "decisions": {
+    "title": "Agent decisions",
+    "recent": "Real-time audit trail",
+    "empty": "No agent decision yet.",
+    "trip": "View trip",
+    "perceived": "Perceived",
+    "decided": "Decided",
+    "executed": "Executed",
+    "result": "Result"
+  },
+  "driverMessages": {
+    "title": "Driver messages",
+    "alertTitle": "Operator message",
+    "hint": "The agent speaks the message and links the voice reply to this thread.",
+    "alertHint": "Reply to {{driver}}'s alert. When sent, the agent speaks the message on the phone.",
+    "open": "Message driver",
+    "empty": "No message has been sent to this driver.",
+    "loadError": "Could not load messages.",
+    "sendError": "Could not send the message.",
+    "modalTitle": "Message driver",
+    "modalHint": "The agent will speak this message; when the app is offline, the call cascade is recorded.",
+    "sender": "Sender",
+    "message": "Message",
+    "close": "Close",
+    "dismiss": "Close reply",
+    "cancel": "Cancel",
+    "send": "Send and speak",
+    "sending": "Sending…",
+    "connectionRequired": "The API connection must be active to send the message.",
+    "response": "Driver reply",
+    "status": {
+      "enviada": "sent",
+      "falada": "spoken to driver",
+      "respondida": "answered",
+      "offline": "driver offline"
+    }
+  },
+  "operator": {
+    "title": "AvisAI call",
+    "eyebrow": "Agora RTC fallback",
+    "hint": "When the PSTN call fails, the operator answers here in the browser.",
+    "waiting": "Waiting for an agent call.",
+    "loading": "Checking calls…",
+    "answer": "Answer",
+    "connecting": "Connecting audio…",
+    "answered": "Call answered",
+    "missingRtc": "This call has no Agora credentials; check backend configuration.",
+    "error": "Could not join the voice call.",
+    "callReason": "Reason: {{reason}}",
+    "callStatus": "Status: {{status}}",
+    "leave": "Leave call"
+  },
   "fleet": {
     "title": "Fleet",
     "mock": "simulated map",
@@ -157,7 +250,6 @@
     "goneHint": "The truck has started a new delivery. Check operations to follow its current route.",
     "back": "Back to operations",
     "route": "{{driver}} · {{receiver}}",
-    "detention": "Detention owed in the demo",
     "capacity": "Total vehicle capacity: {{tons}} t",
     "franchise": "Demo free waiting time: {{hours}} hours",
     "clockStopped": "Counter stopped at unloading confirmation."

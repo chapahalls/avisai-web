@@ -6,7 +6,6 @@ import { Icon } from '../../../components/Icon';
 import { PageHeader } from '../../../components/PageHeader';
 import { CallLogList } from '../../calls';
 import { brl, hhmm } from '../../../utils/format';
-import { stayValue } from '../../../utils/stay';
 import { BUSINESS } from '../../../lib/config';
 import { confirmUnload, useConnection } from '../../../services/operations';
 import { useTrip } from '../hooks/useTrip';
@@ -29,7 +28,6 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
   }
   const isApi = trip.source === 'api';
   const waitMin = isApi ? trip.stay?.waitMin : waited;
-  const value = isApi ? trip.stay?.valueBRL : stayValue(waited, trip.capacityTons);
   const franchiseHours = isApi ? trip.stay?.franchiseHours : BUSINESS.franchiseHours;
   const pendingUnload = connection.pendingUnloadIds.includes(trip.id);
   return (
@@ -39,17 +37,29 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
         <PageHeader title={trip.plate} eyebrow={t(isApi ? 'api.trip.eyebrow' : 'trip.eyebrow')} description={t('trip.route', { driver: isApi ? trip.driver : t('drivers.name', { letter: trip.driver.slice(-1) }), receiver: receiver.name })} />
         <Badge tone={trip.phase === 'waiting' ? 'wait' : trip.phase === 'unloaded' ? 'ok' : 'brand'} label={isApi && trip.backend ? t(`api.routeStatus.${trip.backend.status}`, { defaultValue: trip.backend.status }) : t(`phase.${trip.phase}`)} />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={`grid gap-4 ${isApi ? 'sm:grid-cols-2' : ''}`}>
         <div className="rounded-card border border-ink-700 bg-ink-900 p-5">
           <p className="flex items-center gap-2 text-sm text-ink-300"><Icon name="clock" className="h-4 w-4" />{t('trip.stopped')}</p>
           <p className={`mt-3 font-display text-4xl font-semibold ${waitMin !== undefined && franchiseHours !== undefined && waitMin > franchiseHours * 60 ? 'text-wait-500' : 'text-ink-50'}`}>{waitMin === undefined ? t('common.unavailable') : hhmm(waitMin, locale)}</p>
           <p className="mt-3 text-sm text-ink-300">{trip.phase === 'unloaded' ? t('trip.clockStopped') : franchiseHours === undefined ? t('api.trip.stayUnavailable') : t(isApi ? 'api.trip.franchise' : 'trip.franchise', { hours: franchiseHours })}</p>
         </div>
-        <div className="rounded-card border border-ink-700 bg-ink-900 p-5">
-          <p className="text-sm text-ink-300">{t(isApi ? 'api.trip.detention' : 'trip.detention')}</p>
-          <p className="mt-3 font-display text-4xl font-semibold">{value === undefined ? t('common.unavailable') : brl(value, locale)}</p>
-          <p className="mt-3 text-sm text-ink-300">{isApi ? trip.stay ? t('api.trip.calculationTons', { tons: trip.stay.capacityTons.toLocaleString(locale) }) : t('api.trip.stayUnavailable') : t('trip.capacity', { tons: trip.capacityTons })}</p>
-        </div>
+        {isApi ? (
+          <div className="rounded-card border border-ink-700 bg-ink-900 p-5">
+            <p className="text-sm text-ink-300">{t('api.trip.detention')}</p>
+            <p className="mt-3 font-display text-4xl font-semibold">
+              {trip.stay?.valueBRL === undefined
+                ? t('common.unavailable')
+                : brl(trip.stay.valueBRL, locale)}
+            </p>
+            <p className="mt-3 text-sm text-ink-300">
+              {trip.stay
+                ? t('api.trip.calculationTons', {
+                    tons: trip.stay.capacityTons.toLocaleString(locale),
+                  })
+                : t('api.trip.stayUnavailable')}
+            </p>
+          </div>
+        ) : null}
       </div>
       {isApi && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-ink-700 bg-ink-900 p-4">

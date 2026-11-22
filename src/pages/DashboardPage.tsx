@@ -1,16 +1,19 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { KpiGrid, useMetrics } from '../features/metrics';
-import { TaskQueue } from '../features/tasks';
+import { DriverRequests, TaskQueue } from '../features/tasks';
 import { FleetMap } from '../features/fleet';
-import { EventFeed } from '../features/trips';
+import { AgentDecisions, DriverMessages, EventFeed, LiveAlerts } from '../features/trips';
 import { Icon } from '../components/Icon';
-import { useMode } from '../services/operations';
+import { useMode, useOps } from '../services/operations';
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation();
   const result = useMetrics();
   const mode = useMode();
+  const [alertTripId, setAlertTripId] = useState<string | null>(null);
+  const alertTrip = useOps((state) => alertTripId ? state.trips.find((trip) => trip.id === alertTripId) : undefined);
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const number = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
   const percent = (value: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(value);
@@ -40,7 +43,11 @@ export function DashboardPage() {
         ))}
       </dl>
       <FleetMap key={mode} />
-      <section className="cco-operation-panels" aria-label={t('cco.followUp')}><TaskQueue /><EventFeed limit={16} /></section>
+      <LiveAlerts onAlertSelect={setAlertTripId} />
+      <section className="cco-operation-panels" aria-label={t('cco.followUp')}><TaskQueue /><DriverRequests /><AgentDecisions /><EventFeed limit={16} onAlertSelect={setAlertTripId} /></section>
+      {alertTrip?.backendId && <section className="cco-alert-message" aria-label={t('driverMessages.alertTitle')}>
+        <DriverMessages key={alertTrip.id} routeId={alertTrip.backendId} driverName={alertTrip.driver} highlighted onDismissHighlight={() => setAlertTripId(null)} />
+      </section>}
       <section className="cco-performance" aria-labelledby="cco-performance-title">
         <div className="cco-section-heading"><div><h2 id="cco-performance-title">{t('cco.performance')}</h2><p>{t(mode === 'api' ? 'backendMetrics.source' : 'cco.performanceHint')}</p></div><Link to="/metrics" className="cco-secondary-link">{t('cco.viewMetrics')}<Icon name="chevron" className="h-3.5 w-3.5 -rotate-90" /></Link></div>
         <div className="cco-kpi-grid"><KpiGrid /></div>

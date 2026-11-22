@@ -35,7 +35,7 @@ Dependência: `pages → features → components/services/lib/utils/types`. O `i
 
 `VITE_API_BASE_URL` vazia inicia a Demo. Preenchida, aponta para a raiz do backend e inicia o modo API, por exemplo `http://127.0.0.1:8000`. Alterar a `.env` exige reiniciar o Vite. A API indisponível produz carregamento/erro e retry; **Usar demo** é uma ação explícita. Não há fallback automático ou execução simultânea do motor mock para completar a operação recebida.
 
-`services/api/client.ts` valida respostas e faz o transporte REST/SSE. O cliente busca `/cco/estado`, lê as listas de Tasks, chamadas e eventos, obtém `/rotas/{id}` para o trajeto e acompanha `/cco/stream` por SSE. `services/operations/adapter.ts` normaliza nomes de campos, status e datas UTC para os contratos do painel, preservando IDs e a fonte. `services/operations/runtime.ts` mantém o store API e a reconciliação; sua entrada pública seleciona a fonte consumida pelas features. Componentes não enviam posições nem executam cálculos de negócio do backend.
+`services/api/client.ts` valida respostas e faz o transporte REST/SSE. O cliente busca `/cco/estado`, lê Tasks, chamadas, eventos e mensagens por rota, obtém `/rotas/{id}` para o trajeto e acompanha `/cco/stream` por SSE. `services/operations/adapter.ts` normaliza nomes de campos, status e datas UTC para os contratos do painel, preservando IDs e a fonte. `services/operations/runtime.ts` mantém o store API e a reconciliação; sua entrada pública seleciona a fonte consumida pelas features. Componentes não enviam posições nem executam cálculos de negócio do backend.
 
 ```mermaid
 flowchart LR
@@ -56,7 +56,7 @@ Uma reconexão refaz as leituras; uma reconciliação REST a cada 15 segundos co
 
 REST e SSE são conciliados por entidade: uma atualização de GPS recebida durante a leitura não impede a renovação de chamadas, eventos ou outras coleções. As confirmações de Task, rotas descarregadas e estadias encerradas têm proteção contra regressão por respostas concorrentes. Assim, a reconciliação não descarta a resposta REST inteira quando apenas uma entidade recebeu atualização ao vivo.
 
-**Assumir** envia `POST /tasks/{task_id}/confirmar` com `confirmado_por`; **Confirmar descarga** envia `POST /rotas/{rota_id}/descarga` com `por`. O retorno e o novo snapshot governam o estado exibido. O painel não usa endpoints de reset, chegada manual, envio de GPS, início de ligação ou sessões de agente.
+**Assumir** envia `POST /tasks/{task_id}/confirmar` com `confirmado_por`; **Confirmar descarga** envia `POST /rotas/{rota_id}/descarga` com `por`. **Enviar mensagem ao motorista** envia `POST /rotas/{rota_id}/mensagens`; o serviço do agente registra cada etapa e tenta voz. A ação explícita de ligação usa `POST /cco/rotas/{rota_id}/ligar`; ela não simula sucesso e expõe Twilio, fallback Agora e escalada no feed. O painel não usa reset, chegada manual ou envio de GPS.
 
 O backend trabalha com segundos para as tentativas e timestamps UTC. `/cco/estado` e SSE incluem `Z`; respostas diretas de modelos podem omitir o sufixo, embora representem UTC. Os contadores e resumos de estadia incluem capacidade, franquia, tarifa e aceleração do servidor; nenhum valor financeiro é recalculado com parâmetros da Demo.
 
@@ -66,9 +66,9 @@ No modo API, o login lista `/usuarios?role=cco` e envia o e-mail escolhido para 
 
 ## Publicação, pedidos e anexos
 
-`features/dispatch` consome a entrada pública do transporte para cadastrar/listar motoristas, publicar rotas, atribuir um motorista e gerir anexos. Publicar sem motorista mantém a rota `publicada`; atribuir passa para `planejada` quando aplicável e publica `rota_atribuida`. O backend cria o trajeto linear; o frontend não escolhe uma fixture rodoviária para completar essa rota.
+`features/dispatch` cruza `GET /usuarios?role=driver` com `GET /motoristas` e só exibe perfis persistidos que possuam vínculo operacional. O CCO publica a rota já atribuída a um desses usuários ou a reatribui depois; a tela não cadastra motoristas nem chama `POST /motoristas`. O backend cria o trajeto linear e define o estado resultante; o frontend não escolhe uma fixture rodoviária para completar essa rota.
 
-O dossiê consulta `/api/documents` para os metadados fiscais MOCK e `/rotas/{id}/solicitacoes` para pedidos/respostas da central. Criar solicitação pode acionar fala pela sessão de agente existente no backend; não abre uma sessão de voz ou ligação telefônica no browser.
+O dossiê consulta `/api/documents` para os metadados fiscais MOCK, `/rotas/{id}/solicitacoes` para pedidos/respostas da central e `/rotas/{id}/mensagens` para a thread CCO→motorista. A mensagem é falada somente pela sessão de agente existente; se ela estiver indisponível, o backend registra a decisão e aciona a cascata de chamada. A página `/operator` é a exceção deliberada: ela usa Agora Web RTC para atender o fallback do agente, com permissão de microfone do navegador.
 
 Arquivos reais têm listagem/upload em `/rotas/{id}/arquivos` e download por ID. `arquivo_adicionado` sinaliza refetch, sem carregar binário no SSE. Metadados ficam no banco; conteúdo em `ARQUIVOS_DIR`, montado no Compose em `/app/data/arquivos`. Reset preserva anexos e não existe DELETE/versionamento. Banco e volume precisam de backup conjunto; não há transação atômica completa entre banco e filesystem.
 
@@ -90,7 +90,8 @@ O histórico usa seed 42. O simulador usa geradores pseudoaleatórios independen
 | Estadia | Resumo calculado no servidor, sem recálculo no cliente | Fórmula única em `utils/stay.ts` |
 | Mapa base | Google Maps JavaScript API opcional | Google Maps JavaScript API opcional |
 | Caminho e posição | `trajeto` e último GPS fornecidos pela API, sem inferência | Snapshots OSRM/OpenStreetMap locais e progresso simulado |
-| Ligações | Registros e transcrições da API; UI não inicia chamadas | Resultado e transcrição sintéticos |
+| Alertas e decisões do agente | SSE + feed, toast e painel de decisões | Cada sucesso/falha contém prioridade, horário e resultado; não há ação silenciosa |
+| Chamada do agente | Twilio PSTN, seguido de Agora RTC em `/operator` | Depende de credenciais e URL pública; ausência de configuração é exibida, não simulada |
 | KPIs e ranking | `/api/metrics` e `/api/receivers`; sem série diária/valor cobrado | 63 entregas com seed fixa e entregas da sessão |
 | SSO | `/auth/sso`, token fake e identidade MOCK | Sessão local fictícia |
 | Dossiê | Campos API, notas fiscais MOCK, pedidos e anexos reais | Carga, notas e mensagens fictícias |

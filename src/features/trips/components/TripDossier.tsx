@@ -10,7 +10,7 @@ import { ApiTripDossier } from './ApiTripDossier';
 const tabs = ['cargo', 'invoices', 'communications'] as const;
 type DossierTab = typeof tabs[number];
 
-function CargoItemCard({ item, compact }: { item: CargoItem; compact: boolean }) {
+function CargoItemCard({ item, compact, showCommercialValues }: { item: CargoItem; compact: boolean; showCommercialValues: boolean }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const number = (value: number) => value.toLocaleString(locale);
@@ -21,23 +21,23 @@ function CargoItemCard({ item, compact }: { item: CargoItem; compact: boolean })
         <span className="shrink-0 font-display text-sm text-brand-500">{t('dossier.kg', { value: number(item.weightKg) })}</span>
       </div>
       <p className="mt-2 text-xs leading-relaxed text-ink-300">{t('dossier.itemPackaging', { count: number(item.packageCount), weight: number(item.unitWeightKg) })}</p>
-      <div className={`mt-3 flex flex-wrap justify-between gap-2 border-t border-ink-700/70 pt-3 ${compact ? 'text-xs' : 'text-sm'}`}>
+      {showCommercialValues && <div className={`mt-3 flex flex-wrap justify-between gap-2 border-t border-ink-700/70 pt-3 ${compact ? 'text-xs' : 'text-sm'}`}>
         <span className="text-ink-300">{t('dossier.itemUnitValue', { value: brl(item.unitValueBRL, locale) })}</span>
         <span className="font-display font-semibold">{brl(item.totalValueBRL, locale)}</span>
-      </div>
+      </div>}
     </li>
   );
 }
 
-export function TripDossier({ tripId, compact = false }: { tripId: string; compact?: boolean }) {
+export function TripDossier({ tripId, compact = false, showCommercialValues = true }: { tripId: string; compact?: boolean; showCommercialValues?: boolean }) {
   const trip = useOps((state) => state.trips.find((candidate) => candidate.id === tripId));
   if (trip?.source === 'api') {
-    return <ApiTripDossier key={trip.id} trip={trip} compact={compact} mockComplements={<MockTripDossier tripId={tripId} compact={compact} apiComplement />} />;
+    return <ApiTripDossier key={trip.id} trip={trip} compact={compact} showCommercialValues={showCommercialValues} mockComplements={<MockTripDossier tripId={tripId} compact={compact} apiComplement showCommercialValues={showCommercialValues} />} />;
   }
-  return <MockTripDossier tripId={tripId} compact={compact} />;
+  return <MockTripDossier tripId={tripId} compact={compact} showCommercialValues={showCommercialValues} />;
 }
 
-function MockTripDossier({ tripId, compact, apiComplement = false }: { tripId: string; compact: boolean; apiComplement?: boolean }) {
+function MockTripDossier({ tripId, compact, apiComplement = false, showCommercialValues = true }: { tripId: string; compact: boolean; apiComplement?: boolean; showCommercialValues?: boolean }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const trip = useOps((state) => state.trips.find((candidate) => candidate.id === tripId));
@@ -73,15 +73,15 @@ function MockTripDossier({ tripId, compact, apiComplement = false }: { tripId: s
           <Badge tone="wait" label={t('dossier.mockBadge')} />
         </div>
         <p className="mt-2 text-xs leading-relaxed text-ink-300">{t(apiComplement ? 'api.dossier.mockNotice' : 'dossier.mockNotice')}</p>
-        <dl className="mt-4 grid grid-cols-2 gap-3">
+        <dl className={`mt-4 grid gap-3 ${showCommercialValues ? 'grid-cols-2' : ''}`}>
           <div className="rounded-input border border-brand-500/20 bg-brand-500/5 p-3">
             <dt className="text-xs text-ink-300">{t('dossier.totalWeight')}</dt>
             <dd className={`mt-1 whitespace-nowrap font-display font-semibold text-brand-500 ${compact ? 'text-lg' : 'text-lg sm:text-2xl'}`}>{t('dossier.kg', { value: number(dossier.totalWeightKg) })}</dd>
           </div>
-          <div className="rounded-input border border-ink-700 bg-ink-950/40 p-3">
+          {showCommercialValues && <div className="rounded-input border border-ink-700 bg-ink-950/40 p-3">
             <dt className="text-xs text-ink-300">{t('dossier.declaredValue')}</dt>
             <dd className={`mt-1 whitespace-nowrap font-display font-semibold ${compact ? 'text-sm' : 'text-sm sm:text-2xl'}`}>{brl(dossier.totalValueBRL, locale)}</dd>
-          </div>
+          </div>}
         </dl>
         <p className="mt-3 text-xs text-ink-300">{t('dossier.manifestSummary', { invoices: dossier.invoices.length, packages: number(dossier.totalPackageCount), tons: dossier.capacityTons })}</p>
       </div>
@@ -103,7 +103,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false }: { tripId: s
               <div><dt className="text-xs text-ink-300">{t('dossier.receiverLabel')}</dt><dd className="mt-1">{receiver.name}</dd></div>
             </dl>
             <ul className={`grid gap-3 ${compact ? '' : 'lg:grid-cols-3'}`}>
-              {dossier.cargoItems.map((item) => <CargoItemCard key={item.id} item={item} compact={compact} />)}
+              {dossier.cargoItems.map((item) => <CargoItemCard key={item.id} item={item} compact={compact} showCommercialValues={showCommercialValues} />)}
             </ul>
             <p className="text-xs leading-relaxed text-ink-300">{t('dossier.cargoHint')}</p>
           </>
@@ -127,7 +127,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false }: { tripId: s
                 </ul>
                 <div className="flex flex-wrap justify-between gap-2 border-t border-ink-700 p-4 text-sm">
                   <span className="text-ink-300">{t('dossier.invoiceSummary', { packages: number(invoice.totalPackageCount), weight: number(invoice.totalWeightKg) })}</span>
-                  <strong className="font-display">{brl(invoice.totalValueBRL, locale)}</strong>
+                  {showCommercialValues && <strong className="font-display">{brl(invoice.totalValueBRL, locale)}</strong>}
                 </div>
               </article>
             ))}

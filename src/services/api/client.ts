@@ -2,11 +2,13 @@ import {
   BACKEND_STREAM_CHANNELS,
   type BackendCall,
   type BackendDocument,
+  type BackendAgentCall,
+  type BackendDriverRequest,
+  type BackendDriverMessage,
   type BackendDriver,
   type BackendEvent,
   type BackendFile,
   type BackendMetrics,
-  type BackendNewDriver,
   type BackendNewRoute,
   type BackendOccurrence,
   type BackendReceiver,
@@ -20,6 +22,7 @@ import {
   type BackendTask,
   type BackendUnloadResult,
   type BackendUserProfile,
+  type BackendOperatorCallEnvelope,
 } from './types.js';
 
 export type ApiErrorCode = 'invalid_configuration' | 'invalid_id' | 'invalid_input' | 'http_error' | 'network_error'
@@ -133,9 +136,45 @@ const isOccurrence: Guard<BackendOccurrence> = (value): value is BackendOccurren
   lat: nullable(latitude), lng: nullable(longitude), timestamp, transcricao: nullable(text),
 });
 
+const isDriverRequest: Guard<BackendDriverRequest> = (value): value is BackendDriverRequest => shape(value, {
+  id: positiveId, rota_id: positiveId, tipo: text, assunto: text, descricao: text,
+  km: nullable(numeric), rodovia: nullable(text), ocorrencia_id: nullable(positiveId),
+  status: oneOf('coletando', 'aguardando_cco', 'respondido', 'timeout'),
+  tentativas: integer, max_tentativas: integer, intervalo_s: numeric,
+  criada_em: timestamp, ultima_notificacao: nullable(timestamp), respondida_em: nullable(timestamp),
+  resposta: nullable(text), respondido_por: nullable(text), transcricao: nullable(text),
+});
+
+const isDriverMessage: Guard<BackendDriverMessage> = (value): value is BackendDriverMessage => shape(value, {
+  id: positiveId, rota_id: positiveId, remetente: text, texto: text,
+  status: oneOf('enviada', 'falada', 'respondida', 'offline'),
+  criada_em: timestamp, falada_em: nullable(timestamp), respondida_em: nullable(timestamp),
+  resposta: nullable(text), transcricao_resposta: nullable(text),
+});
+
+const isAgentCall: Guard<BackendAgentCall> = (value): value is BackendAgentCall => shape(value, {
+  id: positiveId, rota_id: positiveId, destino: oneOf('operador', 'supervisor', 'motorista'), motivo: text,
+  status: oneOf('iniciada', 'twilio_atendida', 'agora_tocando', 'atendida', 'sem_resposta', 'escalada', 'falhou'),
+  twilio_sid: nullable(text), twilio_resultado: nullable(text), agora_canal: nullable(text), sessao_id: nullable(positiveId),
+  iniciada_em: timestamp, atendida_em: nullable(timestamp), encerrada_em: nullable(timestamp), erro: nullable(text),
+});
+
+const isOperatorCallEnvelope: Guard<BackendOperatorCallEnvelope> = (value): value is BackendOperatorCallEnvelope =>
+  shape(value, {
+    chamada: (candidate) => candidate === null || (
+      isAgentCall(candidate)
+      && record(candidate)
+      && optional(text)(candidate.app_id)
+      && optional(text)(candidate.channel)
+      && optional(positiveId)(candidate.uid)
+      && optional(text)(candidate.token)
+    ),
+  });
+
 const isSnapshot: Guard<BackendSnapshot> = (value): value is BackendSnapshot => shape(value, {
   rotas: array(isRoute), tasks: array(isTask), estadias: array(isStay),
   ligacoes: array(isCall), ocorrencias: array(isOccurrence), eventos: array(isEvent),
+  chamados: optional(array(isDriverRequest)),
 });
 
 const isDriver: Guard<BackendDriver> = (value): value is BackendDriver => shape(value, {
@@ -199,16 +238,13 @@ const isFile: Guard<BackendFile> = (value): value is BackendFile => shape(value,
 });
 
 const e164: Check = (value) => text(value) && /^\+[1-9]\d{7,14}$/.test(value as string);
-const newDriver: Check = (value) => shape(value, {
-  nome: text, telefone_e164: optional(nullable(e164)), email: optional(nullable(text)), empresa_id: optional(positiveId),
-});
 const point: Check = (value) => shape(value, { nome: text, lat: latitude, lng: longitude });
 const newRoute: Check = (value) => shape(value, {
   origem: point, destino: point,
   recebedor: (receiver) => shape(receiver, { empresa: text, nome: text, telefone_e164: e164 }),
   carga_t: (weight) => numeric(weight) && (weight as number) > 0,
   carga_descricao: optional(text), placa: optional(text), nota_fiscal: optional(text),
-  janela_descarga: optional(text), empresa_id: optional(positiveId), motorista_id: optional(nullable(positiveId)),
+  janela_descarga: optional(text), empresa_id: optional(positiveId), motorista_id: positiveId,
 });
 
 function isStreamData<K extends BackendStreamChannel>(channel: K, value: unknown): value is BackendStreamMessages[K] {
@@ -222,9 +258,10 @@ function isStreamData<K extends BackendStreamChannel>(channel: K, value: unknown
         rota_id: positiveId, lat: latitude, lng: longitude, fonte: optional(oneOf('celular')),
         distancia_m: numeric, eta_min: numeric, status: routeStatus,
       }));
-    case 'fala': return shape(value, { rota_id: positiveId, papel: oneOf('motorista', 'recebedor'), texto: text });
+    case 'fala': return shape(value, { rota_id: positiveId, papel: oneOf('motorista', 'recebedor', 'operador'), texto: text });
     case 'contador': return shape(value, { estadias: array(isStay) });
     case 'reset': return shape(value, { rota_id: positiveId });
+    case 'chamado': return shape(value, { chamado: isDriverRequest });
   }
   return false;
 }
@@ -340,6 +377,61 @@ export class ApiClient {
     return this.request('GET', `/eventos${query.size ? `?${query}` : ''}`, (value): value is BackendEvent[] => array(isEvent)(value), signal);
   }
 
+  listDriverRequests(options: { routeId?: ApiId; open?: boolean } = {}, signal?: AbortSignal) {
+    const query = new URLSearchParams();
+    if (options.routeId !== undefined) query.set('rota_id', encodedId(options.routeId));
+    if (options.open !== undefined) query.set('abertos', String(options.open));
+    return this.request(
+      'GET',
+      `/cco/chamados${query.size ? `?${query}` : ''}`,
+      (value): value is BackendDriverRequest[] => array(isDriverRequest)(value),
+      signal,
+    );
+  }
+
+  respondDriverRequest(id: ApiId, resposta: string, respondidoPor = 'CCO', signal?: AbortSignal) {
+    if (!text(resposta) || !resposta.trim() || resposta.length > 2000 || !text(respondidoPor) || !respondidoPor.trim()) {
+      throw new ApiError('invalid_input');
+    }
+    return this.request(
+      'POST',
+      `/cco/chamados/${encodedId(id)}/responder`,
+      isDriverRequest,
+      signal,
+      { resposta: resposta.trim(), respondido_por: respondidoPor.trim() },
+    );
+  }
+
+  listDriverMessages(routeId: ApiId, signal?: AbortSignal) {
+    return this.request('GET', `/rotas/${encodedId(routeId)}/mensagens`,
+      (value): value is BackendDriverMessage[] => array(isDriverMessage)(value), signal);
+  }
+
+  sendDriverMessage(routeId: ApiId, remetente: string, texto: string, signal?: AbortSignal) {
+    if (!text(remetente) || !remetente.trim() || remetente.length > 255 || !text(texto) || !texto.trim() || texto.length > 2000) {
+      throw new ApiError('invalid_input');
+    }
+    return this.request('POST', `/rotas/${encodedId(routeId)}/mensagens`, isDriverMessage, signal, {
+      remetente: remetente.trim(), texto: texto.trim(),
+    });
+  }
+
+  listAgentCalls(options: { routeId?: ApiId; open?: boolean } = {}, signal?: AbortSignal) {
+    const query = new URLSearchParams();
+    if (options.routeId !== undefined) query.set('rota_id', encodedId(options.routeId));
+    if (options.open !== undefined) query.set('abertas', String(options.open));
+    return this.request('GET', `/cco/chamadas-agente${query.size ? `?${query}` : ''}`,
+      (value): value is BackendAgentCall[] => array(isAgentCall)(value), signal);
+  }
+
+  getCurrentOperatorCall(signal?: AbortSignal) {
+    return this.request('GET', '/operador/chamadas/atual', isOperatorCallEnvelope, signal);
+  }
+
+  answerOperatorCall(id: ApiId, signal?: AbortSignal) {
+    return this.request('POST', `/operador/chamadas/${encodedId(id)}/atender`, isAgentCall, signal, {});
+  }
+
   confirmTask(id: ApiId, por = 'CCO', signal?: AbortSignal) {
     return this.request('POST', `/tasks/${encodedId(id)}/confirmar`, isTask, signal, { confirmado_por: por });
   }
@@ -359,11 +451,6 @@ export class ApiClient {
     const query = role === undefined ? '' : `?role=${role}`;
     return this.request('GET', `/usuarios${query}`, (value): value is BackendUserProfile[] =>
       array(isUserProfile)(value) && (value as BackendUserProfile[]).every((profile) => role === undefined || profile.role === role), signal);
-  }
-
-  createDriver(input: BackendNewDriver, signal?: AbortSignal) {
-    if (!newDriver(input)) throw new ApiError('invalid_input');
-    return this.request('POST', '/motoristas', isDriver, signal, input);
   }
 
   publishRoute(input: BackendNewRoute, signal?: AbortSignal) {

@@ -3,6 +3,9 @@ export type BackendRouteStatus = 'publicada' | 'planejada' | 'na_origem' | 'em_t
 export type BackendTaskStatus = 'pendente' | 'confirmada' | 'escalada_recebedor' | 'concluida';
 export type BackendCallStatus = 'chamando' | 'em_andamento' | 'respondida' | 'nao_atendida' | 'falhou';
 export type BackendTaskChannel = 'push' | 'painel' | 'ligacao';
+export type BackendDriverRequestStatus = 'coletando' | 'aguardando_cco' | 'respondido' | 'timeout';
+export type BackendDriverMessageStatus = 'enviada' | 'falada' | 'respondida' | 'offline';
+export type BackendAgentCallStatus = 'iniciada' | 'twilio_atendida' | 'agora_tocando' | 'atendida' | 'sem_resposta' | 'escalada' | 'falhou';
 
 export interface BackendRoute {
   id: number;
@@ -134,6 +137,67 @@ export interface BackendOccurrence {
   transcricao: string | null;
 }
 
+export interface BackendDriverRequest {
+  id: number;
+  rota_id: number;
+  tipo: 'ocorrencia' | 'chegada' | string;
+  assunto: string;
+  descricao: string;
+  km: number | null;
+  rodovia: string | null;
+  ocorrencia_id: number | null;
+  status: BackendDriverRequestStatus;
+  tentativas: number;
+  max_tentativas: number;
+  intervalo_s: number;
+  criada_em: string;
+  ultima_notificacao: string | null;
+  respondida_em: string | null;
+  resposta: string | null;
+  respondido_por: string | null;
+  transcricao: string | null;
+}
+
+export interface BackendDriverMessage {
+  id: number;
+  rota_id: number;
+  remetente: string;
+  texto: string;
+  status: BackendDriverMessageStatus;
+  criada_em: string;
+  falada_em: string | null;
+  respondida_em: string | null;
+  resposta: string | null;
+  transcricao_resposta: string | null;
+}
+
+export interface BackendAgentCall {
+  id: number;
+  rota_id: number;
+  destino: 'operador' | 'supervisor' | 'motorista';
+  motivo: string;
+  status: BackendAgentCallStatus;
+  twilio_sid: string | null;
+  twilio_resultado: string | null;
+  agora_canal: string | null;
+  sessao_id: number | null;
+  iniciada_em: string;
+  atendida_em: string | null;
+  encerrada_em: string | null;
+  erro: string | null;
+}
+
+export interface BackendOperatorCall extends BackendAgentCall {
+  app_id?: string;
+  channel?: string;
+  uid?: number;
+  token?: string;
+}
+
+export interface BackendOperatorCallEnvelope {
+  chamada: BackendOperatorCall | null;
+}
+
 export interface BackendSnapshot {
   rotas: BackendRoute[];
   tasks: BackendTask[];
@@ -141,6 +205,7 @@ export interface BackendSnapshot {
   ligacoes: BackendCall[];
   ocorrencias: BackendOccurrence[];
   eventos: BackendEvent[];
+  chamados?: BackendDriverRequest[];
 }
 
 export interface BackendStreamMessages {
@@ -148,15 +213,16 @@ export interface BackendStreamMessages {
   evento: BackendEvent;
   task: { task: BackendTask };
   posicao: BackendMobilePosition | BackendTrackerPosition;
-  fala: { rota_id: number; papel: 'motorista' | 'recebedor'; texto: string };
+  fala: { rota_id: number; papel: 'motorista' | 'recebedor' | 'operador'; texto: string };
   /** Somente estadias abertas; ausência neste pacote não comprova encerramento. */
   contador: { estadias: BackendStay[] };
   reset: { rota_id: number };
+  chamado: { chamado: BackendDriverRequest };
 }
 
 export type BackendStreamChannel = keyof BackendStreamMessages;
 export const BACKEND_STREAM_CHANNELS: readonly BackendStreamChannel[] = [
-  'snapshot', 'evento', 'task', 'posicao', 'fala', 'contador', 'reset',
+  'snapshot', 'evento', 'task', 'posicao', 'fala', 'contador', 'reset', 'chamado',
 ];
 
 /** Descarga sem uma estadia existente pode responder com {}. */
@@ -188,13 +254,6 @@ export interface BackendDriver {
   email: string | null;
 }
 
-export interface BackendNewDriver {
-  nome: string;
-  telefone_e164?: string | null;
-  email?: string | null;
-  empresa_id?: number;
-}
-
 export interface BackendNewRoute {
   origem: { nome: string; lat: number; lng: number };
   destino: { nome: string; lat: number; lng: number };
@@ -205,7 +264,8 @@ export interface BackendNewRoute {
   nota_fiscal?: string;
   janela_descarga?: string;
   empresa_id?: number;
-  motorista_id?: number | null;
+  /** O CCO seleciona um perfil de motorista já persistido antes de publicar. */
+  motorista_id: number;
 }
 
 /** Percentuais e médias sem observações são null; o frontend não completa amostras. */

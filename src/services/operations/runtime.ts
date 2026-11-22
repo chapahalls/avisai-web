@@ -14,7 +14,7 @@ export interface ConnectionState {
   pendingUnloadIds: string[];
 }
 export interface ApiOpsState extends OpsState { receivers: Receiver[] }
-const emptySnapshot = (): BackendSnapshot => ({ rotas: [], tasks: [], estadias: [], ligacoes: [], eventos: [], ocorrencias: [] });
+const emptySnapshot = (): BackendSnapshot => ({ rotas: [], tasks: [], estadias: [], ligacoes: [], eventos: [], ocorrencias: [], chamados: [] });
 const upsert = <T extends { id: number }>(items: T[], item: T) => [item, ...items.filter((candidate) => candidate.id !== item.id)];
 const errorLabel = (error: unknown) => error instanceof ApiError ? error.message : 'api_invalid_response';
 const taskOrder: Record<BackendTask['status'], number> = { pendente: 0, escalada_recebedor: 1, confirmada: 2, concluida: 3 };
@@ -129,6 +129,7 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
           ligacoes: reconcile(calls, before.ligacoes, live.ligacoes, (call) => call.id),
           eventos: reconcile(events, before.eventos, live.eventos, (event) => event.id),
           ocorrencias: reconcile(next.ocorrencias, before.ocorrencias, live.ocorrencias, (occurrence) => occurrence.id),
+          chamados: next.chamados ?? live.chamados ?? [],
           estadias: stays,
         };
         apply();
@@ -230,6 +231,7 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
       // As falas persistidas chegam em `evento`; não inventar IDs nem duplicar evidências no canal efêmero.
       fala: () => current(scheduleRefresh),
       reset: () => current(() => { details.clear(); resetRevision++; scheduleRefresh(); }),
+      chamado: () => current(scheduleRefresh),
     });
     void refresh();
     clockTimer = setInterval(() => apply(false), 1000);

@@ -2,7 +2,7 @@
 
 O painel tem dois modos explícitos: **API**, com operação, métricas e ranking recebidos do backend AvisAI, e **Demo**, com a simulação local. SSO, NF-e/CT-e e complementos comerciais continuam declarados como **MOCK**; anexos binários enviados pelo CCO têm contrato próprio. Dados API não são completados com caminhões, posições, eventos, histórico ou valores financeiros da demo.
 
-Os contratos abaixo foram conferidos no código de `avisai/backend/app/api`, nos modelos, schemas e enums do backend. Leituras, SSE e apresentação foram validados localmente. Publicação, atribuição, cadastro e upload foram executados com dados fictícios no backend; confirmação de Task, descarga e perguntas foram verificadas em testes controlados. Os detalhes estão em **Validação realizada**.
+Os contratos abaixo foram conferidos no código de `avisai/backend/app/api`, nos modelos, schemas e enums do backend. Leituras, SSE e apresentação foram validados localmente. Publicação, atribuição, provisionamento técnico de motorista e upload foram executados com dados fictícios no backend; confirmação de Task, descarga e perguntas foram verificadas em testes controlados. Os detalhes estão em **Validação realizada**.
 
 ## Configuração e estados da conexão
 
@@ -22,11 +22,13 @@ Os caminhos de frontend indicam as features consumidoras. IDs nas URLs são os I
 
 | Funcionalidade | Caminho no frontend | Método e endpoint | Status | Limite / contrato |
 |---|---|---|---|---|
-| Estado inicial da operação | `src/app`, `src/features/fleet`, `src/features/tasks`, `src/features/trips` | `GET /cco/estado` | API | Rotas, Tasks, estadias, ligações, ocorrências e eventos; `rota_id` opcional. Não inclui o `trajeto` das rotas. |
-| Atualizações da central | `src/app`, features operacionais | `GET /cco/stream` | API, SSE | Eventos `snapshot`, `evento`, `task`, `posicao`, `fala`, `contador` e `reset`; `rota_id` opcional. Sem replay. |
+| Estado inicial da operação | `src/app`, `src/features/fleet`, `src/features/tasks`, `src/features/trips` | `GET /cco/estado` | API | Rotas, Tasks, estadias, ligações, ocorrências, chamados do motorista e eventos; `rota_id` opcional. Não inclui o `trajeto` das rotas. |
+| Atualizações da central | `src/app`, features operacionais | `GET /cco/stream` | API, SSE | Eventos `snapshot`, `evento`, `task`, `posicao`, `fala`, `contador`, `reset` e `chamado`; `rota_id` opcional. Sem replay. |
 | Fila de Tasks | `src/features/tasks` | `GET /tasks` | API | Até 50 registros, ID decrescente; sem paginação ou filtro por rota nesse endpoint. |
 | Assumir Task | `src/features/tasks` | `POST /tasks/{task_id}/confirmar` | API, ação do operador | JSON `{"confirmado_por":"CCO"}`. A confirmação e as consequências operacionais pertencem ao servidor. |
-| Ligações e transcrições recebidas | `src/features/calls`, `src/features/trips` | `GET /ligacoes` | API, leitura | Até 50 registros, ID decrescente. O painel não inicia ligações. |
+| Alertas do motorista e decisões do agente | `src/features/trips` | `GET /eventos`, `GET /cco/stream` | API, tempo real | `alerta_motorista` traz tipo, resumo, transcrição, prioridade e timestamp; `decisao_agente` traz percebeu/decidiu/executou/resultado. |
+| Mensagens CCO → motorista | `src/features/trips` | `GET/POST /rotas/{rota_id}/mensagens` | API, ação do CCO | POST `{remetente,texto}` cria uma thread e aciona `falar_motorista`; status: `enviada`, `falada`, `respondida` ou `offline`. |
+| Cascata de chamada do agente | `src/pages/OperatorPage.tsx`, feed de eventos | `GET /cco/chamadas-agente`, `GET /operador/chamadas/atual`, `POST /operador/chamadas/{id}/atender` | API, RTC no navegador | O backend tenta Twilio e registra o resultado; sem êxito, `/operator` entra no canal Agora. Sem atendimento, publica escalada crítica. |
 | Feed e eventos da viagem | `src/features/fleet`, `src/features/trips` | `GET /eventos?limite=200` | API, leitura | Backend aceita `rota_id` e `limite` (padrão 100); cliente solicita 200. Não é histórico completo nem paginação. |
 | Rota, carga disponível e caminho | `src/features/fleet`, `src/features/trips` | `GET /rotas/{rota_id}` | API | Inclui `trajeto`, placa, motorista, origem/destino, carga em toneladas, descrição, número da nota e recebedor. Não entrega um dossiê comercial completo. |
 | Confirmar descarga | `src/features/tasks`, `src/features/trips` | `POST /rotas/{rota_id}/descarga` | API, ação do operador | JSON `{"por":"CCO"}`. Encerra estadia e Task no servidor e devolve o resumo financeiro. |
@@ -34,15 +36,16 @@ Os caminhos de frontend indicam as features consumidoras. IDs nas URLs são os I
 | Ranking dos recebedores | `src/features/receivers` | `GET /api/receivers` | API | Agrupa por `recebedor_empresa`, com espera média de estadias encerradas e valores do servidor. |
 | Perfis de demonstração | Login e modelo mobile | `GET /usuarios`, alias `GET /api/users` | API, cadastro persistido | Filtro opcional `role=cco` ou `role=driver`. Retorna ID estável, nome, e-mail, papel, motorista e viagem atual; sem token. |
 | Login de demonstração | `src/features/auth` | `POST /auth/sso` | API com identidade MOCK | JSON `{"email":"..."}` de um perfil cadastrado; 404 para desconhecido. Token fake, papel, nome, `driverId` e `tripId`. Não é autorização real. |
-| Cadastro de motoristas | `src/features/dispatch` | `GET /motoristas`, `POST /motoristas` | API | Nome, e-mail, telefone E.164 opcional e empresa. Cadastro não autentica o motorista. |
-| Publicar rota | `src/features/dispatch` | `POST /rotas` | API, ação do CCO | Origem, destino, recebedor, carga positiva, placa/NF/janela e motorista opcional; caminho linear gerado no backend. |
-| Atribuir motorista | `src/features/dispatch` | `POST /rotas/{rota_id}/atribuir` | API, ação do CCO | JSON `{"motorista_id":1}`; publica `rota_atribuida`. IDs numéricos do backend. |
+| Usuários motoristas cadastrados | `src/features/dispatch` | `GET /usuarios?role=driver`, `GET /motoristas` | API, leitura | O painel cruza o perfil persistido com `driverId` e o cadastro operacional. Motorista sem perfil correspondente não entra na seleção. |
+| Publicar rota | `src/features/dispatch` | `POST /rotas` | API, ação do CCO | Origem, destino, recebedor, carga positiva, placa/NF/janela e `motorista_id` de um usuário motorista já cadastrado; caminho linear gerado no backend. |
+| Atribuir motorista | `src/features/dispatch` | `POST /rotas/{rota_id}/atribuir` | API, ação do CCO | JSON `{"motorista_id":1}` somente para item da seleção de usuário persistido; publica `rota_atribuida`. IDs numéricos do backend. |
 | NF-e/CT-e da viagem | `src/features/trips` | `GET /api/documents?tripId={id}` | API com conteúdo MOCK | Metadados `mock:true`, `fileUri:null`; não são arquivos fiscais enviados pelo CCO. |
 | Pedidos e respostas da central | `src/features/trips` | `GET /rotas/{rota_id}/solicitacoes`, `POST /rotas/{rota_id}/solicitacoes` | API | POST `{"pergunta":"..."}` pode fazer o backend falar com o motorista pela sessão existente. |
+| Chamados do motorista | `src/features/tasks` | `GET /cco/chamados?abertos=true`, `POST /cco/chamados/{id}/responder` | API, ação do CCO | O painel mostra chegada/ocorrência, km/BR, tentativas e oferece resposta. A resposta é persistida e falada ao motorista; o backend encerra após 5 lembretes de 30 s. |
 | Listar/upload de anexos | `src/features/dispatch` | `GET /rotas/{rota_id}/arquivos`, `POST /rotas/{rota_id}/arquivos` | API, binário real | POST multipart `arquivo`, categoria/descrição opcionais; sucesso 201. Independente das notas MOCK. |
 | Download de anexo | `src/features/dispatch` | `GET /rotas/{rota_id}/arquivos/{arquivo_id}/download` | API, binário real | Arquivo da rota com Content-Disposition attachment, MIME validado e nome sanitizado. |
 
-Após uma ação, o painel reconcilia o estado/lista correspondente com o servidor. POSTs não são repetidos automaticamente; durante a pendência, o controle evita envio duplicado. Uma falha mantém o erro visível. O frontend não simula confirmação, descarga, novos contatos ou o valor resultante.
+Após uma ação, o painel reconcilia o estado/lista correspondente com o servidor. No Dashboard, clicar em um alerta API da viagem abre o compositor destacado **Mensagem do operador**; o mesmo `POST /rotas/{rota_id}/mensagens` é usado, sem um segundo canal ou entrega simulada. POSTs não são repetidos automaticamente; durante a pendência, o controle evita envio duplicado. Uma falha mantém o erro visível. O frontend não simula confirmação, descarga, novos contatos ou o valor resultante.
 
 O snapshot limita **Tasks, estadias, ligações e ocorrências a 20 registros por coleção** e **eventos a 50**; as rotas não têm esse limite. Os endpoints de lista ampliam a janela disponível, mas não oferecem a população completa necessária aos indicadores históricos. Se uma lista ou detalhe devolver 404/405, o cliente preserva o dado disponível no snapshot da API; não o completa com MOCK. Outros erros mantêm a falha visível.
 
@@ -78,7 +81,7 @@ Sem observações, médias, percentuais e percentis podem ser `null`; mostrar au
 
 ## Anexos persistidos
 
-Metadados: `id`, `rota_id`, `nome_original`, `tipo_mime`, `tamanho_bytes`, `categoria`, `descricao`, `criado_em` UTC-Z e `url_download` relativa. Categorias: `documento`, `nota_fiscal`, `comprovante`, `imagem`, `outro`.
+Metadados: `id`, `rota_id`, `nome_original`, `tipo_mime`, `tamanho_bytes`, `categoria`, `descricao`, `criado_em` UTC-Z e `url_download` relativa. Categorias: `documento`, `nota_fiscal`, `comprovante`, `imagem`, `outro`. O app indexa os anexos localmente para acesso rápido e o agente responde nomes/campos apenas a partir dos documentos sincronizados.
 
 Upload multipart exige `arquivo`; descrição tem até 1.000 caracteres. Limite padrão **10 MiB** (`ARQUIVOS_MAX_BYTES`); aceita PDF/JPEG/PNG/WebP/GIF. Respostas: 201 sucesso, 413 tamanho, 415 formato e 404 rota/arquivo ausente. `arquivo_adicionado` informa metadados e a rota; o consumidor refaz a lista e baixa separadamente.
 
@@ -94,8 +97,10 @@ Upload/download persiste conteúdo real, mas não registra autor autenticado nem
 | Enviar GPS | — | `POST /rotas/{rota_id}/posicao` | Disponível, não exposta | Pertence ao celular/simulador do backend; o painel não gera posições. |
 | Chegada manual | — | `POST /rotas/{rota_id}/chegada` | Disponível, não exposta | Atalho do backend; o painel acompanha os estados publicados. |
 | Reset de rota | — | `POST /rotas/{rota_id}/reset` | Disponível, não exposta | Remove dados operacionais relacionados; nenhum controle da demo chama esse endpoint. |
+| Cadastrar motorista operacional | — | `POST /motoristas` | Disponível, não exposta | A programação do CCO usa apenas usuários motoristas já cadastrados e vinculados; criação/provisionamento fica fora desta tela. |
 | Iniciar ligação ao recebedor | — | `POST /rotas/{rota_id}/ligar-recebedor` | Disponível, não exposta | Pode acionar serviços externos do backend; o painel apenas lê resultados. |
 | Detalhe da ligação e cliente do recebedor | — | `GET /ligacoes/{ligacao_id}`, `GET /ligacoes/atual/recebedor` | Disponíveis, não expostas | Não usados pelo CCO; respostas podem conter dados de sessão para o cliente de voz. |
+| Iniciar chamada do agente | — | `POST /cco/rotas/{rota_id}/ligar` | Disponível sem botão dedicado | A mesma cascata é invocada pela ferramenta `ligar` do LLM e quando a mensagem encontra motorista offline. |
 | Tokens e sessões de agente | — | `GET /token`, `GET /sessions`, `POST /sessions`, `DELETE /sessions/{sessao_id}`, `POST /sessions/{sessao_id}/speak` | Disponíveis, não expostas | Sem controles diretos no painel; atribuição e pedidos podem fazer o backend avisar uma sessão já existente. |
 | Rota atual do motorista | Modelo mobile | `GET /api/route?driverId={id}`, `GET /motoristas/{id}/rota-atual` | Disponíveis para mobile | Rota não descarregada mais recente, não uma lista completa de viagens. |
 | Canal WebSocket | Modelo mobile | `GET /ws` com upgrade WebSocket | Disponível, não exposto no painel | `motorista_id` acompanha atribuições; `rota_id` acompanha uma rota. O painel usa SSE. |
@@ -113,7 +118,7 @@ Upload/download persiste conteúdo real, mas não registra autor autenticado nem
 - **Seed do backend:** a população idempotente complementa a base com dois CCO e quatro motoristas, duas viagens adicionais e um motorista sem viagem. A rota original tem 28 t e 41 pontos interpolados entre Jundiaí e Campinas. Os trajetos são dados fictícios lineares, não evidência de geometria rodoviária ou GPS real. Reexecutar não deve reabrir viagens ou substituir atribuições. As oito identidades e cinco trajetos locais continuam exclusivos da Demo.
 - **SSE:** a primeira mensagem é `snapshot`; o servidor publica depois eventos e contadores de estadia, com intervalo de contador de aproximadamente 1 segundo. Não há `id:` SSE, cursor ou suporte a `Last-Event-ID`. O cliente refaz estado/listas ao conectar e mantém reconciliação REST a cada 15 segundos; não presume recebimento dos eventos perdidos. Durante a interrupção, identifica os dados como desatualizados.
 - **Reconciliação:** respostas REST e atualizações SSE são conciliadas por entidade. Posições recebidas enquanto uma consulta está em andamento não bloqueiam a atualização de chamadas e outras coleções. A reconciliação protege confirmações de Task, rotas descarregadas e estadias encerradas contra regressão por respostas concorrentes.
-- **Escopo:** fontes, traduções e fixtures da demo continuam locais. Modo API faz requisições somente ao backend configurado; Google Maps continua opcional para o mapa base. Não há Routes API nem consulta de rota por tick. O frontend não adicionou bibliotecas; o backend adicionou `python-multipart` para os uploads.
+- **Escopo:** fontes, traduções e fixtures da demo continuam locais. Modo API faz requisições somente ao backend configurado; Google Maps continua opcional para o mapa base. Não há Routes API nem consulta de rota por tick. O frontend usa `agora-rtc-sdk-ng` exclusivamente em `/operator`; o backend adiciona o adaptador Twilio sem expor credenciais ao navegador.
 
 ## Critérios de validação
 
@@ -124,8 +129,8 @@ Upload/download persiste conteúdo real, mas não registra autor autenticado nem
 5. **Assumir** e **Confirmar descarga** enviam somente os POSTs documentados e apresentam a resposta/erro do servidor.
 6. Valores financeiros recebidos permanecem iguais, inclusive com capacidade, tarifa ou aceleração diferentes da demo.
 7. Métricas/ranking API preservam as semânticas do servidor e mostram nulos sem fabricar amostras. Histórico sintético fica na Demo; SSO e conteúdo fiscal/comercial MOCK permanecem identificados em pt-BR/en.
-8. A navegação não chama reset, chegada manual, posição, telefonia, sessões ou endpoints propostos inexistentes.
-9. Publicação/atribuição usa IDs backend e permite rota sem motorista; anexos são listados por rota e o download retorna o binário correspondente, separado dos documentos MOCK.
+8. A navegação não chama reset, chegada manual ou posição. Mensagem e atendimento RTC seguem os endpoints implementados, sempre com resultado visível no feed e nas decisões.
+9. Publicação/atribuição usa IDs backend de perfis `driver` persistidos e vinculados; motorista sem perfil não aparece na seleção. Anexos são listados por rota e o download retorna o binário correspondente, separado dos documentos MOCK.
 
 Os testes locais de contratos, `npm run typecheck` e `npm run build` verificam o cliente. A validação com um backend ativo deve registrar separadamente as leituras, o SSE e os POSTs executados; a existência de um endpoint não comprova configuração de serviços externos.
 
@@ -150,9 +155,10 @@ Esse registro corresponde à etapa original de leitura da operação. A extensã
 
 ## Validação da extensão · 22/11/2026
 
-- **Frontend:** 82 testes `node:test`, `typecheck`, `build` e `git diff --check` passaram. Cobertura ampliada para publicação, motorista nulo, estados novos, GPS celular/rastreador, atribuições incompatíveis, multipart, integridade do download e ausência de retry automático.
+- **Frontend (registro anterior à restrição de perfis):** 82 testes `node:test`, `typecheck`, `build` e `git diff --check` passaram. A cobertura então incluía publicação com motorista nulo, estados novos, GPS celular/rastreador, atribuições incompatíveis, multipart, integridade do download e ausência de retry automático.
 - **Backend:** 169 testes passaram, incluindo upload/listagem/download, limites e filtros do stream mobile. Migration `b643fd18c299` aplicada; armazenamento persistente do Compose em uso.
-- **Navegador:** motorista fictício `Motorista Demo CCO` cadastrado, viagem `CCO1A23` publicada sem motorista e depois atribuída a ele. Upload de `instrucoes-demo.pdf` com categoria `documento`, listagem e download efetivos. Nenhuma sessão de voz foi iniciada.
+- **Navegador (registro anterior à restrição de perfis):** motorista fictício `Motorista Demo CCO` foi provisionado, a viagem `CCO1A23` foi publicada sem motorista e depois atribuída a ele. Upload de `instrucoes-demo.pdf` com categoria `documento`, listagem e download efetivos. Nenhuma sessão de voz foi iniciada. Esse fluxo de publicação sem motorista não é mais exposto pelo painel.
+- **Voz e chamada do agente:** testes controlados verificam mensagem, alerta, decisão, falha explícita `Twilio não configurado`, criação do fallback Agora e atendimento. Não houve chamada PSTN nem sessão Agora com credenciais reais nessa validação.
 - **Modelo mobile:** exemplo TypeScript compilado em strict e executado contra o backend local. Login MOCK do motorista 2, viagem atual 2, lista de anexos e download conferidos; os 682 bytes do PDF corresponderam ao arquivo enviado e ao download do navegador. Snapshot WS do motorista 2 retornou somente a rota 2.
 - **Interface:** programação em pt-BR/en, largura de 390 × 844 sem overflow horizontal da página, dossiê por setas e separação entre anexos reais e NF-e/CT-e MOCK conferidos. Login SSO MOCK do backend abriu a sessão `Ana (CCO)`; a opção explícita de Demo também funcionou. Métricas API mostraram ausência de amostra como `—`; ranking refletiu os recebedores do backend.
 

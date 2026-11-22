@@ -4,13 +4,14 @@ import { Badge } from '../../../components/Badge';
 import type { Trip } from '../../../types/ops';
 import { CallLogList } from '../../calls';
 import { EventFeed } from './EventFeed';
+import { DriverMessages } from './DriverMessages';
 import { RouteDocuments, RouteRequests } from './RouteResources';
 
 const tabs = ['cargo', 'invoices', 'communications'] as const;
 type DossierTab = typeof tabs[number];
 
 /** Apresenta campos recebidos sem transformar uma referência de NF em documento fiscal. */
-export function ApiTripDossier({ trip, compact, mockComplements }: { trip: Trip; compact: boolean; mockComplements: ReactNode }) {
+export function ApiTripDossier({ trip, compact, showCommercialValues = true, mockComplements }: { trip: Trip; compact: boolean; showCommercialValues?: boolean; mockComplements: ReactNode }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const [activeTab, setActiveTab] = useState<DossierTab>('cargo');
@@ -84,11 +85,12 @@ export function ApiTripDossier({ trip, compact, mockComplements }: { trip: Trip;
           <dl className="grid gap-4 text-sm">
             {fields.filter((field) => field.key === 'origin' || field.key === 'destination').map((field) => <div key={field.key}><dt className="text-xs text-ink-300">{t(`api.dossier.${field.key}`)}</dt><dd className="mt-1 break-words">{field.value}</dd></div>)}
           </dl>
-          {trip.backendId && <RouteDocuments routeId={trip.backendId} />}
+          {trip.backendId && <RouteDocuments routeId={trip.backendId} showCommercialValues={showCommercialValues} />}
         </article>}
         {activeTab === 'communications' && <>
           <p className="text-xs leading-relaxed text-ink-300">{t('api.dossier.communicationsNotice')}</p>
           {trip.backendId && <RouteRequests key={trip.backendId} routeId={trip.backendId} />}
+          {trip.backendId && <DriverMessages routeId={trip.backendId} />}
           <EventFeed tripId={trip.id} limit={50} />
           <CallLogList tripId={trip.id} />
         </>}

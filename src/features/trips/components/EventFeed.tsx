@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useConnection, useOps } from '../../../services/operations';
 import { clock } from '../../../utils/format';
 
-export function EventFeed({ tripId, limit = 30 }: { tripId?: string; limit?: number }) {
+type EventFeedProps = {
+  tripId?: string;
+  limit?: number;
+  onAlertSelect?: (tripId: string) => void;
+};
+
+export function EventFeed({ tripId, limit = 30, onAlertSelect }: EventFeedProps) {
   const { t, i18n } = useTranslation();
   const connection = useConnection();
   const isApi = connection.mode === 'api';
@@ -25,7 +31,11 @@ export function EventFeed({ tripId, limit = 30 }: { tripId?: string; limit?: num
           const result = typeof event.payload.resultCode === 'string' ? t(`${isApi ? 'api.calls.results' : 'calls.results'}.${event.payload.resultCode}`, { dock: event.payload.dock, defaultValue: event.payload.resultCode }) : null;
           const channel = typeof event.payload.channel === 'string' ? t(`channels.${event.payload.channel}`, { defaultValue: event.payload.channel }) : null;
           const backendType = typeof event.payload.backendType === 'string' ? event.payload.backendType : null;
-          const title = isApi && backendType ? t(`api.events.${backendType}`, { defaultValue: backendType }) : t(`events.${event.type}`);
+          const alertType = typeof event.payload.tipo === 'string' ? event.payload.tipo : null;
+          const priority = event.payload.prioridade === 'critico' || event.payload.prioridade === 'atencao' ? event.payload.prioridade : 'info';
+          const title = alertType
+            ? t(`alerts.types.${alertType}`, { defaultValue: alertType })
+            : isApi && backendType ? t(`api.events.${backendType}`, { defaultValue: backendType }) : t(`events.${event.type}`);
           const message = isApi
             ? typeof event.payload.backendMessage === 'string' ? event.payload.backendMessage : null
             : typeof event.payload.messageKey === 'string' ? t(event.payload.messageKey) : null;
@@ -33,20 +43,30 @@ export function EventFeed({ tripId, limit = 30 }: { tripId?: string; limit?: num
           const time = isApi
             ? Number.isNaN(capturedAt.getTime()) ? t('common.unavailable') : new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(capturedAt)
             : clock(event.simMin);
-          return (
-            <li key={event.id} className="flex gap-4 border-b border-ink-700/50 py-3.5 last:border-0">
-              <time className={`${isApi ? 'w-24 text-xs' : 'w-12 text-sm'} shrink-0 pt-0.5 font-display text-ink-300`} dateTime={event.occurredAt}>{time}</time>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{title}</p>
-                {isApi && message && <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-300">{message}</p>}
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-300">
-                  {!tripId && event.tripId && <Link to={`/trips/${event.tripId}`} className="font-display text-brand-500 hover:underline">{plate}</Link>}
-                  <span>{t(`sources.${event.source}`)}</span>
-                  {channel && <span className="rounded bg-ink-800 px-1.5 py-0.5">{channel}</span>}
-                  {result && <span>{result}</span>}
-                  {!isApi && message && <span>{message}</span>}
-                </div>
+          const canReply = isApi && Boolean(alertType) && event.tripId.startsWith('api-route-') && Boolean(onAlertSelect);
+          const content = <>
+            <time className={`${isApi ? 'w-24 text-xs' : 'w-12 text-sm'} shrink-0 pt-0.5 font-display text-ink-300`} dateTime={event.occurredAt}>{time}</time>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{title}</p>
+              {isApi && message && <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-300">{message}</p>}
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-300">
+                {alertType && <span className="rounded bg-ink-800 px-1.5 py-0.5">{t(`alerts.priority.${priority}`)}</span>}
+                {!tripId && event.tripId && (canReply
+                  ? <span className="font-display text-brand-500">{plate}</span>
+                  : <Link to={`/trips/${event.tripId}`} className="font-display text-brand-500 hover:underline">{plate}</Link>)}
+                <span>{t(`sources.${event.source}`)}</span>
+                {channel && <span className="rounded bg-ink-800 px-1.5 py-0.5">{channel}</span>}
+                {result && <span>{result}</span>}
+                {!isApi && message && <span>{message}</span>}
               </div>
+            </div>
+          </>;
+          return (
+            <li key={event.id} className={`border-b border-ink-700/50 py-3.5 last:border-0 ${alertType ? priority === 'critico' ? 'border-l-2 border-l-alert-500 pl-3' : priority === 'atencao' ? 'border-l-2 border-l-wait-500 pl-3' : 'border-l-2 border-l-brand-500 pl-3' : ''}`}>
+              {canReply
+                ? <button type="button" onClick={() => onAlertSelect?.(event.tripId)} className="flex w-full gap-4 text-left outline-none transition hover:opacity-85 focus-visible:rounded-input focus-visible:ring-2 focus-visible:ring-brand-500"
+                    aria-label={t('alerts.replyToAlert', { plate })}>{content}</button>
+                : <div className="flex gap-4">{content}</div>}
             </li>
           );
         })}

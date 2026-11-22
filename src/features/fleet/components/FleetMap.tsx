@@ -447,7 +447,7 @@ export function FleetMap({ tripId }: { tripId?: string } = {}) {
         {!tripId && selected && <aside id={panelId} ref={panel} className="tracking-trip-panel" aria-label={t('tracking.selectedTruck', { plate: selected.plate })}>
           <div className="tracking-trip-panel-top"><span>{t('tracking.selectedVehicle')}</span><button onClick={() => { const vehicleId = selected.vehicleId; setSelectedVehicle(null); setFollowing(false); requestAnimationFrame(() => rows.current.get(vehicleId)?.focus()); }} aria-label={t('tracking.closeDetails')}>×</button></div>
           <div className="tracking-trip-panel-identity"><div><h3 aria-live="polite" aria-atomic="true">{selected.plate}</h3><p>{selected.source === 'api' ? selected.driver : t('drivers.name', { letter: selected.driver.slice(-1) })}</p></div><span className="tracking-phase" style={{ color: phaseColor[selected.phase] }}>{t(selected.backend ? `api.routeStatus.${selected.backend.status}` : `phase.${selected.phase}`)}</span></div>
-          <TripDossier key={selected.id} tripId={selected.id} compact />
+          <TripDossier key={selected.id} tripId={selected.id} compact showCommercialValues={false} />
           <Link className="tracking-open-trip" to={`/trips/${selected.id}`}>{t('tracking.fullTrip')}<span aria-hidden="true">↗</span></Link>
         </aside>}
       </div>

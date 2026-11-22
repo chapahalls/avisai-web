@@ -7,7 +7,7 @@ import { brl } from '../../../utils/format';
 import { Badge } from '../../../components/Badge';
 import { RouteFiles } from '../../dispatch';
 
-export function RouteDocuments({ routeId }: { routeId: number }) {
+export function RouteDocuments({ routeId, showCommercialValues = true }: { routeId: number; showCommercialValues?: boolean }) {
   const { t, i18n } = useTranslation();
   const [documents, setDocuments] = useState<BackendDocument[]>([]);
   const [failed, setFailed] = useState(false);
@@ -34,7 +34,7 @@ export function RouteDocuments({ routeId }: { routeId: number }) {
         <dl className="grid gap-2 text-xs sm:grid-cols-2">
           <div><dt className="text-ink-300">{t('dispatch.documents.number')}</dt><dd className="mt-1 break-all">{document.number}</dd></div>
           <div><dt className="text-ink-300">{t(document.kind === 'NF-e' ? 'dispatch.documents.issuer' : 'dispatch.documents.carrier')}</dt><dd className="mt-1 break-words">{document.kind === 'NF-e' ? document.issuer : document.carrier}</dd></div>
-          <div><dt className="text-ink-300">{t(document.kind === 'NF-e' ? 'dispatch.documents.invoiceValue' : 'dispatch.documents.freightValue')}</dt><dd className="mt-1">{brl(document.kind === 'NF-e' ? document.valueBRL : document.freightBRL, i18n.resolvedLanguage)}</dd></div>
+          {showCommercialValues && <div><dt className="text-ink-300">{t(document.kind === 'NF-e' ? 'dispatch.documents.invoiceValue' : 'dispatch.documents.freightValue')}</dt><dd className="mt-1">{brl(document.kind === 'NF-e' ? document.valueBRL : document.freightBRL, i18n.resolvedLanguage)}</dd></div>}
         </dl>
       </article>)}
     </section>

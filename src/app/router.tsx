@@ -8,6 +8,7 @@ import { ReceiversPage } from '../pages/ReceiversPage';
 import { CallsPage } from '../pages/CallsPage';
 import { TripPage } from '../pages/TripPage';
 import { DispatchPage } from '../pages/DispatchPage';
+import { OperatorPage } from '../pages/OperatorPage';
 
 function RequireSession() {
   const session = useSession((s) => s.session);
@@ -34,6 +35,7 @@ export function AppRouter() {
             <Route path="receivers" element={<ReceiversPage />} />
             <Route path="calls" element={<CallsPage />} />
             <Route path="dispatch" element={<DispatchPage />} />
+            <Route path="operator" element={<OperatorPage />} />
             <Route path="trips/:id" element={<TripPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

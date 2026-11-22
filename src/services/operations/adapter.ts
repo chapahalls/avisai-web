@@ -37,6 +37,21 @@ const eventType: Record<string, EventType> = {
   task_criada: 'TaskCreated', aviso_recebedor: 'ReceiverNotified', nao_recebe_hoje: 'ReceiverCallResult',
   resposta_central: 'ReportSubmitted',
   pergunta_documento: 'DocumentQuestionAnswered',
+  chamado_cco_aberto: 'DriverRequestOpened',
+  chamado_cco_lembrete: 'DriverRequestReminder',
+  chamado_cco_respondido: 'DriverRequestAnswered',
+  chamado_cco_timeout: 'DriverRequestTimeout',
+  alerta_motorista: 'DriverAlert',
+  decisao_agente: 'AgentDecision',
+  mensagem_motorista_enviada: 'DriverMessageSent',
+  mensagem_motorista_falada: 'DriverMessageSpoken',
+  mensagem_motorista_respondida: 'DriverMessageAnswered',
+  motorista_offline: 'DriverOffline',
+  chamada_twilio_falhou: 'TwilioCallFailed',
+  chamada_agora_iniciada: 'AgoraFallbackStarted',
+  chamada_agora_atendida: 'AgoraFallbackAnswered',
+  chamada_sem_resposta: 'AgentCallNoAnswer',
+  escalada_supervisor: 'SupervisorEscalated',
 };
 const eventSource: Record<string, DomainEvent['source']> = {
   task_confirmada: 'cco', descarga: 'cco', fala_motorista: 'driver', chegada_confirmada_voz: 'driver',
@@ -45,6 +60,10 @@ const eventSource: Record<string, DomainEvent['source']> = {
   rota_publicada: 'cco', rota_atribuida: 'cco', arquivo_adicionado: 'cco',
   retirada: 'driver', relatorio: 'driver', resposta_central: 'driver', pedido_central: 'cco',
   campo_faltante: 'agent', aviso_recebedor: 'agent', nao_recebe_hoje: 'agent', pergunta_documento: 'agent',
+  alerta_motorista: 'driver', decisao_agente: 'agent',
+  mensagem_motorista_enviada: 'cco', mensagem_motorista_falada: 'agent', mensagem_motorista_respondida: 'driver',
+  motorista_offline: 'agent', chamada_twilio_falhou: 'agent', chamada_agora_iniciada: 'agent',
+  chamada_agora_atendida: 'cco', chamada_sem_resposta: 'agent', escalada_supervisor: 'agent',
 };
 
 /** Projeção sobre o trajeto informado: serve à linha percorrida, nunca substitui o GPS recebido. */

@@ -36,6 +36,17 @@ const call = {
 const event = { id: 6, tipo: 'chegada', rota_id: 1, timestamp: at, mensagem: 'Chegada fictícia', dados: { task_id: 2 } };
 const occurrence = { id: 7, rota_id: 1, tipo: 'fila', descricao: 'Fila fictícia', lat: null, lng: null, timestamp: at, transcricao: null };
 const snapshot = { rotas: [route], tasks: [task], estadias: [stay], ligacoes: [call], ocorrencias: [occurrence], eventos: [event] };
+const driverMessage = {
+  id: 14, rota_id: 1, remetente: 'Operador fixture', texto: 'Pare em local seguro.',
+  status: 'falada', criada_em: at, falada_em: at, respondida_em: null,
+  resposta: null, transcricao_resposta: null,
+};
+const agentCall = {
+  id: 15, rota_id: 1, destino: 'operador', motivo: 'Pneu furado na BR-381',
+  status: 'agora_tocando', twilio_sid: null, twilio_resultado: 'Twilio não configurado',
+  agora_canal: 'agent-call-15', sessao_id: 16, iniciada_em: at, atendida_em: null,
+  encerrada_em: null, erro: null,
+};
 const driver = { id: 8, empresa_id: 1, nome: 'Motorista fixture', telefone_e164: null, email: null };
 const published = {
   ...route, status: 'publicada', motorista_id: null, motorista_nome: null,
@@ -148,6 +159,33 @@ test('REST usa endpoints e campos do backend, preservando 28 toneladas, doca tex
   assert.ok(requests.slice(0, 5).every(({ options }) => options.body === undefined));
 });
 
+test('mensagem ao motorista e fallback do agente preservam thread, status e chamadas RTC', async () => {
+  const requests = [];
+  const operatorCall = { ...agentCall, app_id: 'agora-fixture', channel: 'agent-call-15', uid: 2001, token: 'token-fixture' };
+  const responses = [[driverMessage], driverMessage, [agentCall], { chamada: operatorCall }, { ...agentCall, status: 'atendida', atendida_em: at }];
+  const api = new ApiClient('/backend', {
+    fetch: async (url, options) => {
+      requests.push({ url, options });
+      return jsonResponse(responses[requests.length - 1]);
+    },
+  });
+  assert.deepEqual(await api.listDriverMessages(1), [driverMessage]);
+  assert.deepEqual(await api.sendDriverMessage(1, ' Operador fixture ', ' Pare em local seguro. '), driverMessage);
+  assert.deepEqual(await api.listAgentCalls({ routeId: 1, open: true }), [agentCall]);
+  assert.deepEqual(await api.getCurrentOperatorCall(), { chamada: operatorCall });
+  assert.equal((await api.answerOperatorCall(15)).status, 'atendida');
+  assert.deepEqual(requests.map(({ url }) => url), [
+    '/backend/rotas/1/mensagens',
+    '/backend/rotas/1/mensagens',
+    '/backend/cco/chamadas-agente?rota_id=1&abertas=true',
+    '/backend/operador/chamadas/atual',
+    '/backend/operador/chamadas/15/atender',
+  ]);
+  assert.deepEqual(requests.map(({ options }) => options.method), ['GET', 'POST', 'GET', 'GET', 'POST']);
+  assert.deepEqual(JSON.parse(requests[1].options.body), { remetente: 'Operador fixture', texto: 'Pare em local seguro.' });
+  assert.deepEqual(JSON.parse(requests[4].options.body), {});
+});
+
 test('rota publicada aceita motorista nulo, novos estados e metadados mantendo compatibilidade anterior', async () => {
   const samples = [
     published,
@@ -174,17 +212,17 @@ test('rota publicada aceita motorista nulo, novos estados e metadados mantendo c
   }
 });
 
-test('publicação, atribuição, motoristas, análises, documentos, solicitações e SSO seguem o contrato REST', async () => {
+test('publicação, atribuição, perfis persistidos, análises, documentos, solicitações e SSO seguem o contrato REST', async () => {
   const requests = [];
-  const newDriver = { nome: 'Motorista fixture', telefone_e164: null, email: null, empresa_id: 1 };
+  const profiles = [{ id: '2', email: 'driver@fixture.test', role: 'driver', name: driver.nome, driverId: driver.id, tripId: null }];
   const newRoute = {
     origem: { nome: 'Origem fixture', lat: -23, lng: -47 },
     destino: { nome: 'Destino fixture', lat: -22, lng: -46 },
     recebedor: { empresa: 'Empresa fixture', nome: 'Recebedor fixture', telefone_e164: '+5511999999999' },
-    carga_t: 28, motorista_id: null, placa: 'TEST-001', nota_fiscal: 'NF-DEMO',
+    carga_t: 28, motorista_id: 8, placa: 'TEST-001', nota_fiscal: 'NF-DEMO',
   };
   const assigned = { ...published, status: 'planejada', motorista_id: 8, motorista_nome: driver.nome, atribuida_em: at };
-  const responses = [[driver], driver, published, assigned, metrics, [receiver], [invoice, freight], [centralRequest], centralRequest, sso, sso];
+  const responses = [[driver], profiles, assigned, assigned, metrics, [receiver], [invoice, freight], [centralRequest], centralRequest, sso, sso];
   const api = new ApiClient('/backend', {
     fetch: async (url, options) => {
       requests.push({ url, options });
@@ -192,8 +230,8 @@ test('publicação, atribuição, motoristas, análises, documentos, solicitaç�
     },
   });
   assert.deepEqual(await api.listDrivers(), [driver]);
-  assert.deepEqual(await api.createDriver(newDriver), driver);
-  assert.deepEqual(await api.publishRoute(newRoute), published);
+  assert.deepEqual(await api.listProfiles('driver'), profiles);
+  assert.deepEqual(await api.publishRoute(newRoute), assigned);
   assert.deepEqual(await api.assignRoute('1', '8'), assigned);
   assert.deepEqual(await api.getMetrics(), metrics);
   assert.deepEqual(await api.getReceivers(), [receiver]);
@@ -203,14 +241,13 @@ test('publicação, atribuição, motoristas, análises, documentos, solicitaç�
   assert.deepEqual(await api.authSso('cco@fixture.test'), sso);
   assert.deepEqual(await api.authSso(), sso);
   assert.deepEqual(requests.map(({ url }) => url), [
-    '/backend/motoristas', '/backend/motoristas', '/backend/rotas', '/backend/rotas/1/atribuir',
+    '/backend/motoristas', '/backend/usuarios?role=driver', '/backend/rotas', '/backend/rotas/1/atribuir',
     '/backend/api/metrics', '/backend/api/receivers', '/backend/api/documents?tripId=1',
     '/backend/rotas/1/solicitacoes', '/backend/rotas/1/solicitacoes', '/backend/auth/sso', '/backend/auth/sso',
   ]);
   assert.deepEqual(requests.map(({ options }) => options.method), [
-    'GET', 'POST', 'POST', 'POST', 'GET', 'GET', 'GET', 'GET', 'POST', 'POST', 'POST',
+    'GET', 'GET', 'POST', 'POST', 'GET', 'GET', 'GET', 'GET', 'POST', 'POST', 'POST',
   ]);
-  assert.deepEqual(JSON.parse(requests[1].options.body), newDriver);
   assert.deepEqual(JSON.parse(requests[2].options.body), newRoute);
   assert.deepEqual(JSON.parse(requests[3].options.body), { motorista_id: 8 });
   assert.deepEqual(JSON.parse(requests[8].options.body), { pergunta: centralRequest.pergunta });
@@ -221,7 +258,6 @@ test('publicação, atribuição, motoristas, análises, documentos, solicitaç�
 test('novos DTOs incompatíveis são rejeitados sem completar métricas, documentos ou usuários', async () => {
   for (const [payload, request] of [
     [[{ ...driver, id: null }], (api) => api.listDrivers()],
-    [{ ...driver, telefone_e164: 123 }, (api) => api.createDriver({ nome: 'fixture' })],
     [{ ...metrics, entregas: '0' }, (api) => api.getMetrics()],
     [{ ...metrics, latencia_voz_ms: { ...metrics.latencia_voz_ms, p95: 'sem dados' } }, (api) => api.getMetrics()],
     [[{ ...receiver, espera_media_h: '0' }], (api) => api.getReceivers()],
@@ -270,7 +306,7 @@ test('perfis inválidos ou de outro papel não entram na seleção de usuários'
   await assert.rejects(wrongRole.listProfiles('cco'), isApiError('invalid_response'));
 });
 
-test('payload inválido de publicação ou motorista e IDs inválidos não chegam ao transporte', () => {
+test('payload inválido de publicação e IDs inválidos não chegam ao transporte', () => {
   let requests = 0;
   const api = new ApiClient('/api', { fetch: async () => { requests++; return jsonResponse({}); } });
   const valid = {
@@ -283,7 +319,6 @@ test('payload inválido de publicação ou motorista e IDs inválidos não chega
     { ...valid, carga_t: 0 }, { ...valid, origem: { ...valid.origem, lat: 91 } },
     { ...valid, recebedor: { ...valid.recebedor, telefone_e164: '123' } }, { ...valid, motorista_id: 0 },
   ]) assert.throws(() => api.publishRoute(input), isApiError('invalid_input'));
-  assert.throws(() => api.createDriver({ nome: 'fixture', telefone_e164: '123' }), isApiError('invalid_input'));
   assert.throws(() => api.createRequest(1, {}), isApiError('invalid_input'));
   assert.throws(() => api.authSso({}), isApiError('invalid_input'));
   for (const request of [
@@ -535,6 +570,13 @@ test('SSE recebe todos os canais, informa reconexão nativa e unsubscribe impede
     posicao: { rota_id: 1, lat: -23, lng: -47, distancia_m: 1200, eta_min: 1.2, status: 'aproximando' },
     fala: { rota_id: 1, papel: 'motorista', texto: 'Relato fictício' },
     contador: { estadias: [stay] }, reset: { rota_id: 1 },
+    chamado: { chamado: {
+      id: 8, rota_id: 1, tipo: 'chegada', assunto: 'Chegada',
+      descricao: 'Aguardando orientação', km: null, rodovia: null, ocorrencia_id: null,
+      status: 'aguardando_cco', tentativas: 0, max_tentativas: 5, intervalo_s: 30,
+      criada_em: '2026-11-22T14:32:00Z', ultima_notificacao: null, respondida_em: null,
+      resposta: null, respondido_por: null, transcricao: null,
+    } },
   };
   const api = new ApiClient('/api/', { eventSource: (url) => { source = new FakeEventSource(url); return source; } });
   const close = api.subscribe({
@@ -568,7 +610,7 @@ test('SSE recebe todos os canais, informa reconexão nativa e unsubscribe impede
   assert.equal(source.listeners.size, 0);
   assert.equal(source.onopen, null);
   assert.equal(source.onerror, null);
-  assert.equal(received.length, 7);
+  assert.equal(received.length, Object.keys(payloads).length);
   assert.deepEqual(statuses.slice(-1), ['closed']);
 });
 

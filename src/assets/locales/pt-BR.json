@@ -83,6 +83,99 @@
       "closed": "fechada"
     }
   },
+  "driverRequests": {
+    "title": "Chamados do motorista",
+    "count": "{{n}} abertos",
+    "empty": "Nenhum chamado aguardando o CCO.",
+    "route": "Rota {{id}}",
+    "locationMissing": "localização não informada",
+    "attempts": "{{n}}/{{max}} lembretes",
+    "replyPlaceholder": "Mensagem para o motorista",
+    "reply": "Responder",
+    "replying": "Enviando…",
+    "loadError": "Não foi possível carregar os chamados.",
+    "replyError": "Não foi possível enviar a resposta.",
+    "status": {
+      "coletando": "coletando dados",
+      "aguardando_cco": "aguardando resposta",
+      "respondido": "respondido",
+      "timeout": "sem resposta"
+    }
+  },
+  "alerts": {
+    "live": "Alertas em tempo real",
+    "received": "Alerta recebido do backend.",
+    "dismiss": "Fechar alerta",
+    "openTrip": "Abrir viagem",
+    "sendMessage": "Responder ao motorista",
+    "replyToAlert": "Abrir mensagem para o motorista da viagem {{plate}}",
+    "openOperator": "Abrir operador",
+    "supervisor": "Escalada ao supervisor",
+    "priority": {
+      "info": "Informação",
+      "atencao": "Atenção",
+      "critico": "Crítico"
+    },
+    "types": {
+      "aproximacao": "Aproximação",
+      "atraso": "Atraso",
+      "chegada": "Chegada",
+      "problema": "Problema",
+      "descarga": "Descarga"
+    }
+  },
+  "decisions": {
+    "title": "Decisões do agente",
+    "recent": "Auditáveis em tempo real",
+    "empty": "Nenhuma decisão do agente ainda.",
+    "trip": "Ver viagem",
+    "perceived": "Percebeu",
+    "decided": "Decidiu",
+    "executed": "Executou",
+    "result": "Resultado"
+  },
+  "driverMessages": {
+    "title": "Mensagens ao motorista",
+    "alertTitle": "Mensagem do operador",
+    "hint": "O agente fala a mensagem e vincula a resposta por voz a esta thread.",
+    "alertHint": "Responder ao alerta de {{driver}}. Ao enviar, o agente fala a mensagem no celular.",
+    "open": "Enviar mensagem ao motorista",
+    "empty": "Nenhuma mensagem enviada a este motorista.",
+    "loadError": "Não foi possível carregar as mensagens.",
+    "sendError": "Não foi possível enviar a mensagem.",
+    "modalTitle": "Enviar mensagem ao motorista",
+    "modalHint": "A mensagem será falada pelo agente; se o app estiver offline, a cascata de ligação será registrada.",
+    "sender": "Remetente",
+    "message": "Mensagem",
+    "close": "Fechar",
+    "dismiss": "Fechar resposta",
+    "cancel": "Cancelar",
+    "send": "Enviar e falar",
+    "sending": "Enviando…",
+    "connectionRequired": "A conexão com a API precisa estar ativa para enviar a mensagem.",
+    "response": "Resposta do motorista",
+    "status": {
+      "enviada": "enviada",
+      "falada": "falada ao motorista",
+      "respondida": "respondida",
+      "offline": "motorista offline"
+    }
+  },
+  "operator": {
+    "title": "Chamada do AvisAI",
+    "eyebrow": "Fallback Agora RTC",
+    "hint": "Quando a ligação PSTN falha, o operador atende aqui pelo navegador.",
+    "waiting": "Aguardando uma chamada do agente.",
+    "loading": "Verificando chamadas…",
+    "answer": "Atender",
+    "connecting": "Conectando áudio…",
+    "answered": "Chamada atendida",
+    "missingRtc": "A chamada não possui credenciais Agora; verifique a configuração do backend.",
+    "error": "Não foi possível entrar na chamada de voz.",
+    "callReason": "Motivo: {{reason}}",
+    "callStatus": "Status: {{status}}",
+    "leave": "Sair da chamada"
+  },
   "fleet": {
     "title": "Frota",
     "mock": "mapa simulado",
@@ -157,7 +250,6 @@
     "goneHint": "O caminhão iniciou uma nova entrega. Consulte a operação para acompanhar a rota atual.",
     "back": "Voltar para a operação",
     "route": "{{driver}} · {{receiver}}",
-    "detention": "Estadia devida na demo",
     "capacity": "Capacidade total do veículo: {{tons}} t",
     "franchise": "Franquia da demo: {{hours}} horas",
     "clockStopped": "Contador encerrado na confirmação da descarga."

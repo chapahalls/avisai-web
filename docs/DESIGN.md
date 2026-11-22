@@ -38,9 +38,9 @@ Fontes da aplicação são locais, sem requisições ao Google Fonts para carreg
 - **Tasks:** status, placa, recebedor, tempo parado, estadia, tentativas e **Assumir**. API usa a contagem e o resumo do servidor, com ação pendente/erro; Demo usa suas regras locais.
 - **Métricas:** Demo usa seus KPIs/gráficos; API usa indicadores do backend com atualização/erro/desatualização e amostras. Sem série temporal ou estadia cobrada, mostrar indisponibilidade em vez de gráfico preenchido por mock.
 - **Recebedores:** Demo mantém espera típica/selo acima da franquia; API mostra ranking agrupado e ordenado pelo servidor, sem aplicar o selo de 300 min da Demo.
-- **Ligações:** horário, recebedor, placa, momento, status, resultado e transcrição. A origem acompanha o modo; conteúdo recebido da API não implica que o painel iniciou uma ligação.
+- **Alertas e ligações:** alertas do motorista mostram prioridade por texto e cor, toast e som para crítico. No Dashboard, selecionar um alerta API abre e destaca o compositor **Mensagem do operador** para a mesma viagem; o envio usa a thread persistida e a fala do agente, sem registrar uma entrega fictícia. Decisões mostram percebeu/decidiu/executou/resultado. A cascata do agente exibe Twilio, fallback Agora, atendimento ou escalada, sem inferir sucesso.
 - **Viagem:** estado, motorista/destino, mapa específico, dossiê, estadia, eventos e ligações filtrados por ID. API oferece **Confirmar descarga** conforme o estado recebido, com pendência/erro visível. Viagem ausente oferece retorno ao Dashboard.
-- **Rotas e anexos:** `/dispatch` permite publicar sem motorista, atribuir depois e cadastrar motorista. Upload real tem campo de arquivo, categoria/descrição, limite/formato, pendência/erro e download por ID; ações não se repetem automaticamente. Demo identifica a indisponibilidade dessas ações do backend.
+- **Rotas e anexos:** `/dispatch` publica para perfis de motorista já vinculados e permite reatribuição. Upload real tem campo de arquivo, categoria/descrição, limite/formato, pendência/erro e download por ID; ações não se repetem automaticamente. Demo identifica a indisponibilidade dessas ações do backend.
 
 ## Responsividade e acessibilidade
 
