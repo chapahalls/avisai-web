@@ -1,0 +1,138 @@
+{
+  "app": {
+    "subtitle": "Torre de controle · demo",
+    "simClock": "relógio simulado (1 s = 1 min)"
+  },
+  "nav": {
+    "dashboard": "Operação",
+    "metrics": "Métricas",
+    "receivers": "Recebedores",
+    "calls": "Ligações"
+  },
+  "auth": {
+    "title": "Central de operação",
+    "subtitle": "Tasks, espera e estadia que o agente mede.",
+    "sso": "Entrar com SSO",
+    "loading": "Entrando…",
+    "mockNotice": "SSO simulado para a demo.",
+    "logout": "Sair"
+  },
+  "kpi": {
+    "stopped": "Horas paradas por entrega",
+    "stoppedHint": "média de {{n}} entregas",
+    "stay": "Estadia devida",
+    "stayHint": "cobrada: {{charged}}",
+    "notified": "Recebedor avisado antes",
+    "notifiedHint": "condição para a estadia",
+    "ccoAction": "Tempo até ação do CCO",
+    "ccoActionHint": "{{n}} escaladas agora",
+    "latency": "Latência da voz (p50)",
+    "latencyHint": "p95 {{p95}} s",
+    "answered": "Ligações atendidas",
+    "completeFirst": "Reporte completo na 1ª",
+    "escalated": "Tasks escaladas (3/3)",
+    "escalatedHint": "agente ligou ao recebedor",
+    "contactsAvoided": "Contatos evitados",
+    "contactsAvoidedHint": "ligações CCO↔motorista",
+    "deliveries": "Entregas",
+    "deliveriesHint": "7 dias + hoje"
+  },
+  "charts": {
+    "stoppedVsNotified": "Horas paradas × recebedores avisados antes",
+    "stoppedHours": "Horas paradas (média)",
+    "notifiedPct": "% avisados antes",
+    "stayDueVsCharged": "Estadia devida × cobrada (R$)",
+    "due": "Devida",
+    "charged": "Cobrada"
+  },
+  "tasks": {
+    "title": "Tasks de chegada",
+    "count": "{{n}} abertas",
+    "empty": "Nenhum caminhão esperando.",
+    "waiting": "parado há {{time}}",
+    "attempts": "{{n}} de {{max}} avisos",
+    "take": "Assumir",
+    "status": {
+      "open": "aberta",
+      "acknowledged": "assumida",
+      "escalated": "escalada",
+      "closed": "fechada"
+    }
+  },
+  "fleet": {
+    "title": "Frota",
+    "mock": "mapa simulado",
+    "origin": "CD Origem",
+    "driving": "em viagem",
+    "waiting": "esperando",
+    "unloaded": "descarregado"
+  },
+  "feed": {
+    "title": "Eventos do agente",
+    "empty": "Sem eventos ainda."
+  },
+  "sources": {
+    "driver": "motorista",
+    "agent": "agente",
+    "cco": "CCO",
+    "system": "sistema"
+  },
+  "receivers": {
+    "hint": "Ordenado pela espera média. Use para renegociar com o embarcador.",
+    "name": "Recebedor",
+    "avgWait": "Espera média",
+    "deliveries": "Entregas",
+    "stoppedHours": "Horas paradas",
+    "stayDue": "Estadia devida",
+    "answered": "Atende o agente",
+    "overFranchise": "acima da franquia"
+  },
+  "calls": {
+    "hint": "Ligações do agente ao recebedor, com a transcrição. É a prova do outro lado.",
+    "empty": "Nenhuma ligação ainda.",
+    "moment": {
+      "approach": "aviso prévio",
+      "escalation": "após 3 avisos"
+    },
+    "who": {
+      "agent": "Agente",
+      "receiver": "Recebedor"
+    }
+  },
+  "metricsPage": {
+    "hint": "Tudo o que o agente consegue medir. Dados simulados."
+  },
+  "trip": {
+    "gone": "Viagem encerrada.",
+    "stopped": "Tempo parado",
+    "stay": "Estadia: {{value}} (veículo de {{t}} t)"
+  },
+  "phase": {
+    "driving": "em viagem",
+    "approaching": "chegando",
+    "waiting": "esperando descarga",
+    "unloaded": "descarregado"
+  },
+  "demo": {
+    "title": "Controles da demo (simulação)",
+    "pause": "Pausar",
+    "play": "Continuar",
+    "responsiveness": "Operador responde: {{v}}%"
+  },
+  "events": {
+    "RouteAssigned": "Rota recebida",
+    "PickupConfirmed": "Retirada confirmada",
+    "ReportSubmitted": "Relatório",
+    "ReportFieldMissing": "Campo faltante",
+    "OccurrenceCreated": "Ocorrência",
+    "ApproachDetected": "Aproximação detectada",
+    "ReceiverNotified": "Aviso ao recebedor",
+    "ReceiverCallResult": "Resposta do recebedor",
+    "ArrivalRegistered": "Chegada (geocerca + voz)",
+    "TaskCreated": "Task criada",
+    "TaskEscalated": "Aviso ao CCO",
+    "TaskAcknowledged": "CCO assumiu",
+    "UnloadConfirmed": "Descarga confirmada",
+    "DocumentQuestionAnswered": "Pergunta sobre documento"
+  }
+}

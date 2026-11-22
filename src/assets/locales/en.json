@@ -1,0 +1,138 @@
+{
+  "app": {
+    "subtitle": "Control tower · demo",
+    "simClock": "simulated clock (1 s = 1 min)"
+  },
+  "nav": {
+    "dashboard": "Operations",
+    "metrics": "Metrics",
+    "receivers": "Receivers",
+    "calls": "Calls"
+  },
+  "auth": {
+    "title": "Operations center",
+    "subtitle": "Tasks, waiting time and detention measured by the agent.",
+    "sso": "Sign in with SSO",
+    "loading": "Signing in…",
+    "mockNotice": "Simulated SSO for the demo.",
+    "logout": "Sign out"
+  },
+  "kpi": {
+    "stopped": "Stopped hours per delivery",
+    "stoppedHint": "average of {{n}} deliveries",
+    "stay": "Detention owed",
+    "stayHint": "charged: {{charged}}",
+    "notified": "Receiver warned in advance",
+    "notifiedHint": "condition for detention",
+    "ccoAction": "Time to control center action",
+    "ccoActionHint": "{{n}} escalated now",
+    "latency": "Voice latency (p50)",
+    "latencyHint": "p95 {{p95}} s",
+    "answered": "Calls answered",
+    "completeFirst": "Report complete on 1st try",
+    "escalated": "Escalated tasks (3/3)",
+    "escalatedHint": "agent called the receiver",
+    "contactsAvoided": "Contacts avoided",
+    "contactsAvoidedHint": "control center ↔ driver calls",
+    "deliveries": "Deliveries",
+    "deliveriesHint": "7 days + today"
+  },
+  "charts": {
+    "stoppedVsNotified": "Stopped hours × receivers warned in advance",
+    "stoppedHours": "Stopped hours (avg)",
+    "notifiedPct": "% warned in advance",
+    "stayDueVsCharged": "Detention owed × charged (R$)",
+    "due": "Owed",
+    "charged": "Charged"
+  },
+  "tasks": {
+    "title": "Arrival tasks",
+    "count": "{{n}} open",
+    "empty": "No truck waiting.",
+    "waiting": "stopped for {{time}}",
+    "attempts": "{{n}} of {{max}} alerts",
+    "take": "Take",
+    "status": {
+      "open": "open",
+      "acknowledged": "taken",
+      "escalated": "escalated",
+      "closed": "closed"
+    }
+  },
+  "fleet": {
+    "title": "Fleet",
+    "mock": "simulated map",
+    "origin": "Origin DC",
+    "driving": "on the road",
+    "waiting": "waiting",
+    "unloaded": "unloaded"
+  },
+  "feed": {
+    "title": "Agent events",
+    "empty": "No events yet."
+  },
+  "sources": {
+    "driver": "driver",
+    "agent": "agent",
+    "cco": "control center",
+    "system": "system"
+  },
+  "receivers": {
+    "hint": "Sorted by average wait. Use it to renegotiate with the shipper.",
+    "name": "Receiver",
+    "avgWait": "Average wait",
+    "deliveries": "Deliveries",
+    "stoppedHours": "Stopped hours",
+    "stayDue": "Detention owed",
+    "answered": "Answers the agent",
+    "overFranchise": "over free time"
+  },
+  "calls": {
+    "hint": "Agent calls to the receiver, with transcript. Proof from the other side.",
+    "empty": "No calls yet.",
+    "moment": {
+      "approach": "advance notice",
+      "escalation": "after 3 alerts"
+    },
+    "who": {
+      "agent": "Agent",
+      "receiver": "Receiver"
+    }
+  },
+  "metricsPage": {
+    "hint": "Everything the agent can measure. Simulated data."
+  },
+  "trip": {
+    "gone": "Trip finished.",
+    "stopped": "Time stopped",
+    "stay": "Detention: {{value}} ({{t}} t vehicle)"
+  },
+  "phase": {
+    "driving": "on the road",
+    "approaching": "approaching",
+    "waiting": "waiting to unload",
+    "unloaded": "unloaded"
+  },
+  "demo": {
+    "title": "Demo controls (simulation)",
+    "pause": "Pause",
+    "play": "Resume",
+    "responsiveness": "Operator answers: {{v}}%"
+  },
+  "events": {
+    "RouteAssigned": "Route received",
+    "PickupConfirmed": "Pickup confirmed",
+    "ReportSubmitted": "Report",
+    "ReportFieldMissing": "Missing field",
+    "OccurrenceCreated": "Incident",
+    "ApproachDetected": "Approach detected",
+    "ReceiverNotified": "Receiver notified",
+    "ReceiverCallResult": "Receiver answer",
+    "ArrivalRegistered": "Arrival (geofence + voice)",
+    "TaskCreated": "Task created",
+    "TaskEscalated": "Control center alert",
+    "TaskAcknowledged": "Control center took it",
+    "UnloadConfirmed": "Unloading confirmed",
+    "DocumentQuestionAnswered": "Document question"
+  }
+}
