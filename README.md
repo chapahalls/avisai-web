@@ -2,6 +2,10 @@
 
 Painel da central de operação do AvisAI: frota, Tasks, ligações, indicadores, publicação de rotas e anexos. **Modo API** usa operação, métricas/ranking e arquivos do backend AvisAI; **modo Demo** executa a simulação no navegador. Login e documentos fiscais permanecem declarados como MOCK. O mapa base usa Google Maps JavaScript API quando uma chave é configurada.
 
+![Fluxo visual da plataforma AvisAI: publicação da rota, motorista, monitoramento, aviso prévio, Task e descarga](docs/assets/avisai-workflow.gif)
+
+O fluxo mostra uma operação fictícia da Demo: o CCO publica e atribui a rota, acompanha a viagem, recebe o aviso de aproximação, trata a Task de chegada e confirma a descarga. Os estados exibidos não comprovam GPS, telefonia ou autenticação reais.
+
 ## Como rodar
 
 Use Node.js **22.22.3 ou superior** e npm.
