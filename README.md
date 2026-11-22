@@ -6,6 +6,19 @@ Painel da central de operação do AvisAI: frota, Tasks, ligações, indicadores
 
 O fluxo mostra uma operação fictícia da Demo: o CCO publica e atribui a rota, acompanha a viagem, recebe o aviso de aproximação, trata a Task de chegada e confirma a descarga. Os estados exibidos não comprovam GPS, telefonia ou autenticação reais.
 
+## Como os papéis se conectam
+
+![Fluxograma do AvisAI: CCO, agente de voz, motorista e recebedor](docs/images/fluxograma.png)
+
+| Papel | Onde | O que faz |
+|---|---|---|
+| 🖥️ **Central (CCO)** | Este painel | Cadastra rota, motorista, regras e documentos; recebe reportes, ocorrências e a Task de chegada com tempo parado e estadia; assume a Task e confirma a descarga. |
+| 🎙️ **Agente de voz** | Backend + Agora | Pede status por voz, valida retirada e chegada pelo GPS do celular e do caminhão, avisa o recebedor na aproximação e liga para ele quando o CCO não responde após 3 tentativas. |
+| 🚚 **Motorista** | App mobile | Confirma retirada, chegada e descarga por voz, reporta ocorrências e pergunta sobre os documentos da rota. |
+| 🏭 **Recebedor da carga** | Ligação | Recebe o aviso prévio e informa doca, horário e previsão de descarga. |
+
+O aviso na aproximação antecipa a doca; a Task na chegada inicia a contagem da estadia; a ligação ao recebedor fecha o ciclo quando o CCO não responde. Nesta Demo, voz, GPS e ligações são simulados (ver [O que é simulado](#o-que-é-simulado)). Problemas e decisões por trás do fluxo: [REGRAS-DE-NEGOCIO.md](docs/REGRAS-DE-NEGOCIO.md).
+
 ## Como rodar
 
 Use Node.js **22.22.3 ou superior** e npm.
