@@ -161,6 +161,12 @@ flowchart TD
   Q --> C
 ```
 
+### Fluxo completo do produto
+
+O diagrama acima cobre só o que a Demo executa no painel. O fluxograma abaixo mostra o produto inteiro em quatro raias (CCO, agente de voz, motorista e recebedor), da preparação da rota à descarga, incluindo a ligação ao recebedor após três avisos sem resposta do CCO. Ele vem do repositório de ideias do time ([`chapahalls-ideas`](https://github.com/chapahalls/chapahalls-ideas/tree/main/ideas/parceiro-de-estrada)); voz, GPS e mobile ficam fora deste painel. Onde houver diferença, valem as regras da Demo deste repositório ([REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md)).
+
+![Fluxograma do AvisAI: CCO, agente de voz, motorista e recebedor](assets/fluxograma-produto.svg)
+
 ## Roteiro de demo · dois minutos
 
 1. **0:00–0:20:** entrar com SSO; mostrar a faixa de indicadores, lista da frota e mapa. O resumo completo dos dez KPIs fica abaixo; o histórico já alimenta os gráficos.

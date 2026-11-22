@@ -150,6 +150,7 @@ Nenhuma fonte anterior ao hackathon. O repositório já continha uma base do pai
 - [Modelo mobile: identidade, rota atribuída e anexos](docs/CONTRATO-MOBILE.md)
 - [Regras da simulação](docs/REGRAS-DE-NEGOCIO.md)
 - [Design e acessibilidade](docs/DESIGN.md)
+- [Fluxograma completo do produto](docs/ARQUITETURA.md#fluxo-completo-do-produto) e [problemas resolvidos pelo time](docs/REGRAS-DE-NEGOCIO.md), vindos do repositório de ideias `chapahalls-ideas`
 
 A skill de manutenção `avisai-web-maintenance` reúne o contexto necessário para ajustar domínio, telas e traduções preservando os limites entre a operação simulada e as integrações autorizadas. Ela acompanha o repositório em `.agents/skills/avisai-web-maintenance`.
 
