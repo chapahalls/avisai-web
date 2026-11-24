@@ -9,6 +9,7 @@ import { CallsPage } from '../pages/CallsPage';
 import { TripPage } from '../pages/TripPage';
 import { DispatchPage } from '../pages/DispatchPage';
 import { OperatorPage } from '../pages/OperatorPage';
+import { HomePage } from '../pages/HomePage';
 
 function RequireSession() {
   const session = useSession((s) => s.session);
@@ -27,6 +28,7 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/home" element={<HomePage />} />
         <Route path="/login" element={<LoginRoute />} />
         <Route element={<RequireSession />}>
           <Route element={<Layout />}>

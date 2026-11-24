@@ -11,6 +11,7 @@ src/
 ├── components/       Layout, navegação, controles de demo e UI compartilhada
 ├── features/
 │   ├── auth/         Sessão SSO simulada
+│   ├── home/         Home pública: carregamento, abertura e rolagem suave
 │   ├── tasks/        Fila, tentativas e ação Assumir
 │   ├── fleet/        Mapa, seleção e frota da fonte operacional escolhida
 │   ├── trips/        Eventos e detalhes da viagem
@@ -30,6 +31,14 @@ src/
 ```
 
 Dependência: `pages → features → components/services/lib/utils/types`. O `index.ts` é a entrada pública de cada feature; uma feature não importa os arquivos internos de outra. O cálculo de estadia **da Demo** pertence somente a `utils/stay.ts`, incluindo usos no histórico, fila, viagem e métricas. No modo API, resumos financeiros e contadores vêm do servidor, sem aplicação da fórmula local.
+
+## Home pública
+
+`/home` fica fora da guarda de sessão e não consome API, Demo ou motor. `features/home` concentra:
+
+- `model.ts`: regras puras do carregamento, testadas em `tests/home.test.mjs`. O contador segue o progresso **real** (fontes e imagens da abertura) limitado por um tempo mínimo de 1,8 s; só chega a 100 quando os arquivos terminam, com limite de segurança de 8 s. Falhas de imagem contam como concluídas.
+- `hooks/useHomeIntro.ts`: pré-carregamento, contador, saída do loader e rolagem.
+- `hooks/useSmoothScroll.ts`: instância do Lenis (`lerp` 0.1, âncoras suaves, toque nativo) criada só enquanto a home está montada e destruída ao sair, sem alterar a rolagem do painel. Fica pausada durante o carregamento. Com `prefers-reduced-motion`, a rolagem permanece nativa e as transições são desligadas.
 
 ## Seleção de fonte e fluxo API
 

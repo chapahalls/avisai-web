@@ -30,10 +30,11 @@ O painel torna visível a operação que tende a ficar dispersa entre motorista,
 
 ## Telas do painel
 
-Todas as rotas, exceto `/login`, exigem uma sessão CCO. Hoje essa sessão é deliberadamente MOCK.
+Todas as rotas, exceto `/home` e `/login`, exigem uma sessão CCO. Hoje essa sessão é deliberadamente MOCK.
 
 | URL | Área | Uso principal |
 |---|---|---|
+| `/home` | Home pública RODAR | tela de carregamento, abertura com o chip e rolagem suave (Lenis); não usa API nem Demo |
 | `/` | Monitoramento | frota, mapa, dossiê, Tasks, alertas, eventos e KPIs rápidos |
 | `/dispatch` | Programação | publicar/reatribuir uma rota para motorista cadastrado e administrar anexos |
 | `/trips/:id` | Dossiê | carga, notas MOCK, eventos, pedidos, mensagens e arquivos da viagem |
@@ -50,6 +51,7 @@ src/
 ├── pages/               telas conectadas ao roteador
 ├── features/            domínio de cada área; somente index.ts é entrada pública
 │   ├── auth/            sessão SSO MOCK
+│   ├── home/            home pública: loader, abertura e rolagem suave
 │   ├── fleet/           mapa e seleção da frota
 │   ├── trips/           dossiê, mensagens, alertas e decisões do agente
 │   ├── tasks/           fila operacional e ação Assumir
@@ -177,7 +179,7 @@ Referências: [carregar Maps JavaScript API](https://developers.google.com/maps/
 
 ## Dependências
 
-React, Vite, TypeScript strict, Tailwind CSS v4 com `@tailwindcss/vite`, React Router, zustand, Recharts, i18next/react-i18next e `agora-rtc-sdk-ng`. As versões instaladas estão no `package-lock.json`. Os testes usam `node:test`, sem biblioteca de testes adicional.
+React, Vite, TypeScript strict, Tailwind CSS v4 com `@tailwindcss/vite`, React Router, zustand, Recharts, i18next/react-i18next, `agora-rtc-sdk-ng` e `lenis` (rolagem suave somente na home pública). As versões instaladas estão no `package-lock.json`. Os testes usam `node:test`, sem biblioteca de testes adicional.
 
 ## O que é simulado
 
