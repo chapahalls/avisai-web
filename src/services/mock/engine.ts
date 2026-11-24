@@ -150,6 +150,8 @@ export function createOpsStore(options: EngineOptions = {}) {
               escalated: task?.escalatedAtMin !== undefined,
               reportCompleteFirst: reports[trip.id] ?? true, stayCharged: false,
               contactsAvoided: 2 + Math.floor(metricRandom() * 4), voiceLatencyMs: Math.round(700 + metricRandom() * 1300),
+              plate: trip.plate, driver: trip.driver,
+              arrivalMinuteOfDay: ((SIMULATION.startHour * 60 + (trip.arrivedAtMin ?? unloadedAtMin)) % 1440 + 1440) % 1440,
             });
             delete reports[trip.id];
             return { ...trip, phase: 'unloaded', unloadedAtMin };

@@ -30,18 +30,17 @@ O painel torna visível a operação que tende a ficar dispersa entre motorista,
 
 ## Telas do painel
 
-Todas as rotas, exceto `/home` e `/login`, exigem uma sessão CCO. Hoje essa sessão é deliberadamente MOCK.
+O painel do CCO vive em `/dashboard` e suas derivações; todas exigem uma sessão CCO, hoje deliberadamente MOCK. `/` e os endereços antigos (`/metrics`, `/trips/:id`, …) redirecionam para o equivalente em `/dashboard`.
 
 | URL | Área | Uso principal |
 |---|---|---|
 | `/home` | Home pública RODAR | carregamento, história 3D (chip → mundo), plataforma, como funciona (caminhão 3D na doca), calculadora de estadia, perguntas e contato; não usa API nem Demo. Os formulários da calculadora e de contato são MOCK: validam no navegador e não enviam dados |
-| `/` | Monitoramento | frota, mapa, dossiê, Tasks, alertas, eventos e KPIs rápidos |
-| `/dispatch` | Programação | publicar/reatribuir uma rota para motorista cadastrado e administrar anexos |
-| `/trips/:id` | Dossiê | carga, notas MOCK, eventos, pedidos, mensagens e arquivos da viagem |
-| `/metrics` | Indicadores | KPIs e séries; no modo API, valores são recebidos do servidor |
-| `/receivers` | Recebedores | ranking por espera, chamadas e estadia |
-| `/calls` | Ligações | transcrições e resultado das chamadas ao recebedor |
-| `/operator` | Operador | atendimento do fallback de chamada do agente via Agora RTC |
+| `/dashboard` | Monitoramento | 7 KPIs da operação, fila de alertas, mapa, veículo selecionado e última chamada do AI, grade de viagens, janelas de doca do dia, solicitações e eventos |
+| `/dashboard/dispatch` | Trip dispatch | motoristas cadastrados e suas viagens (filtros por situação e busca); rota editável só antes da saída, com troca de motorista e arquivos no painel lateral. Paradas extras ainda não são aceitas pelo backend |
+| `/dashboard/dispatch/new` | Cadastrar viagem | 4 etapas (motorista cadastrado, destino e entrega, regras do AI somente leitura, documentos) com resumo; publica a rota e envia os documentos em seguida, sem repetição automática. Rascunho salvo só neste navegador (sem arquivos). `?driver=` já seleciona o motorista |
+| `/dashboard/trips/:id` | Motorista e viagem | motorista, últimos 7 dias (Demo), onde parou, linha do tempo filtrável (paradas, agente, CCO, recebedor) com transcrição das ligações, mensagem por voz ao motorista (API), mapa e dossiê com notas MOCK e arquivos |
+| `/dashboard/metrics` | Análises | período (hoje, 7 e 30 dias) e filtros por recebedor, motorista e ocorrência; 10 indicadores, funil dos avisos, Agente × CCO por dia, ocorrências por tipo e abas Ocorrências, Chamadas e solicitações (com transcrição), Contatos com o CCO, Motoristas e Recebedores; exporta a aba em CSV. No modo API, indicadores e ranking vêm do servidor e as listas mostram o que a sessão recebeu. `/dashboard/receivers` e `/dashboard/calls` abrem as abas correspondentes |
+| `/dashboard/operator` | Operador | atendimento do fallback de chamada do agente via Agora RTC |
 
 ## Arquitetura do front-end
 
@@ -129,7 +128,7 @@ Consulte a [matriz de integração](docs/INTEGRACAO-BACKEND.md) para endpoints, 
 
 ## Rotas, motoristas e arquivos
 
-No modo API, a tela `/dispatch` consulta somente perfis de motorista já cadastrados e vinculados ao banco. O CCO publica a rota para um desses usuários ou a reatribui depois; não há cadastro de motorista nessa tela. O backend publica eventos de atribuição que o mobile pode acompanhar. POSTs não são repetidos automaticamente.
+No modo API, `/dashboard/dispatch` consulta somente perfis de motorista já cadastrados e vinculados ao banco. O CCO publica a rota para um desses usuários em `/dashboard/dispatch/new` ou troca o motorista enquanto a viagem não saiu (publicada, planejada ou na origem); não há cadastro de motorista nessas telas. O backend publica eventos de atribuição que o mobile pode acompanhar. POSTs não são repetidos automaticamente.
 
 O CCO pode anexar **arquivos reais** à rota e baixá-los depois. São aceitos PDF/JPEG/PNG/WebP/GIF, até 10 MiB por padrão; o limite é configurável no backend. O dossiê também consulta pedidos/respostas da central e metadados fiscais MOCK, preservando sua origem.
 

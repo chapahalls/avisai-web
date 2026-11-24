@@ -1,82 +1,146 @@
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '../../../components/Badge';
-import { Icon } from '../../../components/Icon';
-import { PageHeader } from '../../../components/PageHeader';
-import { CallLogList } from '../../calls';
-import { brl, hhmm } from '../../../utils/format';
 import { BUSINESS } from '../../../lib/config';
-import { confirmUnload, useConnection } from '../../../services/operations';
+import { APP_ROUTES } from '../../../lib/routes';
+import { confirmUnload, receiverById, useConnection, useOps } from '../../../services/operations';
+import { brl, clock, hhmm } from '../../../utils/format';
+import { stayValue } from '../../../utils/stay';
+import { useDriverHistory } from '../hooks/useDriverHistory';
 import { useTrip } from '../hooks/useTrip';
-import { EventFeed } from './EventFeed';
+import { confirmedDock, tripStops } from '../model';
+import { DriverChat } from './DriverChat';
 import { TripDossier } from './TripDossier';
+import { TripTimeline } from './TripTimeline';
+import './trips.css';
 
+/** Motorista e viagem (mockup 06-motorista-e-viagem). */
 export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNode }) {
   const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const { trip, receiver, waited } = useTrip(tripId);
   const connection = useConnection();
-  const locale = i18n.resolvedLanguage ?? 'pt-BR';
+  const calls = useOps((state) => state.calls);
+  const feed = useOps((state) => state.feed);
+  const simMinutes = useOps((state) => state.simMinutes);
+  const history = useDriverHistory(trip?.driver ?? null);
+
   if (!trip || !receiver) {
     return (
-      <div className="rounded-card border border-ink-700 bg-ink-900 p-8">
-        <h1 className="font-display text-2xl font-semibold">{t(connection.mode === 'api' ? connection.status === 'connecting' ? 'api.connection.loading' : 'api.trip.unavailable' : 'trip.gone')}</h1>
-        <p className="my-3 text-sm text-ink-300">{t(connection.mode === 'api' ? 'api.trip.unavailableHint' : 'trip.goneHint')}</p>
-        <Link className="inline-block rounded-input bg-brand-500 px-4 py-2.5 text-sm font-semibold" to="/">{t('trip.back')}</Link>
+      <div className="trv-card trv-gone">
+        <h1>{t(connection.mode === 'api' ? connection.status === 'connecting' ? 'api.connection.loading' : 'api.trip.unavailable' : 'trip.gone')}</h1>
+        <p>{t(connection.mode === 'api' ? 'api.trip.unavailableHint' : 'trip.goneHint')}</p>
+        <Link className="trv-button" data-variant="primary" to={APP_ROUTES.dashboard}>{t('trip.back')}</Link>
       </div>
     );
   }
+
   const isApi = trip.source === 'api';
-  const waitMin = isApi ? trip.stay?.waitMin : waited;
-  const franchiseHours = isApi ? trip.stay?.franchiseHours : BUSINESS.franchiseHours;
+  const driverName = isApi ? trip.driver : t('drivers.name', { letter: trip.driver.slice(-1) });
+  const status = isApi && trip.backend ? t(`api.routeStatus.${trip.backend.status}`, { defaultValue: trip.backend.status }) : t(`phase.${trip.phase}`);
+  const waitMin = isApi ? trip.stay?.waitMin : trip.arrivedAtMin === undefined ? undefined : waited;
+  const stay = isApi ? trip.stay?.valueBRL : waitMin === undefined ? undefined : stayValue(waitMin, trip.capacityTons);
+  const dock = confirmedDock(calls, trip.id);
+  const origin = trip.backend?.originName ?? t('dossier.origin');
+  const occurrenceMinutes = feed.filter((event) => event.tripId === trip.id && event.type === 'OccurrenceCreated').map((event) => event.simMin);
+  const stops = tripStops(trip, simMinutes, occurrenceMinutes);
   const pendingUnload = connection.pendingUnloadIds.includes(trip.id);
+  const tone = trip.phase === 'waiting' ? waitMin !== undefined && waitMin > BUSINESS.franchiseHours * 60 ? 'alert' : 'wait' : trip.phase === 'unloaded' ? 'muted' : 'ok';
+  const positionAge = trip.lastPositionAt ? (Date.now() - new Date(trip.lastPositionAt).getTime()) / 60_000 : null;
+  const position = !isApi ? t('tripView.driver.positionLive')
+    : trip.positionKnown === false || positionAge === null ? t('tripView.driver.positionMissing')
+      : t('tripView.driver.positionAge', { source: trip.positionSource ? t(`api.positionSources.${trip.positionSource}`) : 'GPS', time: hhmm(positionAge, locale) });
+
+  const driverRows: [string, string][] = [
+    [t('tripView.driver.vehicle'), t('tripView.driver.vehicleValue', { plate: trip.plate, tons: trip.backend?.cargoTons ?? trip.capacityTons })],
+    [t('tripView.driver.receiver'), receiver.name],
+    ...(trip.backend?.receiverContact ? [[t('tripView.driver.contact'), trip.backend.receiverContact] as [string, string]] : []),
+    [t('tripView.driver.notified'), t(trip.notifiedBeforeArrival ? 'tripView.driver.yes' : 'tripView.driver.no')],
+    [t('tripView.driver.position'), position],
+    [t('tripView.driver.wait'), waitMin === undefined ? '—' : hhmm(waitMin, locale)],
+    [t('tripView.driver.stay'), stay === undefined || stay === 0 ? '—' : brl(stay, locale)],
+  ];
+  const stoppedTotal = stops.reduce((total, stop) => total + (stop.durationMin ?? 0), 0);
+
   return (
-    <>
-      <Link to="/" className="inline-block text-sm text-brand-500 hover:underline">{t('trip.back')}</Link>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader title={trip.plate} eyebrow={t(isApi ? 'api.trip.eyebrow' : 'trip.eyebrow')} description={t('trip.route', { driver: isApi ? trip.driver : t('drivers.name', { letter: trip.driver.slice(-1) }), receiver: receiver.name })} />
-        <Badge tone={trip.phase === 'waiting' ? 'wait' : trip.phase === 'unloaded' ? 'ok' : 'brand'} label={isApi && trip.backend ? t(`api.routeStatus.${trip.backend.status}`, { defaultValue: trip.backend.status }) : t(`phase.${trip.phase}`)} />
-      </div>
-      <div className={`grid gap-4 ${isApi ? 'sm:grid-cols-2' : ''}`}>
-        <div className="rounded-card border border-ink-700 bg-ink-900 p-5">
-          <p className="flex items-center gap-2 text-sm text-ink-300"><Icon name="clock" className="h-4 w-4" />{t('trip.stopped')}</p>
-          <p className={`mt-3 font-display text-4xl font-semibold ${waitMin !== undefined && franchiseHours !== undefined && waitMin > franchiseHours * 60 ? 'text-wait-500' : 'text-ink-50'}`}>{waitMin === undefined ? t('common.unavailable') : hhmm(waitMin, locale)}</p>
-          <p className="mt-3 text-sm text-ink-300">{trip.phase === 'unloaded' ? t('trip.clockStopped') : franchiseHours === undefined ? t('api.trip.stayUnavailable') : t(isApi ? 'api.trip.franchise' : 'trip.franchise', { hours: franchiseHours })}</p>
+    <div className="trv">
+      <header className="trv-header">
+        <div>
+          <Link to={APP_ROUTES.dashboard} className="trv-back">← {t('tripView.back')}</Link>
+          <h1>{driverName} <span className="trv-plate">{trip.plate}</span> <span className="trv-pill" data-tone={tone}>{waitMin !== undefined && trip.phase === 'waiting' ? t('tripView.statusWaiting', { status, time: hhmm(waitMin, locale) }) : status}</span></h1>
+          <p>
+            {t('tripView.subtitle', { id: trip.backendId ? `#${trip.backendId}` : trip.id, origin, receiver: receiver.name })}
+            {dock ? ` · ${t('tripView.dock', { dock: dock.dock ?? '—', time: clock(dock.atMin) })}` : ''}
+          </p>
         </div>
-        {isApi ? (
-          <div className="rounded-card border border-ink-700 bg-ink-900 p-5">
-            <p className="text-sm text-ink-300">{t('api.trip.detention')}</p>
-            <p className="mt-3 font-display text-4xl font-semibold">
-              {trip.stay?.valueBRL === undefined
-                ? t('common.unavailable')
-                : brl(trip.stay.valueBRL, locale)}
-            </p>
-            <p className="mt-3 text-sm text-ink-300">
-              {trip.stay
-                ? t('api.trip.calculationTons', {
-                    tons: trip.stay.capacityTons.toLocaleString(locale),
-                  })
-                : t('api.trip.stayUnavailable')}
-            </p>
-          </div>
-        ) : null}
-      </div>
-      {isApi && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-ink-700 bg-ink-900 p-4">
-          <p className="text-sm text-ink-300">{t('api.trip.serverState')} {trip.backend ? t(`api.routeStatus.${trip.backend.status}`, { defaultValue: trip.backend.status }) : t(`phase.${trip.phase}`)}</p>
-          {trip.phase === 'waiting' && <button type="button" onClick={() => void confirmUnload(trip.id)} disabled={pendingUnload || connection.status !== 'connected'} aria-busy={pendingUnload} className="rounded-input bg-brand-500 px-4 py-2.5 text-sm font-semibold transition hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">{t(pendingUnload ? 'api.actions.confirmingUnload' : 'api.actions.confirmUnload')}</button>}
-          {connection.actionError && <p role="alert" className="w-full text-sm text-alert-500">{t('api.actions.failed')} {connection.actionError}</p>}
+        <div className="trv-actions">
+          {isApi && trip.phase === 'waiting' && (
+            <button type="button" className="trv-button" data-variant="primary" onClick={() => void confirmUnload(trip.id)} disabled={pendingUnload || connection.status !== 'connected'} aria-busy={pendingUnload}>
+              {t(pendingUnload ? 'tripView.actions.unloading' : 'tripView.actions.unload')}
+            </button>
+          )}
+          <a className="trv-button" href="#trv-map">{t('tripView.actions.map')}</a>
         </div>
-      )}
-      {route}
-      <TripDossier tripId={trip.id} />
-      <div className="grid items-start gap-5 lg:grid-cols-2">
-        <EventFeed tripId={trip.id} limit={50} />
-        <div className="space-y-4">
-          <h2 className="font-display text-lg font-semibold">{t('nav.calls')}</h2>
-          <CallLogList tripId={trip.id} />
+        {connection.actionError && <p role="alert" className="trv-error">{t('api.actions.failed')} {connection.actionError}</p>}
+      </header>
+
+      <div className="trv-layout">
+        <aside className="trv-left">
+          <section className="trv-card" aria-labelledby="trv-driver-title">
+            <h2 id="trv-driver-title">{t('tripView.driver.title')}</h2>
+            <dl className="trv-rows">{driverRows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+          </section>
+          <section className="trv-card" aria-labelledby="trv-history-title">
+            <header className="trv-card-heading">
+              <h2 id="trv-history-title">{t('tripView.history.title')}</h2>
+              {history.stats && <span>{t('tripView.history.trips', { count: history.stats.trips })}</span>}
+            </header>
+            {isApi ? <p className="trv-empty">{t('tripView.history.api')}</p> : !history.stats ? <p className="trv-empty">{t('tripView.history.empty')}</p> : (
+              <dl className="trv-tiles">
+                <div><dt>{t('tripView.history.tripsLabel')}</dt><dd>{history.stats.trips}</dd></div>
+                <div><dt>{t('tripView.history.notified')}</dt><dd data-tone="ok">{history.stats.notifiedRate === null ? '—' : new Intl.NumberFormat(locale, { style: 'percent' }).format(history.stats.notifiedRate)}</dd></div>
+                <div><dt>{t('tripView.history.escalations')}</dt><dd data-tone="wait">{history.stats.escalations}</dd></div>
+                <div><dt>{t('tripView.history.occurrences')}</dt><dd data-tone="alert">{history.stats.occurrences}</dd></div>
+                <div><dt>{t('tripView.history.avgWait')}</dt><dd>{history.stats.avgWaitMin === null ? '—' : hhmm(history.stats.avgWaitMin, locale)}</dd></div>
+                <div><dt>{t('tripView.history.stay')}</dt><dd>{brl(history.stats.stayDue, locale)}</dd></div>
+              </dl>
+            )}
+          </section>
+        </aside>
+
+        <div className="trv-center">
+          <section className="trv-card trv-flush" aria-labelledby="trv-stops-title">
+            <header className="trv-card-heading">
+              <h2 id="trv-stops-title">{t('tripView.stops.title')}</h2>
+              <span>{t('tripView.stops.summary', { count: stops.length, time: hhmm(stoppedTotal, locale) })}</span>
+            </header>
+            <div className="trv-table-wrap">
+              <table className="trv-table">
+                <thead><tr>{(['place', 'start', 'duration', 'type', 'reason'] as const).map((column) => <th key={column} scope="col">{t(`tripView.stops.columns.${column}`)}</th>)}</tr></thead>
+                <tbody>
+                  {stops.map((stop) => (
+                    <tr key={stop.key}>
+                      <th scope="row">{stop.kind === 'origin' ? origin : receiver.name}</th>
+                      <td className="trv-mono">{stop.startMin === null ? '—' : clock(stop.startMin)}</td>
+                      <td className="trv-mono">{stop.durationMin === null ? '—' : hhmm(stop.durationMin, locale)}</td>
+                      <td><span className="trv-tag" data-kind={stop.kind}>{t(`tripView.stops.kinds.${stop.kind}`)}</span></td>
+                      <td>{t(`tripView.stops.reasons.${stop.kind === 'receiver' ? stop.done ? 'receiverDone' : 'receiverWaiting' : stop.kind}`)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <TripTimeline tripId={trip.id} />
+          <section id="trv-map" className="trv-map" aria-label={t('tripView.map')}>{route}</section>
+          <TripDossier tripId={trip.id} />
         </div>
+
+        <aside className="trv-right">
+          <DriverChat routeId={trip.backendId} driverName={driverName} stopped={trip.phase === 'waiting' || trip.phase === 'unloaded' || ['publicada', 'planejada', 'na_origem'].includes(trip.backend?.status ?? '')} />
+        </aside>
       </div>
-    </>
+    </div>
   );
 }
+

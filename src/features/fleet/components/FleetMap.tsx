@@ -18,6 +18,7 @@ import { Icon } from '../../../components/Icon';
 import type { Trip } from '../../../types/ops';
 import type { LatLng } from '../../../types/geo';
 import './FleetMap.css';
+import { APP_ROUTES } from '../../../lib/routes';
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? '';
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim() || 'DEMO_MAP_ID';
@@ -363,7 +364,16 @@ function LocalRouteMap({ trips, selected, onSelect }: { trips: Trip[]; selected?
   );
 }
 
-export function FleetMap({ tripId }: { tripId?: string } = {}) {
+/**
+ * `onSelectTrip` ativa o modo embutido (monitoramento): a página controla a
+ * seleção e mostra lista/dossiê em painéis próprios, então só o mapa aparece.
+ */
+export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
+  tripId?: string;
+  selectedTripId?: string | null;
+  onSelectTrip?: (tripId: string) => void;
+} = {}) {
+  const embedded = Boolean(onSelectTrip);
   const { t, i18n } = useTranslation();
   const mode = useMode();
   const receivers = useReceivers();
@@ -390,7 +400,7 @@ export function FleetMap({ tripId }: { tripId?: string } = {}) {
       || filter === 'waiting' && trip.phase === 'waiting' || filter === 'alerts' && tasks.some((task) => task.tripId === trip.id && (task.status === 'open' || task.status === 'escalated'));
     return matchesQuery && matchesFilter;
   });
-  const selected = visibleTrips.find((trip) => trip.vehicleId === selectedVehicle);
+  const selected = embedded ? trips.find((trip) => trip.id === selectedTripId) : visibleTrips.find((trip) => trip.vehicleId === selectedVehicle);
   useEffect(() => {
     if (tripId) setSelectedVehicle(activeTrips.find((trip) => trip.id === tripId)?.vehicleId ?? null);
     else if (!selectionInitialized.current && activeTrips.length) {
@@ -400,6 +410,11 @@ export function FleetMap({ tripId }: { tripId?: string } = {}) {
   }, [tripId, activeTrips]);
   useEffect(() => { if (!selected) setFollowing(false); }, [selected?.vehicleId]);
   const selectTruck = (vehicleId: string) => {
+    if (onSelectTrip) {
+      const trip = trips.find((item) => item.vehicleId === vehicleId);
+      if (trip) onSelectTrip(trip.id);
+      return;
+    }
     setSelectedVehicle(vehicleId);
     if (window.innerWidth < 1200 && !tripId) requestAnimationFrame(() => panel.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' }));
   };
@@ -407,16 +422,16 @@ export function FleetMap({ tripId }: { tripId?: string } = {}) {
   const distance = selected ? selected.source === 'api' ? selected.distanceRemainingKm : getTripRoute(selected).totalKm * (1 - selected.progress) : null;
   const eta = selected ? selected.source === 'api' ? selected.etaMin : Math.ceil((distance ?? 0) / SIMULATION.speedKmh * 60) : null;
   return (
-    <section className={`tracking-workspace${tripId ? ' tracking-workspace-single' : ''}`} aria-label={t('tracking.title')}>
+    <section className={`tracking-workspace${tripId ? ' tracking-workspace-single' : ''}${embedded ? ' tracking-workspace-embedded' : ''}`} aria-label={t('tracking.title')}>
       <div className="tracking-workspace-header">
-        <div className="flex min-w-0 items-center gap-3"><Icon name="truck" className="h-5 w-5 text-brand-500" /><div><h2>{t(tripId ? 'fleet.routeTitle' : 'tracking.title')}</h2><p>{t(mode === 'api' ? 'api.trackingSubtitle' : 'tracking.subtitle')}</p></div></div>
+        <div className="flex min-w-0 items-center gap-3"><Icon name="truck" className="h-5 w-5 text-brand-500" /><div><h2>{t(tripId ? 'fleet.routeTitle' : embedded ? 'monitoring.map.title' : 'tracking.title')}</h2><p>{t(mode === 'api' ? 'api.trackingSubtitle' : 'tracking.subtitle')}</p></div></div>
         <div className="tracking-tools">
           <button type="button" onClick={() => { setFilter('all'); setQuery(''); setFollowing(false); setFitRequest((value) => value + 1); }} className="tracking-tool-button"><span aria-hidden="true">⌖</span>{t('tracking.fitFleet')}</button>
           <button type="button" disabled={!selected || selected.positionKnown === false} aria-pressed={following && !!selected} onClick={() => setFollowing((value) => !value)} className="tracking-tool-button"><span aria-hidden="true">◎</span>{t('tracking.follow')}</button>
         </div>
       </div>
-      <div className={`tracking-workspace-body${selected && !tripId ? ' has-selection' : ''}`}>
-        {!tripId && <aside className="tracking-fleet-list" aria-label={t('tracking.fleetList')}>
+      <div className={`tracking-workspace-body${selected && !tripId && !embedded ? ' has-selection' : ''}`}>
+        {!tripId && !embedded && <aside className="tracking-fleet-list" aria-label={t('tracking.fleetList')}>
           <div className="tracking-fleet-heading"><h3>{t('tracking.fleetList')}</h3><span>{t('tracking.vehicleCount', { count: visibleTrips.length })}</span></div>
           <div className="tracking-fleet-search"><label htmlFor="fleet-search" className="sr-only">{t('tracking.search')}</label><span aria-hidden="true">⌕</span><input id="fleet-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('tracking.search')} /></div>
           <div className="tracking-fleet-filters" aria-label={t('tracking.filters')}>{filters.map((item) => <button key={item} aria-pressed={filter === item} onClick={() => setFilter(item)}>{t(`tracking.filter.${item}`)}</button>)}</div>
@@ -444,11 +459,11 @@ export function FleetMap({ tripId }: { tripId?: string } = {}) {
           </div>
           <p className="tracking-attribution">{mode === 'api' ? <>{t('api.backendRoute')}{selected && !getTripRoute(selected).points.length && ` · ${t('api.noGeometry')}`}{selected?.positionKnown === false && ` · ${t('api.noPosition')}`}{selected?.positionSource && ` · ${t('api.positionSource', { source: t(`api.positionSources.${selected.positionSource}`) })}`}{selected?.lastPositionAt && ` · ${t('api.lastPosition', { time: new Intl.DateTimeFormat(i18n.resolvedLanguage, { timeStyle: 'medium' }).format(new Date(selected.lastPositionAt)) })}`}{selected?.lastPositionAt && Date.now() - new Date(selected.lastPositionAt).getTime() > 120_000 && ` · ${t('api.stalePosition')}`}</> : <>{t('tracking.routeData')} · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> / OSRM</>}</p>
         </div>
-        {!tripId && selected && <aside id={panelId} ref={panel} className="tracking-trip-panel" aria-label={t('tracking.selectedTruck', { plate: selected.plate })}>
+        {!tripId && !embedded && selected && <aside id={panelId} ref={panel} className="tracking-trip-panel" aria-label={t('tracking.selectedTruck', { plate: selected.plate })}>
           <div className="tracking-trip-panel-top"><span>{t('tracking.selectedVehicle')}</span><button onClick={() => { const vehicleId = selected.vehicleId; setSelectedVehicle(null); setFollowing(false); requestAnimationFrame(() => rows.current.get(vehicleId)?.focus()); }} aria-label={t('tracking.closeDetails')}>×</button></div>
           <div className="tracking-trip-panel-identity"><div><h3 aria-live="polite" aria-atomic="true">{selected.plate}</h3><p>{selected.source === 'api' ? selected.driver : t('drivers.name', { letter: selected.driver.slice(-1) })}</p></div><span className="tracking-phase" style={{ color: phaseColor[selected.phase] }}>{t(selected.backend ? `api.routeStatus.${selected.backend.status}` : `phase.${selected.phase}`)}</span></div>
           <TripDossier key={selected.id} tripId={selected.id} compact showCommercialValues={false} />
-          <Link className="tracking-open-trip" to={`/trips/${selected.id}`}>{t('tracking.fullTrip')}<span aria-hidden="true">↗</span></Link>
+          <Link className="tracking-open-trip" to={APP_ROUTES.trip(selected.id)}>{t('tracking.fullTrip')}<span aria-hidden="true">↗</span></Link>
         </aside>}
       </div>
     </section>

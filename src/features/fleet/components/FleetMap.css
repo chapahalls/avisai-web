@@ -81,6 +81,11 @@
 .tracking-place-origin { border-color: var(--color-brand-500); color: var(--color-brand-500); font-weight: 650; }
 .tracking-workspace-single .tracking-workspace-body { grid-template-columns: minmax(0, 1fr); }
 .tracking-workspace-single .tracking-map-stage { height: 460px; min-height: 460px; }
+/* Embutido no monitoramento: só o mapa, ocupando a coluna central. */
+.tracking-workspace-embedded { display: flex; height: 100%; flex-direction: column; }
+.tracking-workspace-embedded .tracking-workspace-body { flex: 1; grid-template-columns: minmax(0, 1fr); }
+.tracking-workspace-embedded .tracking-map-column { display: flex; flex-direction: column; }
+.tracking-workspace-embedded .tracking-map-stage { flex: 1; height: auto; min-height: 520px; }
 @media (min-width: 1800px) { .tracking-workspace-body.has-selection { grid-template-columns: 280px minmax(0, 1fr) 360px; } .tracking-map-stage { min-height: 600px; } }
 @media (max-width: 1199px) { .tracking-workspace-body.has-selection { grid-template-columns: 225px minmax(0, 1fr); } .tracking-trip-panel { grid-column: 1 / -1; max-height: none; border-left: 0; border-top: 1px solid var(--color-ink-700); } .tracking-workspace-body { grid-template-columns: 225px minmax(0, 1fr); } }
 @media (max-width: 639px) { .tracking-workspace-header { padding: 12px; } .tracking-workspace-header p { max-width: 280px; font-size: 10px; } .tracking-workspace-body, .tracking-workspace-body.has-selection { grid-template-columns: minmax(0, 1fr); } .tracking-map-column { grid-row: 1; } .tracking-map-stage { min-height: 400px; } .tracking-fleet-list { border-right: 0; border-top: 1px solid var(--color-ink-700); } .tracking-vehicles { max-height: 360px; } .tracking-route-strip { padding: 12px; gap: 12px; } .tracking-route-strip strong { font-size: 12px; } .tracking-workspace-single .tracking-map-stage { height: 400px; min-height: 400px; } .tracking-map-label { left: 10px; font-size: 9px; } .tracking-trip-panel { grid-column: auto; } }

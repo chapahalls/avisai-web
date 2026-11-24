@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../../../components/Badge';
 import { getApiClient, useConnection } from '../../../services/operations';
 import type { BackendDriverRequest } from '../../../services/api/types';
+import { APP_ROUTES } from '../../../lib/routes';
 
 const statusTone = {
   coletando: 'wait',
@@ -77,7 +78,7 @@ export function DriverRequests() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link to={`/trips/api-route-${row.rota_id}`} className="font-display text-base font-semibold hover:text-brand-500">
+                  <Link to={APP_ROUTES.trip(`api-route-${row.rota_id}`)} className="font-display text-base font-semibold hover:text-brand-500">
                     {t('driverRequests.route', { id: row.rota_id })}
                   </Link>
                   <Badge tone={statusTone[row.status]} label={t(`driverRequests.status.${row.status}`)} />

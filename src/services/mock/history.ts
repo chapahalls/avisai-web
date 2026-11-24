@@ -24,16 +24,19 @@ export function buildHistoricalData(): { deliveries: Delivery[]; calls: CallLog[
       const notified = slot < NOTIFIED_COUNTS[index];
       const escalated = random() < 0.25;
       const trip = { plate: PLATES[slot % PLATES.length], driver: `Motorista ${String.fromCharCode(65 + slot % 8)}`, receiverId: receiver.id };
+      // Chegadas entre 07:00 e 17:00; o aviso sai 30 min antes e a nova tentativa 75 min depois.
+      const arrivalMinuteOfDay = 7 * 60 + slot * 75;
+      const approachAtMin = day * 1440 + arrivalMinuteOfDay - 30;
       const approach = buildCall({
         id: `${tripId}-approach`, tripId, trip, receiver, moment: 'approach',
-        atMin: day * 1440 + slot * 12, random, answered: notified,
+        atMin: approachAtMin, random, answered: notified,
       });
       calls.push(approach);
       let callAnswered = approach.answered;
       if (escalated) {
         const escalation = buildCall({
           id: `${tripId}-escalation`, tripId, trip, receiver, moment: 'escalation',
-          atMin: day * 1440 + slot * 12 + 75, random,
+          atMin: approachAtMin + 75, random,
         });
         calls.push(escalation);
         callAnswered ||= escalation.answered;
@@ -47,6 +50,8 @@ export function buildHistoricalData(): { deliveries: Delivery[]; calls: CallLog[
         stayCharged: false,
         contactsAvoided: 2 + Math.floor(random() * 4),
         voiceLatencyMs: Math.round(700 + random() * 1300),
+        plate: trip.plate, driver: trip.driver,
+        arrivalMinuteOfDay,
       });
     });
   }
