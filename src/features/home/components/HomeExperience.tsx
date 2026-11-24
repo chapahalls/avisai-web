@@ -60,20 +60,26 @@ function HomeSceneCanvas({
     };
     canvas.addEventListener('webglcontextlost', handleContextLost);
 
-    void import('../three/createHomeScene')
-      .then(({ createHomeScene }) => {
+    void (async () => {
+      try {
+        const { createHomeScene } = await import('../three/createHomeScene');
         if (!active) return;
-        controller = createHomeScene(canvas);
+        const nextController = await createHomeScene(canvas);
+        if (!active) {
+          nextController.dispose();
+          return;
+        }
+        controller = nextController;
         controllerRef.current = controller;
         observer = new ResizeObserver(resize);
         observer.observe(canvas);
         resize();
         controller.setProgress(progressRef.current);
         onStateChange('ready');
-      })
-      .catch(() => {
+      } catch {
         if (active) onStateChange('failed');
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -153,9 +159,9 @@ export function HomeExperience({ ready, reducedMotion }: { ready: boolean; reduc
   const handleSceneState = useCallback((state: SceneState) => setSceneState(state), []);
   const style = {
     '--story-grid-opacity': String(
-      0.18
-      + segment(effectiveProgress, 0.52, 0.75) * 0.52
-      - segment(effectiveProgress, 0.86, 0.98) * 0.26,
+      0.1
+      + segment(effectiveProgress, 0.34, 0.62) * 0.17
+      - segment(effectiveProgress, 0.84, 0.98) * 0.1,
     ),
     '--story-copy-opacity': String(typed.opacity),
     '--story-progress': `${effectiveProgress * 100}%`,

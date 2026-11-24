@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:brazil-topography": "node scripts/generate-brazil-topography.mjs",
+    "generate:world-wireframe": "node scripts/generate-world-wireframe.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "node scripts/test.mjs"
