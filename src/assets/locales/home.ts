@@ -18,7 +18,7 @@ export const homePt = {
   },
   story: {
     label: 'Experiência RODAR: do chip à malha global',
-    nav: { platform: 'Plataforma', how: 'Como funciona', calculator: 'Calculadora', faq: 'Perguntas', product: 'Ver produto', demo: 'Agendar demo' },
+    nav: { platform: 'Plataforma', how: 'Como funciona', calculator: 'Calculadora', faq: 'Perguntas', product: 'Ver produto', demo: 'Visualizar demo' },
     chip: {
       kicker: 'INTELIGÊNCIA PARA A ESTRADA',
       title: 'Tudo começa num chip de inteligência.',
@@ -67,6 +67,17 @@ export const homePt = {
     intro: 'O AI da RODAR liga o motorista, o recebedor e o CCO por voz. Do aviso antecipado ao comprovante da estadia, cada etapa fica registrada. Veja as quatro etapas:',
     sceneLabel: 'Cena 3D: o caminhão chega à doca 3 enquanto o AI avisa, registra e prova a espera',
     demoNote: 'Cena ilustrativa · dados fictícios',
+    plugin: {
+      eyebrow: 'Funciona como plug-in',
+      title: 'A RODAR se encaixa na sua operação, não o contrário.',
+      body: 'Não é preciso trocar de sistema. Adaptamos o setup à infraestrutura que você já tem e o AI passa a trabalhar sobre ela.',
+      items: [
+        { title: 'Seu TMS ou ERP', body: 'Rotas, entregas e notas chegam por integração ou importação.' },
+        { title: 'Sua telefonia', body: 'As ligações ao recebedor saem pelos números e canais que você já usa.' },
+        { title: 'Seu CCO', body: 'Alertas e eventos voltam para as telas, filas e regras da sua equipe.' },
+        { title: 'O celular do motorista', body: 'Basta o app no aparelho que ele já tem, sem hardware extra na cabine.' },
+      ],
+    },
     steps: {
       notify: { title: 'Avisa o recebedor antes', body: 'O AI liga para o recebimento 30 minutos antes da chegada, pergunta doca e horário e confirma com o motorista por voz. Ninguém do CCO precisa pegar o telefone.' },
       arrive: { title: 'Registra a chegada e a espera', body: 'A cerca virtual e a voz do motorista marcam a chegada. A partir desse minuto, a espera conta, com horário, local e ligação gravada.' },
@@ -87,7 +98,9 @@ export const homePt = {
       receipt: 'Comprovante gerado',
       sending: 'Enviando comprovante ao CCO…',
       delivered: 'Entrega confirmada no CCO',
-      cco: 'CCO · Campinas/SP',
+      ccoRoom: 'Central de Controle Operacional',
+      incoming: 'Recebendo comprovante…',
+      received: 'Comprovante recebido · estadia {{value}}',
     },
   },
   voice: {
@@ -195,7 +208,7 @@ export const homePt = {
     columns: {
       tech: { title: 'Tecnologia', app: 'App do motorista', cco: 'Painel do CCO', calculator: 'Calculadora de estadia' },
       company: { title: 'Empresa', how: 'Como funciona', faq: 'Perguntas', contact: 'Contato' },
-      talk: { title: 'Fale conosco', demo: 'Agendar demonstração' },
+      talk: { title: 'Fale conosco', demo: 'Visualizar demo' },
     },
     rights: '© 2026 RODAR · Todos os direitos reservados',
     demoData: 'Dados de demonstração fictícios',
@@ -222,7 +235,7 @@ export const homeEn: typeof homePt = {
   },
   story: {
     label: 'RODAR experience: from the chip to the global network',
-    nav: { platform: 'Platform', how: 'How it works', calculator: 'Calculator', faq: 'Questions', product: 'Explore product', demo: 'Book a demo' },
+    nav: { platform: 'Platform', how: 'How it works', calculator: 'Calculator', faq: 'Questions', product: 'Explore product', demo: 'View demo' },
     chip: {
       kicker: 'INTELLIGENCE FOR THE ROAD',
       title: 'It all starts with an intelligence chip.',
@@ -271,6 +284,17 @@ export const homeEn: typeof homePt = {
     intro: 'RODAR’s AI connects the driver, the receiver and the control center by voice. From the early notice to the detention receipt, every step is recorded. Here are the four steps:',
     sceneLabel: '3D scene: the truck arrives at dock 3 while AI notifies, records and proves the wait',
     demoNote: 'Illustrative scene · fictitious data',
+    plugin: {
+      eyebrow: 'Works as a plug-in',
+      title: 'RODAR fits your operation, not the other way around.',
+      body: 'There is no need to replace systems. We adapt the setup to the infrastructure you already have and the AI works on top of it.',
+      items: [
+        { title: 'Your TMS or ERP', body: 'Routes, deliveries and invoices arrive through integration or import.' },
+        { title: 'Your telephony', body: 'Calls to the receiver go out through the numbers and channels you already use.' },
+        { title: 'Your control center', body: 'Alerts and events flow back to your team’s screens, queues and rules.' },
+        { title: 'The driver’s phone', body: 'Just the app on the phone they already have, no extra hardware in the cab.' },
+      ],
+    },
     steps: {
       notify: { title: 'Notifies the receiver ahead', body: 'AI calls receiving 30 minutes before arrival, asks for the dock and time and confirms with the driver by voice. Nobody in the control center has to pick up the phone.' },
       arrive: { title: 'Records the arrival and the wait', body: 'The geofence and the driver’s voice mark the arrival. From that minute on, the wait counts, with time, place and a recorded call.' },
@@ -291,7 +315,9 @@ export const homeEn: typeof homePt = {
       receipt: 'Receipt generated',
       sending: 'Sending receipt to the control center…',
       delivered: 'Delivery confirmed at the control center',
-      cco: 'Control center · Campinas',
+      ccoRoom: 'Operations control center',
+      incoming: 'Receiving receipt…',
+      received: 'Receipt received · detention {{value}}',
     },
   },
   voice: {
@@ -399,7 +425,7 @@ export const homeEn: typeof homePt = {
     columns: {
       tech: { title: 'Technology', app: 'Driver app', cco: 'Control center dashboard', calculator: 'Detention calculator' },
       company: { title: 'Company', how: 'How it works', faq: 'Questions', contact: 'Contact' },
-      talk: { title: 'Contact us', demo: 'Book a demo' },
+      talk: { title: 'Contact us', demo: 'View demo' },
     },
     rights: '© 2026 RODAR · All rights reserved',
     demoData: 'Fictitious demo data',

@@ -120,12 +120,44 @@ html:has(.home-page) { scroll-padding-top: 96px; }
 .home-how-tag-said { bottom: 16%; text-transform: none; letter-spacing: .06em; }
 .home-how-stay { position: absolute; right: 8%; top: 40%; display: grid; gap: 12px; color: var(--color-wait-500); }
 .home-how-note { position: absolute; right: 18px; bottom: 16px; color: var(--color-ink-300); font-size: 10px; font-weight: 400; opacity: .7; }
-.home-how-cco {
-  position: absolute; left: var(--cco-x, 85%); top: var(--cco-y, 75%); transform: translate(-50%, calc(-100% - 22px)); white-space: nowrap;
-  color: var(--color-rodar-mark); opacity: .55; transition: opacity .3s ease;
+.home-how-flash {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 93% 7%, var(--color-ink-50), color-mix(in srgb, var(--color-rodar-mark) 70%, transparent) 18%, transparent 62%);
 }
-.home-how-cco[data-delivered='true'] { opacity: 1; }
-.home-how-cco[data-delivered='true']::after { content: ' ✓'; }
+.home-how-room {
+  position: absolute; left: 8%; bottom: 17%; color: var(--color-ink-50);
+  animation: home-how-pop-left .5s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+.home-how-room::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 10px; border-radius: 50%; background: var(--color-rodar-mark); vertical-align: middle; }
+@keyframes home-how-pop-left { from { opacity: 0; transform: translateY(-6px); } }
+/* Bloco "funciona como plug-in" ao fim de Como funciona. */
+.home-how-plugin {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: clamp(28px, 5vw, 120px); align-items: start;
+  padding: clamp(80px, 9vw, 160px) clamp(16px, 3.4vw, 65px) clamp(88px, 10vw, 180px) clamp(16px, 9vw, 215px);
+}
+.home-how-plugin-copy h3 { margin: 0 0 20px; font-family: var(--font-display); font-size: clamp(30px, 2.6vw, 50px); font-weight: 500; line-height: 1.05; letter-spacing: -.035em; }
+.home-how-plugin-copy p:not(.home-light-eyebrow) { margin: 0; max-width: 520px; color: var(--color-paper-600); font-size: clamp(16px, 1.15vw, 21px); line-height: 1.5; }
+.home-how-plugin-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0; padding: 0; list-style: none; }
+.home-how-plugin-list li {
+  position: relative; display: grid; gap: 8px; padding: clamp(22px, 2vw, 34px); padding-left: calc(clamp(22px, 2vw, 34px) + 28px);
+  border: 1px solid var(--color-paper-200); border-radius: 12px; background: var(--color-ink-50);
+}
+/* Encaixe: um "conector" que liga cada sistema do cliente à RODAR. */
+.home-how-plugin-socket {
+  position: absolute; left: clamp(22px, 2vw, 34px); top: calc(clamp(22px, 2vw, 34px) + 6px);
+  width: 14px; height: 14px; border: 2px solid var(--color-forest-950); border-radius: 3px;
+}
+.home-how-plugin-socket::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--color-rodar-600); transform: translate(-50%, -50%);
+}
+.home-how-plugin-list h4 { margin: 0; font-family: var(--font-display); font-size: clamp(18px, 1.35vw, 25px); font-weight: 600; letter-spacing: -.015em; }
+.home-how-plugin-list p { margin: 0; color: var(--color-paper-600); font-size: clamp(14px, .95vw, 17px); line-height: 1.5; }
+@media (max-width: 860px) {
+  .home-how-plugin { grid-template-columns: 1fr; padding-left: 16px; padding-right: 16px; }
+  .home-how-plugin-list { grid-template-columns: 1fr; }
+}
+
 @keyframes home-how-pop { from { opacity: 0; transform: translate(-50%, -6px) scale(.96); } }
 
 /* --------------------------------------------------------- por que voz */

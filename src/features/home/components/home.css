@@ -154,6 +154,15 @@
 .home-nav a { color: var(--color-ink-300); font-size: 13px; text-decoration: none; white-space: nowrap; }
 .home-nav nav a:hover { color: var(--color-rodar-mark); }
 .home-nav-actions { display: flex; align-items: center; gap: 10px; }
+.home-nav-language {
+  display: inline-flex; padding: 3px; border: 1px solid color-mix(in srgb, var(--color-ink-50) 18%, transparent); border-radius: 8px;
+}
+.home-nav-language button {
+  min-width: 34px; min-height: 28px; padding: 0 8px; border: 0; border-radius: 5px; background: transparent; cursor: pointer;
+  color: var(--color-ink-300); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .1em;
+}
+.home-nav-language button[aria-pressed='true'] { background: var(--color-ink-50); color: var(--color-night-950); }
+.home-nav-language button:focus-visible { outline: 2px solid var(--color-rodar-mark); outline-offset: 1px; }
 .home-nav-product, .home-nav-demo {
   display: inline-flex; min-height: 36px; align-items: center; justify-content: center; border-radius: 8px; padding: 0 13px;
   font-family: var(--font-mono); font-size: 10px !important; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;

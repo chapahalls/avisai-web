@@ -33,6 +33,15 @@
       "arrival": "Avise o recebedor antes da chegada.",
       "waiting": "Acompanhe o tempo de espera da frota.",
       "evidence": "Mantenha os eventos e transcrições visíveis."
+    },
+    "globe": {
+      "label": "Globo 3D com o Brasil em destaque, a malha de rotas rodoviárias e caminhões em rota",
+      "title": "Malha rodoviária ao vivo",
+      "stats": "{{corridors}} corredores · {{cities}} cidades",
+      "roads": "Rotas rodoviárias",
+      "trucks": "Caminhões em rota",
+      "hub": "CCO · São Paulo",
+      "demo": "Visualização ilustrativa · dados de demonstração"
     }
   },
   "kpi": {

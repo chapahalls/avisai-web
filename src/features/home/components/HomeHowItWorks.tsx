@@ -135,9 +135,16 @@ export function HomeHowItWorks({ reducedMotion }: { reducedMotion: boolean }) {
     notify: null,
     arrive: t('home.how.panel.dockConfirmed'),
     talk: t('home.how.panel.connected'),
-    prove: local >= DOCK_PROVE_TIMING.flightEnd ? t('home.how.panel.delivered') : t('home.how.panel.stayRegistered'),
+    prove: local >= DOCK_PROVE_TIMING.arrive
+      ? t('home.how.panel.delivered')
+      : local >= DOCK_PROVE_TIMING.cut ? null : t('home.how.panel.stayRegistered'),
   }[step];
   const badgeVisible = step !== 'arrive' || local > 0.55;
+  const inRoom = step === 'prove' && local >= DOCK_PROVE_TIMING.cut;
+  // Clarão do estouro na borda: esconde o corte do pátio para a sala do CCO.
+  const flash = step === 'prove'
+    ? clamp01(1 - Math.abs(local - (DOCK_PROVE_TIMING.burst + DOCK_PROVE_TIMING.cut) / 2) / 0.03)
+    : 0;
 
   return (
     <section
@@ -168,7 +175,8 @@ export function HomeHowItWorks({ reducedMotion }: { reducedMotion: boolean }) {
         <div className="home-how-stage">
         <figure className="home-how-panel" aria-label={t('home.how.sceneLabel')}>
           <DockCanvas progress={progress} reducedMotion={reducedMotion} />
-          <div className="home-how-overlay">
+          <div className="home-how-overlay" data-room={inRoom}>
+            <span className="home-how-flash" aria-hidden="true" style={{ opacity: reducedMotion ? 0 : flash }} />
             {badge && badgeVisible ? <p key={badge} className="home-how-badge">{badge} <span aria-hidden="true">✓</span></p> : null}
             {step === 'notify' ? (
               <>
@@ -188,21 +196,22 @@ export function HomeHowItWorks({ reducedMotion }: { reducedMotion: boolean }) {
                 <p className="home-how-tag">{t('home.how.panel.voice')}</p>
               </>
             ) : null}
-            {step === 'prove' ? (
+            {step === 'prove' && !inRoom ? (
               <>
                 <div className="home-how-stay">
                   <p>{t('home.how.panel.wait', { time: waitLabel })}</p>
                   <p>{t('home.how.panel.stay', { value: stay })}</p>
                 </div>
                 {local >= DOCK_PROVE_TIMING.ringEnd ? <p className="home-how-tag home-how-tag-lime">{t('home.how.panel.receipt')}</p> : null}
-                {local >= DOCK_PROVE_TIMING.flightStart && local < DOCK_PROVE_TIMING.flightEnd
-                  ? <p className="home-how-tag">{t('home.how.panel.sending')}</p>
-                  : null}
-                {local >= 0.12 ? (
-                  <p className="home-how-cco" data-delivered={local >= DOCK_PROVE_TIMING.flightEnd}>
-                    {t('home.how.panel.cco')}
-                  </p>
-                ) : null}
+                {local >= DOCK_PROVE_TIMING.flightStart ? <p className="home-how-tag">{t('home.how.panel.sending')}</p> : null}
+              </>
+            ) : null}
+            {inRoom ? (
+              <>
+                <p className="home-how-room">{t('home.how.panel.ccoRoom')}</p>
+                {local >= DOCK_PROVE_TIMING.arrive
+                  ? <p className="home-how-tag home-how-tag-lime">{t('home.how.panel.received', { value: stay })}</p>
+                  : <p className="home-how-tag">{t('home.how.panel.incoming')}</p>}
               </>
             ) : null}
             <p className="home-how-note">{t('home.how.demoNote')}</p>
@@ -210,6 +219,22 @@ export function HomeHowItWorks({ reducedMotion }: { reducedMotion: boolean }) {
         </figure>
         </div>
       </div>
+      <section className="home-how-plugin" aria-labelledby="home-how-plugin-title">
+        <div className="home-how-plugin-copy">
+          <p className="home-light-eyebrow home-align-left">{t('home.how.plugin.eyebrow')}</p>
+          <h3 id="home-how-plugin-title">{t('home.how.plugin.title')}</h3>
+          <p>{t('home.how.plugin.body')}</p>
+        </div>
+        <ul className="home-how-plugin-list">
+          {(t('home.how.plugin.items', { returnObjects: true }) as { title: string; body: string }[]).map((item) => (
+            <li key={item.title}>
+              <span className="home-how-plugin-socket" aria-hidden="true" />
+              <h4>{item.title}</h4>
+              <p>{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </section>
   );
 }
