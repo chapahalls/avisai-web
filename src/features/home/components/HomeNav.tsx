@@ -6,7 +6,8 @@ import './landing.css';
 
 /** Navegação fixa da home: acompanha a história 3D e as seções seguintes. */
 export function HomeNav({ ready }: { ready: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage === 'en' ? 'en' : 'pt-BR';
   return (
     <header className="home-nav" data-ready={ready}>
       <Link to="/home" aria-label={t('app.name')}><RodarLogo size={34} /></Link>
@@ -17,8 +18,21 @@ export function HomeNav({ ready }: { ready: boolean }) {
         <a href="#perguntas">{t('home.story.nav.faq')}</a>
       </nav>
       <div className="home-nav-actions">
+        <div className="home-nav-language" role="group" aria-label={t('app.language')}>
+          {(['pt-BR', 'en'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={language === option}
+              lang={option}
+              onClick={() => void i18n.changeLanguage(option)}
+            >
+              {t(option === 'en' ? 'app.languages.en' : 'app.languages.pt')}
+            </button>
+          ))}
+        </div>
         <a className="home-nav-product" href="#plataforma">{t('home.story.nav.product')}</a>
-        <a className="home-nav-demo" href="#contato">{t('home.story.nav.demo')}</a>
+        <Link className="home-nav-demo" to="/login">{t('home.story.nav.demo')}</Link>
       </div>
     </header>
   );

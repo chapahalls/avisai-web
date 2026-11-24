@@ -9,5 +9,6 @@ export { HomeCalculator } from './components/HomeCalculator';
 export { HomeFaq } from './components/HomeFaq';
 export { HomeContact } from './components/HomeContact';
 export { HomeFooter } from './components/HomeFooter';
+export { LoginGlobe } from './components/LoginGlobe';
 export { useHomeIntro, HOME_ASSETS } from './hooks/useHomeIntro';
 export type { LoaderPhase, LoaderStage } from './model';

@@ -33,6 +33,15 @@
       "arrival": "Notify the receiver before arrival.",
       "waiting": "Track fleet waiting times.",
       "evidence": "Keep events and transcripts visible."
+    },
+    "globe": {
+      "label": "3D globe highlighting Brazil, the road route network and trucks on the move",
+      "title": "Live road network",
+      "stats": "{{corridors}} corridors · {{cities}} cities",
+      "roads": "Road routes",
+      "trucks": "Trucks on route",
+      "hub": "Control center · São Paulo",
+      "demo": "Illustrative view · demo data"
     }
   },
   "kpi": {

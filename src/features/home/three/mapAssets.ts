@@ -25,5 +25,9 @@ export function brazilLonLatToMap([longitude, latitude]: readonly [number, numbe
   ];
 }
 
-/** CCO da demonstração: Campinas/SP (mesma origem mostrada no carregamento). */
-export const HOME_CCO_LON_LAT = [-47.06, -22.91] as const;
+export function brazilMapToLonLat(x: number, y: number): [number, number] {
+  return [
+    mapLinear(x, BRAZIL_FRAME.minX, BRAZIL_FRAME.maxX, BRAZIL_EXTENT.west, BRAZIL_EXTENT.east),
+    mapLinear(y, BRAZIL_FRAME.minY, BRAZIL_FRAME.maxY, BRAZIL_EXTENT.south, BRAZIL_EXTENT.north),
+  ];
+}

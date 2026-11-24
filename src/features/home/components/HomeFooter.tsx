@@ -30,7 +30,7 @@ export function HomeFooter() {
         </nav>
         <nav aria-labelledby="home-footer-talk">
           <h3 id="home-footer-talk">{t('home.footer.columns.talk.title')}</h3>
-          <a href="#contato">{t('home.footer.columns.talk.demo')}</a>
+          <Link to="/login">{t('home.footer.columns.talk.demo')}</Link>
         </nav>
       </div>
       <div className="home-footer-legal">

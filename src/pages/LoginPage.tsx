@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../features/auth';
 import { RodarLogo } from '../components/RodarLogo';
+import { LoginGlobe } from '../features/home';
 import { apiConfigured, getApiClient, setMode, useMode } from '../services/operations';
 import type { BackendUserProfile } from '../services/api/types';
 
@@ -36,8 +37,9 @@ export function LoginPage() {
   }, [mode, reload]);
   const canLogin = mode !== 'api' || profilesStatus === 'ready' && profiles.some((profile) => profile.email === email);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--color-ink-800),_var(--color-ink-950)_65%)] p-5">
-      <div className="w-full max-w-md rounded-card border border-ink-700 bg-ink-900 p-7 shadow-2xl shadow-black/20 sm:p-10">
+    <div className="grid min-h-screen bg-night-950 bg-[radial-gradient(ellipse_at_20%_0%,_var(--color-ink-800),_var(--color-night-950)_60%)] lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]">
+      <div className="order-2 flex items-center justify-center p-5 sm:p-8 lg:order-1 lg:p-12">
+      <div className="w-full max-w-md rounded-card border border-ink-700 bg-ink-900/90 p-7 shadow-2xl shadow-black/30 backdrop-blur sm:p-10">
         <p className="mb-8"><RodarLogo size={44} /></p>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-500">{t('auth.eyebrow')}</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight">{t('auth.title')}</h1>
@@ -82,6 +84,10 @@ export function LoginPage() {
         {apiConfigured && <button type="button" disabled={loading} onClick={() => { setMode(mode === 'api' ? 'demo' : 'api'); setError(false); }}
           className="mt-4 w-full rounded-input border border-ink-700 px-4 py-2.5 text-sm text-ink-300 hover:bg-ink-800 disabled:opacity-50">{t(mode === 'api' ? 'api.connection.useDemo' : 'api.connection.useApi')}</button>}
         <p className="mt-4 text-center text-xs leading-relaxed text-ink-300">{t(mode === 'api' ? 'dispatch.login.notice' : 'auth.mockNotice')}</p>
+      </div>
+      </div>
+      <div className="order-1 h-[42svh] min-h-[280px] lg:order-2 lg:h-auto lg:min-h-screen">
+        <LoginGlobe />
       </div>
     </div>
   );
