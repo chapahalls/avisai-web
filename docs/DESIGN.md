@@ -23,6 +23,15 @@ A interface identifica a fonte operacional **API** ou **Demo**. No modo API, mé
 | `rodar-400` | `#9BE22D` | Destaque da marca RODAR na home pública |
 | `rodar-mark` | `#A2F200` | Símbolo RODAR (bloco lima com o "R" vazado); só para a marca |
 | `night-950` | `#050806` | Fundo da home pública e do carregamento |
+| `paper-50` | `#F3F5F2` | Fundo das seções claras da home pública |
+| `paper-100` | `#E7EBE6` | Cards e campos nas seções claras |
+| `paper-200` | `#D6DDD6` | Bordas e divisores nas seções claras |
+| `paper-400` | `#B7C0B8` | Texto ainda não revelado e etapas inativas |
+| `paper-600` | `#5A655C` | Texto secundário nas seções claras |
+| `forest-950` | `#0F2A22` | Superfícies escuras: resultado da calculadora, contato e rodapé |
+| `forest-800` | `#1D4033` | Superfície interna sobre `forest-950` |
+| `moss-600` | `#4F5D47` | Card "Na estrada" da plataforma |
+| `rodar-600` | `#5F9E0F` | Destaque da marca sobre fundo claro (contraste AA para texto grande) |
 | `font-sans` | Inter, sans-serif | Texto e controles |
 | `font-display` | Space Grotesk, sans-serif | Títulos, relógio e números |
 | `font-brand` | Kumbh Sans 750 | Palavra "RODAR" da assinatura, só na marca |

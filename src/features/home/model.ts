@@ -1,3 +1,6 @@
+import { BUSINESS, LANDING_CALCULATOR } from '../../lib/config.js';
+import { stayValue } from '../../utils/stay.js';
+
 export type LoaderPhase = 'loading' | 'exit' | 'done';
 export type LoaderStage = 'routes' | 'fleet' | 'cco' | 'ready';
 
@@ -49,4 +52,27 @@ export function formatCounter(progress: number): string {
 export function tickDashArray(radius: number, ticks = LOADER_TICKS, tickWidth = 1.2): string {
   const period = (2 * Math.PI * radius) / ticks;
   return `${tickWidth} ${(period - tickWidth).toFixed(3)}`;
+}
+
+export type FleetInputs = {
+  trucks: number;
+  deliveriesPerDay: number;
+  /** Fração (0–1) das entregas que passam da franquia. */
+  lateShare: number;
+  /** Horas além da franquia, em média, por entrega atrasada. */
+  extraHours: number;
+  loadTons: number;
+};
+
+/**
+ * Estimativa da calculadora da home (Demo): a estadia por entrega vem de
+ * `stayValue` (R5), aqui só se multiplica pelo volume mensal.
+ */
+export function fleetRecovery(inputs: FleetInputs) {
+  const monthlyDeliveries = inputs.trucks * inputs.deliveriesPerDay * LANDING_CALCULATOR.workingDaysPerMonth;
+  const lateDeliveries = Math.round(monthlyDeliveries * clamp(inputs.lateShare, 0, 1));
+  const stoppedHours = lateDeliveries * inputs.extraHours;
+  const perDelivery = stayValue((BUSINESS.franchiseHours + inputs.extraHours) * 60, inputs.loadTons);
+  const monthly = lateDeliveries * perDelivery;
+  return { lateDeliveries, stoppedHours, perDelivery, monthly, yearly: monthly * 12 };
 }

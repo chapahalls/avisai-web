@@ -85,18 +85,9 @@
   color: var(--color-ink-300); text-decoration: none;
 }
 
-/* ------------------------------------------------------------------ pilares */
-.home-pillars { padding: 120px clamp(16px, 5vw, 80px); border-top: 1px solid var(--color-ink-700); }
-.home-section-title { margin: 0 auto 48px; max-width: 760px; text-align: center; font-family: var(--font-display); font-size: clamp(28px, 3.4vw, 46px); line-height: 1.05; font-weight: 600; }
-.home-pillar-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; max-width: 1200px; margin: 0 auto; padding: 0; list-style: none; }
-.home-pillar { display: flex; flex-direction: column; gap: 12px; padding: 28px; border: 1px solid var(--color-ink-700); border-radius: var(--radius-card); background: var(--color-ink-900); }
-.home-pillar-number { font-family: var(--font-mono); font-size: 12px; color: var(--color-rodar-400); }
-.home-pillar h3 { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 600; }
-.home-pillar p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--color-ink-300); }
-
 /* -------------------------------------------------------- experiência */
 .home-experience {
-  position: relative; z-index: 0; height: 860svh;
+  position: relative; z-index: 0; height: 1400svh;
   background: var(--color-night-950); color: var(--color-ink-50);
 }
 .home-experience-sticky {
@@ -148,8 +139,8 @@
     linear-gradient(180deg, color-mix(in srgb, var(--color-night-950) 74%, transparent), transparent 20%, transparent 72%, color-mix(in srgb, var(--color-night-950) 82%, transparent)),
     radial-gradient(ellipse at center, transparent 35%, color-mix(in srgb, var(--color-night-950) 72%, transparent) 100%);
 }
-.home-story-nav {
-  position: absolute; z-index: 5; top: clamp(16px, 2vw, 28px); left: 50%;
+.home-nav {
+  position: fixed; z-index: 50; top: clamp(16px, 2vw, 28px); left: 50%;
   display: flex; width: min(980px, calc(100% - 32px)); min-height: 56px; align-items: center; gap: 24px;
   border: 1px solid color-mix(in srgb, var(--color-ink-50) 15%, transparent); border-radius: 14px;
   background: color-mix(in srgb, var(--color-ink-950) 69%, transparent); padding: 9px 12px 9px 14px;
@@ -157,18 +148,18 @@
   box-shadow: 0 12px 46px color-mix(in srgb, var(--color-night-950) 64%, transparent);
   opacity: 1; transform: translateX(-50%); transition: opacity .45s ease .25s;
 }
-.home-experience[data-ready='false'] .home-story-nav { opacity: 0; }
-.home-story-nav .rodar-logo { color: var(--color-ink-50); }
-.home-story-nav nav { display: flex; gap: clamp(14px, 2vw, 26px); margin-right: auto; }
-.home-story-nav a { color: var(--color-ink-300); font-size: 13px; text-decoration: none; white-space: nowrap; }
-.home-story-nav nav a:hover { color: var(--color-rodar-mark); }
-.home-story-nav-actions { display: flex; align-items: center; gap: 10px; }
-.home-story-nav-link, .home-story-nav-cta {
+.home-nav[data-ready='false'] { opacity: 0; pointer-events: none; }
+.home-nav .rodar-logo { color: var(--color-ink-50); }
+.home-nav nav { display: flex; gap: clamp(14px, 2vw, 26px); margin-right: auto; }
+.home-nav a { color: var(--color-ink-300); font-size: 13px; text-decoration: none; white-space: nowrap; }
+.home-nav nav a:hover { color: var(--color-rodar-mark); }
+.home-nav-actions { display: flex; align-items: center; gap: 10px; }
+.home-nav-product, .home-nav-demo {
   display: inline-flex; min-height: 36px; align-items: center; justify-content: center; border-radius: 8px; padding: 0 13px;
   font-family: var(--font-mono); font-size: 10px !important; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
 }
-.home-story-nav-link { background: var(--color-rodar-mark); color: var(--color-night-950) !important; }
-.home-story-nav-cta { background: var(--color-ink-50); color: var(--color-night-950) !important; }
+.home-nav-product { background: var(--color-rodar-mark); color: var(--color-night-950) !important; }
+.home-nav-demo { background: var(--color-ink-50); color: var(--color-night-950) !important; }
 .home-story-copy {
   position: absolute; z-index: 4; left: 50%; top: 72%;
   width: min(920px, calc(100% - 40px)); text-align: center;
@@ -241,7 +232,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-loader, .home-hero-grid, .home-hero-mark, .home-hero-copy, .home-story-scene, .home-story-nav, .home-story-copy { transition: none; }
+  .home-loader, .home-hero-grid, .home-hero-mark, .home-hero-copy, .home-story-scene, .home-nav, .home-story-copy { transition: none; }
   .home-loader-halo, .home-loader-mark path { animation: none; }
   .home-story-grid { animation: none; }
   .home-experience { height: 100svh; }
@@ -249,11 +240,11 @@
 }
 
 @media (max-width: 760px) {
-  .home-experience { height: 720svh; }
-  .home-story-nav { gap: 10px; min-height: 50px; padding: 7px 9px 7px 11px; }
-  .home-story-nav nav, .home-story-nav-link { display: none; }
-  .home-story-nav-actions { margin-left: auto; }
-  .home-story-nav-cta { min-height: 34px; padding: 0 10px; font-size: 9px !important; }
+  .home-experience { height: 1150svh; }
+  .home-nav { gap: 10px; min-height: 50px; padding: 7px 9px 7px 11px; }
+  .home-nav nav, .home-nav-product { display: none; }
+  .home-nav-actions { margin-left: auto; }
+  .home-nav-demo { min-height: 34px; padding: 0 10px; font-size: 9px !important; }
   .home-story-copy { top: 75%; width: calc(100% - 32px); }
   .home-story-copy[data-stage='phone'] { top: 80%; }
   .home-story-copy h1 { max-width: 560px; font-size: clamp(27px, 9vw, 43px); }

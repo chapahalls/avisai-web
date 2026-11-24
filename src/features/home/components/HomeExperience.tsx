@@ -5,9 +5,8 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RodarLogo, RodarMark } from '../../../components/RodarLogo';
+import { RodarMark } from '../../../components/RodarLogo';
 import type { HomeSceneController } from '../three/createHomeScene';
 import {
   clamp01,
@@ -193,19 +192,6 @@ export function HomeExperience({ ready, reducedMotion }: { ready: boolean; reduc
         </div>
         <div className="home-story-grid" aria-hidden="true" />
         <div className="home-story-vignette" aria-hidden="true" />
-
-        <header className="home-story-nav">
-          <Link to="/home" aria-label={t('app.name')}><RodarLogo size={34} /></Link>
-          <nav aria-label={t('nav.main')}>
-            <a href="#experiencia">{t('home.story.nav.platform')}</a>
-            <a href="#como-funciona">{t('home.story.nav.how')}</a>
-            <a href="#como-funciona">{t('home.story.nav.calculator')}</a>
-          </nav>
-          <div className="home-story-nav-actions">
-            <a className="home-story-nav-link" href="#como-funciona">{t('home.story.nav.product')}</a>
-            <Link className="home-story-nav-cta" to="/login">{t('home.story.nav.demo')}</Link>
-          </div>
-        </header>
 
         <div className="home-story-copy" data-stage={stage}>
           <p>{kicker}</p>

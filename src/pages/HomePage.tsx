@@ -1,6 +1,20 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HomeExperience, HomeLoader, HomePillars, useHomeIntro } from '../features/home';
+import {
+  HomeAudience,
+  HomeCalculator,
+  HomeContact,
+  HomeExperience,
+  HomeFaq,
+  HomeFooter,
+  HomeHowItWorks,
+  HomeLoader,
+  HomeNav,
+  HomePlatform,
+  HomeStart,
+  HomeVoice,
+  useHomeIntro,
+} from '../features/home';
 
 export function HomePage() {
   const { t, i18n } = useTranslation();
@@ -15,10 +29,19 @@ export function HomePage() {
   return (
     <div className="home-page">
       <HomeLoader progress={progress} phase={phase} />
+      <HomeNav ready={phase !== 'loading'} />
       <main aria-busy={phase === 'loading'}>
         <HomeExperience ready={phase !== 'loading'} reducedMotion={reducedMotion} />
-        <HomePillars />
+        <HomeStart />
+        <HomeCalculator />
+        <HomeHowItWorks reducedMotion={reducedMotion} />
+        <HomePlatform />
+        <HomeAudience />
+        <HomeVoice />
+        <HomeContact />
+        <HomeFaq />
       </main>
+      <HomeFooter />
     </div>
   );
 }
