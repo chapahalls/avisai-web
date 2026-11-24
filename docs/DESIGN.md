@@ -20,8 +20,11 @@ A interface identifica a fonte operacional **API** ou **Demo**. No modo API, mé
 | `wait-500` | `#F5A524` | Espera e estadia |
 | `alert-500` | `#F04438` | Escalada e falha de atendimento |
 | `ok-500` | `#17B26A` | Task assumida e descarga confirmada |
+| `rodar-400` | `#9BE22D` | Destaque da marca RODAR na home pública |
+| `night-950` | `#050806` | Fundo da home pública e do carregamento |
 | `font-sans` | Inter, sans-serif | Texto e controles |
 | `font-display` | Space Grotesk, sans-serif | Títulos, relógio e números |
+| `font-mono` | monoespaçada do sistema | Contador e rótulos técnicos da home (sem fonte externa) |
 | `radius-card` | 12 px | Cards |
 | `radius-input` | 8 px | Campos e botões |
 
@@ -29,6 +32,7 @@ Fontes da aplicação são locais, sem requisições ao Google Fonts para carreg
 
 ## Telas e componentes
 
+- **Home pública (`/home`):** carregamento com anel de 120 marcações que acendem conforme o progresso, contador `[ 00 ]`–`[ 100 ]`, etapa textual (rotas, frota, CCO, pronto) e coordenadas do CCO. O progresso é anunciado como `progressbar` com valor e etapa; a cor não comunica sozinha. Na saída, o anel encolhe até o centro e o chip da abertura assume o mesmo lugar. Rolagem suave por Lenis, desligada com movimento reduzido.
 - **Login:** card central com AvisAI, contexto do CCO, e-mail no modo API, ação SSO e indicação explícita de autenticação MOCK. Carregamento/erro não vira sessão fictícia automaticamente.
 - **Shell:** sidebar compacta de monitoramento; cabeçalho com fonte, conexão, relógio, idioma e perfil. Controles da simulação pertencem à Demo. O espaço principal pertence à operação da frota.
 - **Dashboard:** quatro indicadores resumidos acima; painel de monitoramento em largura; fila de Tasks e eventos abaixo; resumo de desempenho ao fim. API preserva rótulos/unidades do backend: escaladas históricas, contatos resolvidos e latência LLM; nulos são `—`.

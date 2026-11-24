@@ -13,8 +13,11 @@
   --color-wait-500: #f5a524;
   --color-alert-500: #f04438;
   --color-ok-500: #17b26a;
+  --color-rodar-400: #9be22d;
+  --color-night-950: #050806;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --radius-card: 12px;
   --radius-input: 8px;
 }
