@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { routeInput, assignmentIssue, registeredDrivers } from '../.cache/tests/features/dispatch/model.js';
+import { routeInput, assignmentIssue, registeredDrivers, dispatchRows, dispatchCounts, routeDispatchState, routeFileIssue, draftProgress, worstCaseReceiverCalls, ROUTE_FILE_MAX_BYTES, emptyDraft } from '../.cache/tests/features/dispatch/model.js';
 
 const draft = {
   origin: ' CD Jundiaí ', originLat: '-23,1857', originLng: '-46.8978',
@@ -49,4 +49,60 @@ test('atribuição impede viagem encerrada, empresas diferentes e outra viagem a
   assert.equal(assignmentIssue(trip, driver, [other]), 'busy');
   assert.equal(assignmentIssue(trip, driver, [{ ...other, backend: { ...other.backend, status: 'descarregada' } }]), null);
   assert.equal(assignmentIssue(trip, driver, [{ ...trip, backend: { ...trip.backend, driverId: 9 } }]), null);
+});
+
+const apiTrip = (id, status, driverId) => ({
+  id: `api-route-${id}`, source: 'api', backendId: id, plate: `PLT${id}`, driver: '', receiverId: 'r', phase: 'driving',
+  backend: { status, driverId, companyId: 1, originName: 'CD', destinationName: `Destino ${id}`, arrivalWindow: '', invoiceNumber: '', cargoDescription: '', cargoTons: 10, receiverContact: '' },
+});
+const registered = (id, name) => ({
+  profile: { id: `p${id}`, email: `${id}@x.test`, role: 'driver', name, driverId: id, tripId: null },
+  driver: { id, empresa_id: 1, nome: name, telefone_e164: null, email: null },
+});
+
+test('lista de dispatch: rota só é editável antes da saída; em rota e no recebedor ficam travadas', () => {
+  assert.equal(routeDispatchState(apiTrip(1, 'planejada', 7)), 'editable');
+  assert.equal(routeDispatchState(apiTrip(1, 'publicada', 7)), 'editable');
+  assert.equal(routeDispatchState(apiTrip(1, 'na_origem', 7)), 'editable');
+  assert.equal(routeDispatchState(apiTrip(1, 'em_transito', 7)), 'onRoute');
+  assert.equal(routeDispatchState(apiTrip(1, 'aproximando', 7)), 'onRoute');
+  assert.equal(routeDispatchState(apiTrip(1, 'no_destino', 7)), 'atReceiver');
+  assert.equal(routeDispatchState(apiTrip(1, 'publicada', null)), 'unassigned');
+  assert.equal(routeDispatchState(apiTrip(1, 'descarregada', 7)), null);
+});
+
+test('lista de dispatch: uma linha por motorista e por rota sem motorista, com contagem dos filtros', () => {
+  const drivers = [registered(7, 'Bruna'), registered(8, 'Ana'), registered(9, 'Caio')];
+  const trips = [
+    apiTrip(1, 'em_transito', 7),
+    apiTrip(2, 'planejada', 8),
+    apiTrip(3, 'publicada', null),
+    apiTrip(4, 'descarregada', 9),
+    { ...apiTrip(5, 'em_transito', 9), source: 'mock' },
+  ];
+  const rows = dispatchRows(drivers, trips);
+  assert.deepEqual(rows.map((row) => [row.key, row.state]), [
+    ['driver-7', 'onRoute'],
+    ['driver-8', 'editable'],
+    ['route-api-route-3', 'unassigned'],
+    ['driver-9', 'available'],
+  ]);
+  assert.deepEqual(dispatchCounts(rows), { all: 4, editable: 2, onRoute: 1, atReceiver: 0, available: 1 });
+});
+
+test('cadastro: arquivos seguem os tipos e o limite do backend', () => {
+  assert.equal(routeFileIssue({ size: 1000, type: 'application/pdf' }), null);
+  assert.equal(routeFileIssue({ size: 1000, type: 'image/webp' }), null);
+  assert.equal(routeFileIssue({ size: 0, type: 'application/pdf' }), 'emptyFile');
+  assert.equal(routeFileIssue({ size: ROUTE_FILE_MAX_BYTES + 1, type: 'application/pdf' }), 'tooLarge');
+  assert.equal(routeFileIssue({ size: 1000, type: 'application/xml' }), 'type');
+});
+
+test('cadastro: etapas ficam prontas com a mesma validação da publicação', () => {
+  assert.deepEqual(draftProgress(emptyDraft, null), { driver: false, route: false, ready: false });
+  assert.deepEqual(draftProgress(draft, null), { driver: false, route: true, ready: false });
+  assert.deepEqual(draftProgress(draft, 8), { driver: true, route: true, ready: true });
+  assert.equal(draftProgress({ ...draft, receiverPhone: '119' }, 8).ready, false);
+  assert.equal(worstCaseReceiverCalls(1, 3), 3);
+  assert.equal(worstCaseReceiverCalls(2, 3), 6);
 });

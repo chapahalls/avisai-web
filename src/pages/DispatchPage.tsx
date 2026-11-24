@@ -1,2 +1,5 @@
-import { DispatchBoard } from '../features/dispatch';
-export function DispatchPage() { return <DispatchBoard />; }
+import { DispatchList } from '../features/dispatch';
+
+export function DispatchPage() {
+  return <DispatchList />;
+}

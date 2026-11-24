@@ -114,4 +114,8 @@ export interface Delivery {
   stayCharged: boolean;
   contactsAvoided: number;
   voiceLatencyMs: number;
+  /** Identificação e horário de chegada (minuto do dia) para as tabelas de Análises. */
+  plate?: string;
+  driver?: string;
+  arrivalMinuteOfDay?: number;
 }

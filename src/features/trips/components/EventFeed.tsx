@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useConnection, useOps } from '../../../services/operations';
 import { clock } from '../../../utils/format';
+import { APP_ROUTES } from '../../../lib/routes';
+import { describeEvent } from '../eventLabels';
 
 type EventFeedProps = {
   tripId?: string;
@@ -28,17 +30,7 @@ export function EventFeed({ tripId, limit = 30, onAlertSelect }: EventFeedProps)
         {rows.map((event) => {
           const knownPlate = tripMeta[event.tripId]?.plate ?? (typeof event.payload.plate === 'string' ? event.payload.plate : '');
           const plate = knownPlate.trim() ? knownPlate : t('common.unavailable');
-          const result = typeof event.payload.resultCode === 'string' ? t(`${isApi ? 'api.calls.results' : 'calls.results'}.${event.payload.resultCode}`, { dock: event.payload.dock, defaultValue: event.payload.resultCode }) : null;
-          const channel = typeof event.payload.channel === 'string' ? t(`channels.${event.payload.channel}`, { defaultValue: event.payload.channel }) : null;
-          const backendType = typeof event.payload.backendType === 'string' ? event.payload.backendType : null;
-          const alertType = typeof event.payload.tipo === 'string' ? event.payload.tipo : null;
-          const priority = event.payload.prioridade === 'critico' || event.payload.prioridade === 'atencao' ? event.payload.prioridade : 'info';
-          const title = alertType
-            ? t(`alerts.types.${alertType}`, { defaultValue: alertType })
-            : isApi && backendType ? t(`api.events.${backendType}`, { defaultValue: backendType }) : t(`events.${event.type}`);
-          const message = isApi
-            ? typeof event.payload.backendMessage === 'string' ? event.payload.backendMessage : null
-            : typeof event.payload.messageKey === 'string' ? t(event.payload.messageKey) : null;
+          const { title, message, result, channel, alertType, priority } = describeEvent(event, t, isApi);
           const capturedAt = new Date(event.occurredAt);
           const time = isApi
             ? Number.isNaN(capturedAt.getTime()) ? t('common.unavailable') : new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(capturedAt)
@@ -53,7 +45,7 @@ export function EventFeed({ tripId, limit = 30, onAlertSelect }: EventFeedProps)
                 {alertType && <span className="rounded bg-ink-800 px-1.5 py-0.5">{t(`alerts.priority.${priority}`)}</span>}
                 {!tripId && event.tripId && (canReply
                   ? <span className="font-display text-brand-500">{plate}</span>
-                  : <Link to={`/trips/${event.tripId}`} className="font-display text-brand-500 hover:underline">{plate}</Link>)}
+                  : <Link to={APP_ROUTES.trip(event.tripId)} className="font-display text-brand-500 hover:underline">{plate}</Link>)}
                 <span>{t(`sources.${event.source}`)}</span>
                 {channel && <span className="rounded bg-ink-800 px-1.5 py-0.5">{channel}</span>}
                 {result && <span>{result}</span>}
