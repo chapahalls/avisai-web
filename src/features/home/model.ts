@@ -7,7 +7,7 @@ export const LOADER_MIN_MS = 1800;
 export const LOADER_MAX_MS = 8000;
 /** Pausa em 100 antes da saída. */
 export const LOADER_HOLD_MS = 350;
-/** Duração da saída (o anel encolhe até o chip da abertura). */
+/** Duração da saída (o anel encolhe até o símbolo RODAR da abertura). */
 export const LOADER_EXIT_MS = 1000;
 /** Intervalo mínimo entre atualizações visíveis do contador. */
 export const LOADER_STEP_MS = 60;

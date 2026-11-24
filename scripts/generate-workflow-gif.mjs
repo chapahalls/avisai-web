@@ -123,7 +123,7 @@ const render = (frame) => {
     <line x1="0" y1="80" x2="${width}" y2="80" stroke="#223250"/>
     ${rounded(24, 20, 36, 36, '#0c3152', '#147bc0', 10)}
     ${text(42, 44, '▰', 18, '#6cc7ff', 700, 'middle')}
-    ${text(74, 43, 'AvisAI', 24, '#f4f7ff', 800)}
+    ${text(74, 43, 'RODAR', 24, '#f4f7ff', 800)}
     ${text(74, 61, 'CENTRAL DE OPERAÇÃO · DEMO', 10, '#77c8ff', 700)}
     ${rounded(722, 24, 214, 30, '#13233d', '#2a466b', 7)}
     ${text(829, 44, 'Workflow operacional', 12, '#d9e7f9', 700, 'middle')}

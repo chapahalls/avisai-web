@@ -1,4 +1,4 @@
-/** DTOs do backend AvisAI. Valores monetários e estados continuam sob autoridade do servidor. */
+/** DTOs do backend RODAR. Valores monetários e estados continuam sob autoridade do servidor. */
 export type BackendRouteStatus = 'publicada' | 'planejada' | 'na_origem' | 'em_transito' | 'aproximando' | 'no_destino' | 'descarregada';
 export type BackendTaskStatus = 'pendente' | 'confirmada' | 'escalada_recebedor' | 'concluida';
 export type BackendCallStatus = 'chamando' | 'em_andamento' | 'respondida' | 'nao_atendida' | 'falhou';

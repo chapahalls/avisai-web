@@ -1,22 +1,24 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-brand-50: #e6f5ff;
-  --color-brand-500: #099dfd;
-  --color-brand-600: #0780d0;
-  --color-ink-950: #0b1220;
-  --color-ink-900: #121a2b;
-  --color-ink-800: #1a2438;
-  --color-ink-700: #2a3550;
-  --color-ink-300: #a7b1c6;
-  --color-ink-50: #f4f6fa;
+  --color-brand-50: #e8f2ea;
+  --color-brand-500: #3d7a52;
+  --color-brand-600: #285c3b;
+  --color-ink-950: #090b09;
+  --color-ink-900: #111511;
+  --color-ink-800: #1c231d;
+  --color-ink-700: #354037;
+  --color-ink-300: #aeb8b0;
+  --color-ink-50: #f6f8f6;
   --color-wait-500: #f5a524;
   --color-alert-500: #f04438;
   --color-ok-500: #17b26a;
   --color-rodar-400: #9be22d;
+  --color-rodar-mark: #a2f200;
   --color-night-950: #050806;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-brand: 'Kumbh Sans', 'Space Grotesk', sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --radius-card: 12px;
   --radius-input: 8px;
@@ -35,6 +37,15 @@
   src: url('/fonts/SpaceGrotesk-latin.woff2') format('woff2');
   font-style: normal;
   font-weight: 500 700;
+  font-display: swap;
+}
+
+/* Variável (100–900): a assinatura RODAR usa o peso 750. */
+@font-face {
+  font-family: 'Kumbh Sans';
+  src: url('/fonts/KumbhSans-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
   font-display: swap;
 }
 

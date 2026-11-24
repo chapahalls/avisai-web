@@ -1,4 +1,4 @@
-/** Contrato de eventos. Igual ao do repositório web (avisai-web/src/types/events.ts). */
+/** Contrato de eventos. Igual ao do repositório web (rodar-web/src/types/events.ts). */
 export type EventType =
   | 'RouteAssigned'
   | 'PickupConfirmed'

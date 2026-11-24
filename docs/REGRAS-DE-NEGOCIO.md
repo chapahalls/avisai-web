@@ -1,4 +1,4 @@
-# AvisAI Web · Regras da simulação
+# RODAR Web · Regras da simulação
 
 Estas são regras da **Demo local** de CCO, não uma validação jurídica de cobrança. Nesse modo, Google Maps JavaScript API exibe o mapa base e os caminhos são snapshots OSRM/OpenStreetMap locais; o navegador simula o restante da operação.
 

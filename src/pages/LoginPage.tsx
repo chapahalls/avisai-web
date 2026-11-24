@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../features/auth';
-import { Icon } from '../components/Icon';
+import { RodarLogo } from '../components/RodarLogo';
 import { apiConfigured, getApiClient, setMode, useMode } from '../services/operations';
 import type { BackendUserProfile } from '../services/api/types';
 
@@ -38,10 +38,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--color-ink-800),_var(--color-ink-950)_65%)] p-5">
       <div className="w-full max-w-md rounded-card border border-ink-700 bg-ink-900 p-7 shadow-2xl shadow-black/20 sm:p-10">
-        <div className="mb-8 flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-card bg-brand-500/15 text-brand-500"><Icon name="truck" className="h-6 w-6" /></span>
-          <p className="font-display text-3xl font-bold tracking-tight">{t('app.name')}</p>
-        </div>
+        <p className="mb-8"><RodarLogo size={44} /></p>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-brand-500">{t('auth.eyebrow')}</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight">{t('auth.title')}</h1>
         <p className="mt-3 text-sm leading-relaxed text-ink-300">{t('auth.subtitle')}</p>

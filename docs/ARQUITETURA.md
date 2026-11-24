@@ -1,4 +1,4 @@
-# AvisAI Web · Arquitetura
+# RODAR Web · Arquitetura
 
 Aplicação React + Vite + TypeScript strict. O zustand mantém o estado exibido; React Router organiza as telas; Recharts exibe as séries da Demo; i18next fornece pt-BR e inglês. Tailwind v4 define os tokens no CSS, sem configuração Tailwind ou PostCSS separada. A operação usa **API** ou **Demo**, com origem indicada. API usa indicadores do servidor; SSO e metadados fiscais permanecem MOCK.
 
@@ -81,7 +81,7 @@ O dossiê consulta `/api/documents` para os metadados fiscais MOCK, `/rotas/{id}
 
 Arquivos reais têm listagem/upload em `/rotas/{id}/arquivos` e download por ID. `arquivo_adicionado` sinaliza refetch, sem carregar binário no SSE. Metadados ficam no banco; conteúdo em `ARQUIVOS_DIR`, montado no Compose em `/app/data/arquivos`. Reset preserva anexos e não existe DELETE/versionamento. Banco e volume precisam de backup conjunto; não há transação atômica completa entre banco e filesystem.
 
-O backend alterado é `/home/henry/Documents/avisai/backend`, fora do checkout web. O modelo mobile em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md) usa IDs do backend, WS por motorista, leitura autoritativa da rota e download `Blob`; não constitui um app mobile completo.
+O backend alterado é `/home/henry/Documents/rodar-backend/backend`, fora do checkout web. O modelo mobile em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md) usa IDs do backend, WS por motorista, leitura autoritativa da rota e download `Blob`; não constitui um app mobile completo.
 
 ## Fluxo de dados da Demo
 
@@ -175,7 +175,7 @@ flowchart TD
 
 O diagrama acima cobre só o que a Demo executa no painel. O fluxograma abaixo mostra o produto inteiro em quatro raias (CCO, agente de voz, motorista e recebedor), da preparação da rota à descarga, incluindo a ligação ao recebedor após três avisos sem resposta do CCO. Ele vem do repositório de ideias do time ([`chapahalls-ideas`](https://github.com/chapahalls/chapahalls-ideas/tree/main/ideas/parceiro-de-estrada)); voz, GPS e mobile ficam fora deste painel. Onde houver diferença, valem as regras da Demo deste repositório ([REGRAS-DE-NEGOCIO.md](REGRAS-DE-NEGOCIO.md)).
 
-![Fluxograma do AvisAI: CCO, agente de voz, motorista e recebedor](assets/fluxograma-produto.svg)
+![Fluxograma do RODAR: CCO, agente de voz, motorista e recebedor](assets/fluxograma-produto.svg)
 
 ## Roteiro de demo · dois minutos
 

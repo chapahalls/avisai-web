@@ -1,8 +1,8 @@
-# AvisAI · Contrato para o app do motorista
+# RODAR · Contrato para o app do motorista
 
 Este modelo considera o usuário mobile como **motorista**. O CCO publica/atribui a rota; o app recebe a identidade de demonstração, consulta sua rota e acompanha atualizações. Os papéis de login continuam `driver` e `cco`; `operador` é apenas uma sessão técnica do agente usada no fallback RTC e não é uma identidade de login mobile.
 
-Os contratos foram conferidos por leitura em `avisai/backend/app/api`, `servicos/{usuarios,publicacao}.py`, `dominio/documentos.py`, `infra/eventos.py` e nos exemplos `clients/tipos.ts`, `clients/react-native/useAvisaiVoz.ts` e `clients/web/avisaiStream.ts`. O exemplo é validado com transportes simulados; isso não representa validação de um aplicativo mobile instalado.
+Os contratos foram conferidos por leitura em `rodar-backend/backend/app/api`, `servicos/{usuarios,publicacao}.py`, `dominio/documentos.py`, `infra/eventos.py` e nos exemplos `clients/tipos.ts`, `clients/react-native/useAvisaiVoz.ts` e `clients/web/avisaiStream.ts`. O exemplo é validado com transportes simulados; isso não representa validação de um aplicativo mobile instalado.
 
 ## O que já existe
 
@@ -69,7 +69,7 @@ O login aceita somente e-mail cadastrado e responde 404 para desconhecido. O exe
 
 O token `mock-*` não é um token de autorização. Não tratá-lo como credencial real nem usar o ID enviado pelo cliente como prova de propriedade de viagem. Autenticação real e autorização por motorista/empresa são pendências do backend.
 
-O seed inclui os perfis CCO Ana/Bruno e os motoristas Carlos, Marina, João e Fernanda; Fernanda começa sem viagem. Bases existentes podem conter outros perfis. A preparação idempotente e os e-mails de demonstração estão em `avisai/backend/docs/PERFIS-DEMO.md`. O app deve sempre consumir a lista da API, sem fixar contagens ou IDs.
+O seed inclui os perfis CCO Ana/Bruno e os motoristas Carlos, Marina, João e Fernanda; Fernanda começa sem viagem. Bases existentes podem conter outros perfis. A preparação idempotente e os e-mails de demonstração estão em `rodar-backend/backend/docs/PERFIS-DEMO.md`. O app deve sempre consumir a lista da API, sem fixar contagens ou IDs.
 
 ## Contrato da rota mobile
 

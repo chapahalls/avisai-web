@@ -5,6 +5,7 @@ import { useSession } from '../features/auth';
 import { clock } from '../utils/format';
 import { DemoControls } from './DemoControls';
 import { Icon } from './Icon';
+import { RodarLogo } from './RodarLogo';
 import { ConnectionBanner } from './ConnectionBanner';
 import '../cco.css';
 
@@ -30,8 +31,8 @@ export function Layout() {
       <a href="#main-content" className="sr-only z-50 rounded-input bg-brand-500 p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">{t('app.skipContent')}</a>
       <aside className="cco-sidebar">
         <Link to="/" className="cco-brand" aria-label={t('app.name')}>
-          <span className="cco-brand-mark"><Icon name="truck" className="h-5 w-5" /></span>
-          <span className="cco-brand-text">{t('app.name')}<span>{t('app.subtitle')}</span></span>
+          <RodarLogo size={38} className="cco-brand-logo" />
+          <span className="cco-brand-subtitle">{t('app.subtitle')}</span>
         </Link>
         <p className="cco-nav-group">{t('cco.workspace')}</p>
         <nav aria-label={t('nav.main')} className="cco-side-nav">
@@ -50,7 +51,7 @@ export function Layout() {
       <div className="cco-workspace">
         <header className="cco-topbar">
           <div className="cco-topbar-left">
-            <Link to="/" className="cco-mobile-brand" aria-label={t('app.name')}><Icon name="truck" className="h-5 w-5" /><span>{t('app.name')}</span></Link>
+            <Link to="/" className="cco-mobile-brand" aria-label={t('app.name')}><RodarLogo size={24} /></Link>
             <div className="cco-topbar-title"><span>{t('cco.controlRoom')}</span><strong>{t('cco.roadOperations')}</strong></div>
             <span className="cco-topbar-divider" aria-hidden="true" />
             <div className="cco-clock">
