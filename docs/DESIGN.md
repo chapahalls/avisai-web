@@ -1,6 +1,6 @@
-# AvisAI Web · Design
+# RODAR Web · Design
 
-Painel escuro de CCO com mapa como área principal, inspirado na referência visual de monitoramento da frota e na paleta da Agora, com identidade AvisAI. Os tokens ficam no `@theme` de `src/index.css`, após `@import "tailwindcss";`; `src/cco.css` organiza o shell e o Dashboard. Não há `tailwind.config.js` nem `postcss.config.js`.
+Painel escuro de CCO com mapa como área principal, inspirado na referência visual de monitoramento da frota e na paleta da Agora, com identidade RODAR. Os tokens ficam no `@theme` de `src/index.css`, após `@import "tailwindcss";`; `src/cco.css` organiza o shell e o Dashboard. Não há `tailwind.config.js` nem `postcss.config.js`.
 
 A interface identifica a fonte operacional **API** ou **Demo**. No modo API, métricas/ranking e anexos usam o servidor; SSO, NF-e/CT-e e complementos ilustrativos continuam marcados como **MOCK**. Cor ou aparência semelhante não substitui a indicação de origem.
 
@@ -21,19 +21,23 @@ A interface identifica a fonte operacional **API** ou **Demo**. No modo API, mé
 | `alert-500` | `#F04438` | Escalada e falha de atendimento |
 | `ok-500` | `#17B26A` | Task assumida e descarga confirmada |
 | `rodar-400` | `#9BE22D` | Destaque da marca RODAR na home pública |
+| `rodar-mark` | `#A2F200` | Símbolo RODAR (bloco lima com o "R" vazado); só para a marca |
 | `night-950` | `#050806` | Fundo da home pública e do carregamento |
 | `font-sans` | Inter, sans-serif | Texto e controles |
 | `font-display` | Space Grotesk, sans-serif | Títulos, relógio e números |
+| `font-brand` | Kumbh Sans 750 | Palavra "RODAR" da assinatura, só na marca |
 | `font-mono` | monoespaçada do sistema | Contador e rótulos técnicos da home (sem fonte externa) |
 | `radius-card` | 12 px | Cards |
 | `radius-input` | 8 px | Campos e botões |
 
-Fontes da aplicação são locais, sem requisições ao Google Fonts para carregá-las. O SDK do Google Maps faz suas próprias requisições externas para o mapa. Espaçamento usa múltiplos de 4 px; números de KPIs e tempo recebem destaque sem competir com as ações da fila.
+Fontes da aplicação são locais, sem requisições ao Google Fonts para carregá-las.
+
+**Marca:** o símbolo e a assinatura ficam em `src/components/RodarLogo.tsx` (`RodarMark` e `RodarLogo`), a partir de `docs/RODAR-telas/marca/rodar-icone.svg`. O "R" do símbolo é vazado e mostra o fundo. Na assinatura, a palavra "RODAR" (Kumbh Sans 750, espaçamento 0,01 em, cor `ink-50`) tem altura de maiúscula ≈ 0,53 × a altura do símbolo e fica a ≈ 0,2 × essa altura dele. Sidebar compacta mostra só o símbolo; a sidebar larga, o cabeçalho móvel e o login mostram a assinatura. O SDK do Google Maps faz suas próprias requisições externas para o mapa. Espaçamento usa múltiplos de 4 px; números de KPIs e tempo recebem destaque sem competir com as ações da fila.
 
 ## Telas e componentes
 
-- **Home pública (`/home`):** carregamento com anel de 120 marcações que acendem conforme o progresso, contador `[ 00 ]`–`[ 100 ]`, etapa textual (rotas, frota, CCO, pronto) e coordenadas do CCO. O progresso é anunciado como `progressbar` com valor e etapa; a cor não comunica sozinha. Na saída, o anel encolhe até o centro e o chip da abertura assume o mesmo lugar. Rolagem suave por Lenis, desligada com movimento reduzido.
-- **Login:** card central com AvisAI, contexto do CCO, e-mail no modo API, ação SSO e indicação explícita de autenticação MOCK. Carregamento/erro não vira sessão fictícia automaticamente.
+- **Home pública (`/home`):** carregamento com anel de 120 marcações que acendem conforme o progresso, contador `[ 00 ]`–`[ 100 ]`, etapa textual (rotas, frota, CCO, pronto) e coordenadas do CCO. O progresso é anunciado como `progressbar` com valor e etapa; a cor não comunica sozinha. Na saída, o anel encolhe até o centro e o símbolo RODAR da abertura assume o mesmo lugar. Rolagem suave por Lenis, desligada com movimento reduzido.
+- **Login:** card central com RODAR, contexto do CCO, e-mail no modo API, ação SSO e indicação explícita de autenticação MOCK. Carregamento/erro não vira sessão fictícia automaticamente.
 - **Shell:** sidebar compacta de monitoramento; cabeçalho com fonte, conexão, relógio, idioma e perfil. Controles da simulação pertencem à Demo. O espaço principal pertence à operação da frota.
 - **Dashboard:** quatro indicadores resumidos acima; painel de monitoramento em largura; fila de Tasks e eventos abaixo; resumo de desempenho ao fim. API preserva rótulos/unidades do backend: escaladas históricas, contatos resolvidos e latência LLM; nulos são `—`.
 - **Monitoramento:** barra de busca/filtros, lista da frota à esquerda, mapa no centro e dossiê do caminhão selecionado à direita. Seleção pela lista, rota ou marcador destaca a mesma viagem; a busca também encontra números de nota. Na Demo, o caminho percorrido é contínuo e o restante tracejado; Seguir centraliza o caminhão e sua orientação acompanha os segmentos. No modo API, posições ausentes recebem rótulo explícito e o trajeto mantém a geometria recebida.

@@ -2,8 +2,8 @@
   "app": {
     "subtitle": "Central de operação",
     "simClock": "1 segundo = 1 minuto simulado",
-    "name": "AvisAI",
-    "pageTitle": "AvisAI · Central de operação",
+    "name": "RODAR",
+    "pageTitle": "RODAR · Central de operação",
     "language": "Idioma",
     "languages": {
       "pt": "PT",
@@ -22,7 +22,7 @@
   },
   "auth": {
     "title": "Cada hora parada tem uma história.",
-    "subtitle": "A central do AvisAI transforma avisos de chegada e conversas em visibilidade para sua operação.",
+    "subtitle": "A central do RODAR transforma avisos de chegada e conversas em visibilidade para sua operação.",
     "sso": "Entrar com SSO",
     "loading": "Entrando…",
     "mockNotice": "SSO simulado. Acesso local, sem senha ou credencial.",
@@ -162,7 +162,7 @@
     }
   },
   "operator": {
-    "title": "Chamada do AvisAI",
+    "title": "Chamada do RODAR",
     "eyebrow": "Fallback Agora RTC",
     "hint": "Quando a ligação PSTN falha, o operador atende aqui pelo navegador.",
     "waiting": "Aguardando uma chamada do agente.",
@@ -352,7 +352,7 @@
     },
     "originLabel": "Origem",
     "receiverLabel": "Destinatário",
-    "origin": "CD AvisAI Campinas — fictício",
+    "origin": "CD RODAR Campinas — fictício",
     "cargoHint": "Manifesto local gerado por viagem. Os pesos, volumes e valores correspondem às NFs fictícias abaixo.",
     "itemPackaging": "{{count}} volumes × {{weight}} kg",
     "itemUnitValue": "{{value}} / volume",

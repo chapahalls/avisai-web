@@ -1,8 +1,8 @@
-# AvisAI Web · Integração com o backend
+# RODAR Web · Integração com o backend
 
-O painel tem dois modos explícitos: **API**, com operação, métricas e ranking recebidos do backend AvisAI, e **Demo**, com a simulação local. SSO, NF-e/CT-e e complementos comerciais continuam declarados como **MOCK**; anexos binários enviados pelo CCO têm contrato próprio. Dados API não são completados com caminhões, posições, eventos, histórico ou valores financeiros da demo.
+O painel tem dois modos explícitos: **API**, com operação, métricas e ranking recebidos do backend RODAR, e **Demo**, com a simulação local. SSO, NF-e/CT-e e complementos comerciais continuam declarados como **MOCK**; anexos binários enviados pelo CCO têm contrato próprio. Dados API não são completados com caminhões, posições, eventos, histórico ou valores financeiros da demo.
 
-Os contratos abaixo foram conferidos no código de `avisai/backend/app/api`, nos modelos, schemas e enums do backend. Leituras, SSE e apresentação foram validados localmente. Publicação, atribuição, provisionamento técnico de motorista e upload foram executados com dados fictícios no backend; confirmação de Task, descarga e perguntas foram verificadas em testes controlados. Os detalhes estão em **Validação realizada**.
+Os contratos abaixo foram conferidos no código de `rodar-backend/backend/app/api`, nos modelos, schemas e enums do backend. Leituras, SSE e apresentação foram validados localmente. Publicação, atribuição, provisionamento técnico de motorista e upload foram executados com dados fictícios no backend; confirmação de Task, descarga e perguntas foram verificadas em testes controlados. Os detalhes estão em **Validação realizada**.
 
 ## Configuração e estados da conexão
 
@@ -87,7 +87,7 @@ Upload multipart exige `arquivo`; descrição tem até 1.000 caracteres. Limite 
 
 Metadados ficam no banco, conteúdo em `ARQUIVOS_DIR` (padrão `data/arquivos`; Docker `/app/data/arquivos` com volume `./backend/data/arquivos:/app/data/arquivos`). Backup exige banco e arquivos juntos. Reset operacional preserva os anexos; não há DELETE/versionamento nesta entrega. Uma interrupção abrupta pode deixar arquivo órfão; o contrato não promete atomicidade completa entre banco e filesystem.
 
-Upload/download persiste conteúdo real, mas não registra autor autenticado nem autoriza acesso por motorista/empresa. NF-e/CT-e MOCK são independentes. O backend alterado fica em `/home/henry/Documents/avisai/backend`, fora deste repositório web; sua migration e volume precisam acompanhar a execução. O modelo de consumo do motorista está em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md).
+Upload/download persiste conteúdo real, mas não registra autor autenticado nem autoriza acesso por motorista/empresa. NF-e/CT-e MOCK são independentes. O backend alterado fica em `/home/henry/Documents/rodar-backend/backend`, fora deste repositório web; sua migration e volume precisam acompanhar a execução. O modelo de consumo do motorista está em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md).
 
 ## APIs existentes que o painel não expõe
 

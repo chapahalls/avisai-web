@@ -1,14 +1,14 @@
-# AvisAI Web · CCO
+# RODAR Web · CCO
 
-Painel da central de operação do AvisAI: frota, Tasks, ligações, indicadores, publicação de rotas e anexos. **Modo API** usa operação, métricas/ranking e arquivos do backend AvisAI; **modo Demo** executa a simulação no navegador. Login e documentos fiscais permanecem declarados como MOCK. O mapa base usa Google Maps JavaScript API quando uma chave é configurada.
+Painel da central de operação do RODAR: frota, Tasks, ligações, indicadores, publicação de rotas e anexos. **Modo API** usa operação, métricas/ranking e arquivos do backend RODAR; **modo Demo** executa a simulação no navegador. Login e documentos fiscais permanecem declarados como MOCK. O mapa base usa Google Maps JavaScript API quando uma chave é configurada.
 
-![Fluxo visual da plataforma AvisAI: publicação da rota, motorista, monitoramento, aviso prévio, Task e descarga](docs/assets/avisai-workflow.gif)
+![Fluxo visual da plataforma RODAR: publicação da rota, motorista, monitoramento, aviso prévio, Task e descarga](docs/assets/avisai-workflow.gif)
 
 O fluxo mostra uma operação fictícia da Demo: o CCO publica e atribui a rota, acompanha a viagem, recebe o aviso de aproximação, trata a Task de chegada e confirma a descarga. Os estados exibidos não comprovam GPS, telefonia ou autenticação reais.
 
 ## Como os papéis se conectam
 
-![Fluxograma do AvisAI: CCO, agente de voz, motorista e recebedor](docs/images/fluxograma.png)
+![Fluxograma do RODAR: CCO, agente de voz, motorista e recebedor](docs/images/fluxograma.png)
 
 | Papel | Onde | O que faz |
 |---|---|---|
@@ -34,7 +34,7 @@ Todas as rotas, exceto `/home` e `/login`, exigem uma sessão CCO. Hoje essa ses
 
 | URL | Área | Uso principal |
 |---|---|---|
-| `/home` | Home pública RODAR | tela de carregamento, abertura com o chip e rolagem suave (Lenis); não usa API nem Demo |
+| `/home` | Home pública RODAR | tela de carregamento, abertura com o símbolo RODAR e rolagem suave (Lenis); não usa API nem Demo |
 | `/` | Monitoramento | frota, mapa, dossiê, Tasks, alertas, eventos e KPIs rápidos |
 | `/dispatch` | Programação | publicar/reatribuir uma rota para motorista cadastrado e administrar anexos |
 | `/trips/:id` | Dossiê | carga, notas MOCK, eventos, pedidos, mensagens e arquivos da viagem |
@@ -76,13 +76,13 @@ As dependências seguem `pages → features → components/services/lib/utils/ty
 
 O GIF abaixo foi gerado a partir da gravação da demonstração do painel e reduzido para uma resolução adequada ao README. Dados, perfis, rota, NF e GPS exibidos são fictícios; a animação não comprova credenciais, GPS ou telefonia reais.
 
-![Demonstração do painel AvisAI: monitoramento da frota, mapa e dossiê da viagem](docs/assets/dashboard-demo.gif)
+![Demonstração do painel RODAR: monitoramento da frota, mapa e dossiê da viagem](docs/assets/dashboard-demo.gif)
 
 As imagens estáticas mostram a sessão e o dashboard conectados a uma base de demonstração. A ausência de GPS ou de documento completo deve continuar visível como limitação da API.
 
 <p align="center">
-  <img src="docs/assets/login.png" alt="Login do painel AvisAI com seletor de perfil CCO" width="300" />
-  <img src="docs/assets/dashboard-api.jpg" alt="Dashboard do AvisAI conectado à API com rota, mapa e dossiê" width="700" />
+  <img src="docs/assets/login.png" alt="Login do painel RODAR com seletor de perfil CCO" width="300" />
+  <img src="docs/assets/dashboard-api.jpg" alt="Dashboard do RODAR conectado à API com rota, mapa e dossiê" width="700" />
 </p>
 
 ## Como rodar
@@ -105,7 +105,7 @@ npm run preview
 
 O servidor do Vite serve os arquivos locais durante o desenvolvimento. Sem chave Google, o mapa informa a limitação e mantém a visão local, a lista da frota e a seleção de viagens.
 
-## Conectar ao backend AvisAI
+## Conectar ao backend RODAR
 
 Configure a `.env` local e reinicie o Vite:
 
@@ -133,7 +133,7 @@ No modo API, a tela `/dispatch` consulta somente perfis de motorista já cadastr
 
 O CCO pode anexar **arquivos reais** à rota e baixá-los depois. São aceitos PDF/JPEG/PNG/WebP/GIF, até 10 MiB por padrão; o limite é configurável no backend. O dossiê também consulta pedidos/respostas da central e metadados fiscais MOCK, preservando sua origem.
 
-Esta entrega modifica também `/home/henry/Documents/avisai/backend`, fora do repositório web. Metadados dos anexos ficam no banco e os binários em `ARQUIVOS_DIR`; o Compose monta `./backend/data/arquivos:/app/data/arquivos`. A migration e esse volume precisam acompanhar o backend; backup inclui banco e arquivos. Reset operacional preserva anexos.
+Esta entrega modifica também `/home/henry/Documents/rodar-backend/backend`, fora do repositório web. Metadados dos anexos ficam no banco e os binários em `ARQUIVOS_DIR`; o Compose monta `./backend/data/arquivos:/app/data/arquivos`. A migration e esse volume precisam acompanhar o backend; backup inclui banco e arquivos. Reset operacional preserva anexos.
 
 Para implementar o consumo pelo app do motorista, use o [modelo mobile](docs/CONTRATO-MOBILE.md) e o [exemplo TypeScript independente](docs/examples/mobile-client.ts). São referências de integração, não um app mobile entregue.
 
@@ -147,7 +147,7 @@ A cascata tenta Twilio PSTN primeiro e registra qualquer resultado. Sem credenci
 
 ## Popular o banco e escolher usuários
 
-No repositório do backend (`../avisai`), com os serviços `db` e `api` iniciados:
+No repositório do backend (`../rodar-backend`), com os serviços `db` e `api` iniciados:
 
 ```bash
 docker compose exec -T api alembic upgrade head

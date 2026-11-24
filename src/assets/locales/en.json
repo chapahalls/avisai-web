@@ -2,8 +2,8 @@
   "app": {
     "subtitle": "Operations center",
     "simClock": "1 second = 1 simulated minute",
-    "name": "AvisAI",
-    "pageTitle": "AvisAI · Operations center",
+    "name": "RODAR",
+    "pageTitle": "RODAR · Operations center",
     "language": "Language",
     "languages": {
       "pt": "PT",
@@ -22,7 +22,7 @@
   },
   "auth": {
     "title": "Every waiting hour tells a story.",
-    "subtitle": "The AvisAI control center turns arrival alerts and conversations into visibility for your operation.",
+    "subtitle": "The RODAR control center turns arrival alerts and conversations into visibility for your operation.",
     "sso": "Sign in with SSO",
     "loading": "Signing in…",
     "mockNotice": "Simulated SSO. Local access, no password or credentials.",
@@ -162,7 +162,7 @@
     }
   },
   "operator": {
-    "title": "AvisAI call",
+    "title": "RODAR call",
     "eyebrow": "Agora RTC fallback",
     "hint": "When the PSTN call fails, the operator answers here in the browser.",
     "waiting": "Waiting for an agent call.",
@@ -352,7 +352,7 @@
     },
     "originLabel": "Origin",
     "receiverLabel": "Receiver",
-    "origin": "AvisAI Campinas distribution center — fictional",
+    "origin": "RODAR Campinas distribution center — fictional",
     "cargoHint": "A local manifest generated for this trip. Weights, packages and values match the fictional invoices below.",
     "itemPackaging": "{{count}} packages × {{weight}} kg",
     "itemUnitValue": "{{value}} / package",

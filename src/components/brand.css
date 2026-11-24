@@ -1,0 +1,11 @@
+/* Marca RODAR · cores só por tokens (src/index.css) */
+
+.rodar-mark { display: block; flex-shrink: 0; color: var(--color-rodar-mark); }
+
+/* Assinatura: altura de maiúscula ≈ 0,53 × símbolo (Kumbh Sans: maiúscula = 0,732 em → corpo ≈ 0,724 × símbolo); espaço ≈ 0,2 × símbolo. */
+.rodar-logo { --rodar-logo-size: 38px; display: inline-flex; align-items: center; gap: calc(var(--rodar-logo-size) * .2); line-height: 1; }
+.rodar-logo-mark { width: calc(var(--rodar-logo-size) * 775 / 799); height: var(--rodar-logo-size); }
+.rodar-logo-word {
+  font-family: var(--font-brand); font-size: calc(var(--rodar-logo-size) * .724); font-weight: 750;
+  letter-spacing: .01em; line-height: 1; color: var(--color-ink-50); white-space: nowrap;
+}

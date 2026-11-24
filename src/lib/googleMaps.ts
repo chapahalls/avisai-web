@@ -186,7 +186,7 @@ export function getRoadRoute(api: GoogleMapsLibraries, origin: LatLng, destinati
     routeCache.delete(key);
     if (error instanceof Error) {
       const message = error.message.replace(/AIza[\w-]+/g, '[redacted]').replace(/([?&]key=)[^&\s"']+/g, '$1[redacted]');
-      console.warn('AvisAI: Google Maps route request failed:', message);
+      console.warn('RODAR: Google Maps route request failed:', message);
     }
     throw error;
   });
