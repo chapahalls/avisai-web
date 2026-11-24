@@ -7,6 +7,11 @@ export const BUSINESS = {
   approachKm: 8,
 } as const;
 
+/** Premissas da calculadora pública de estadia (home): dias úteis por mês. */
+export const LANDING_CALCULATOR = {
+  workingDaysPerMonth: 22,
+} as const;
+
 /** Relógio simulado: 1 s real = 1 min. */
 export const SIM_MINUTES_PER_SECOND = 1;
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loaderTarget, nextDisplayed, loaderStage, formatCounter, tickDashArray, LOADER_MIN_MS, LOADER_MAX_MS } from '../.cache/tests/features/home/model.js';
+import { loaderTarget, nextDisplayed, loaderStage, formatCounter, tickDashArray, fleetRecovery, LOADER_MIN_MS, LOADER_MAX_MS } from '../.cache/tests/features/home/model.js';
 import { CABIN_FIT, sampleHomeTimeline, storyLineAt } from '../.cache/tests/features/home/three/timeline.js';
 
 const HOME_GLB_ASSETS = [
@@ -66,10 +66,10 @@ test('hero reserva mais scroll e libera o mapa do texto em telas largas', () => 
     new URL('../src/features/home/components/home.css', import.meta.url),
     'utf8',
   );
-  assert.match(css, /\.home-experience\s*\{[^}]*height:\s*860svh/s);
+  assert.match(css, /\.home-experience\s*\{[^}]*height:\s*1400svh/s);
   assert.match(css, /@media \(min-width: 900px\)/);
   assert.match(css, /data-stage='brazil'[\s\S]*data-stage='world'[\s\S]*text-align:\s*left/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*height:\s*720svh/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*height:\s*1150svh/);
 });
 
 test('globo balança mantendo o Brasil em destaque e colore os pontos conforme as rotas avançam', () => {
@@ -205,4 +205,14 @@ test('texto digitado revela uma linha por etapa e destaca o caractere corrente',
   assert.equal(typed.reveal, 1);
   assert.equal(world.line.stage, 'world');
   assert.equal(world.reveal, 1);
+});
+
+test('calculadora da home usa a regra de estadia (R5) e 22 dias úteis', () => {
+  const result = fleetRecovery({ trucks: 20, deliveriesPerDay: 1.5, lateShare: 0.35, extraHours: 2, loadTons: 22 });
+  assert.equal(result.lateDeliveries, 231);
+  assert.equal(result.stoppedHours, 462);
+  assert.equal(result.perDelivery, 110);
+  assert.equal(result.monthly, 25410);
+  assert.equal(result.yearly, 304920);
+  assert.equal(fleetRecovery({ trucks: 10, deliveriesPerDay: 1, lateShare: 0, extraHours: 3, loadTons: 20 }).monthly, 0);
 });

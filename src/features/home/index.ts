@@ -1,6 +1,13 @@
 export { HomeLoader } from './components/HomeLoader';
 export { HomeHero } from './components/HomeHero';
 export { HomeExperience } from './components/HomeExperience';
-export { HomePillars } from './components/HomePillars';
+export { HomeNav } from './components/HomeNav';
+export { HomePlatform } from './components/HomePlatform';
+export { HomeHowItWorks } from './components/HomeHowItWorks';
+export { HomeVoice, HomeAudience, HomeStart } from './components/HomeSections';
+export { HomeCalculator } from './components/HomeCalculator';
+export { HomeFaq } from './components/HomeFaq';
+export { HomeContact } from './components/HomeContact';
+export { HomeFooter } from './components/HomeFooter';
 export { useHomeIntro, HOME_ASSETS } from './hooks/useHomeIntro';
 export type { LoaderPhase, LoaderStage } from './model';

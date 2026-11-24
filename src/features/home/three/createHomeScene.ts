@@ -3,6 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RODAR_MARK_PATH } from '../../../components/RodarLogo';
 import { CABIN_FIT, sampleHomeTimeline, segment, smoothstep } from './timeline';
 import {
+  BRAZIL_EXTENT,
+  BRAZIL_FRAME,
+  brazilLonLatToMap,
   HOME_BRAZIL_TOPOGRAPHY_URL,
   HOME_WORLD_WIREFRAME_URL,
 } from './mapAssets';
@@ -1987,18 +1990,6 @@ const BRAZIL_POINTS: readonly Point2[] = [
   [-0.51, -1.73], [-0.77, -1.04], [-0.95, -0.35], [-1.13, 0.35], [-1.82, 1.04],
   [-2.52, 1.04], [-3.4, 1.73],
 ] as const;
-
-// Must match TARGET_FRAME in scripts/generate-brazil-topography.mjs and the
-// geographic extent of the source STL so cities land on the outline.
-const BRAZIL_EXTENT = { west: -73.99, east: -34.79, south: -33.75, north: 5.27 } as const;
-const BRAZIL_FRAME = { minX: -3.4, maxX: 3.46, minY: -4.43, maxY: 4.5 } as const;
-
-function brazilLonLatToMap([longitude, latitude]: LonLat): Point2 {
-  return [
-    THREE.MathUtils.mapLinear(longitude, BRAZIL_EXTENT.west, BRAZIL_EXTENT.east, BRAZIL_FRAME.minX, BRAZIL_FRAME.maxX),
-    THREE.MathUtils.mapLinear(latitude, BRAZIL_EXTENT.south, BRAZIL_EXTENT.north, BRAZIL_FRAME.minY, BRAZIL_FRAME.maxY),
-  ];
-}
 
 const BRAZIL_CITIES = {
   saoPaulo: [-46.63, -23.55],

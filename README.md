@@ -34,7 +34,7 @@ Todas as rotas, exceto `/home` e `/login`, exigem uma sessão CCO. Hoje essa ses
 
 | URL | Área | Uso principal |
 |---|---|---|
-| `/home` | Home pública RODAR | tela de carregamento, abertura com o símbolo RODAR e rolagem suave (Lenis); não usa API nem Demo |
+| `/home` | Home pública RODAR | carregamento, história 3D (chip → mundo), plataforma, como funciona (caminhão 3D na doca), calculadora de estadia, perguntas e contato; não usa API nem Demo. Os formulários da calculadora e de contato são MOCK: validam no navegador e não enviam dados |
 | `/` | Monitoramento | frota, mapa, dossiê, Tasks, alertas, eventos e KPIs rápidos |
 | `/dispatch` | Programação | publicar/reatribuir uma rota para motorista cadastrado e administrar anexos |
 | `/trips/:id` | Dossiê | carga, notas MOCK, eventos, pedidos, mensagens e arquivos da viagem |
