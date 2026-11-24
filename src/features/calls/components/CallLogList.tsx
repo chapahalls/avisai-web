@@ -4,6 +4,7 @@ import { receiverById, useConnection, useOps } from '../../../services/operation
 import { clock } from '../../../utils/format';
 import { Badge } from '../../../components/Badge';
 import { Icon } from '../../../components/Icon';
+import { APP_ROUTES } from '../../../lib/routes';
 
 export function CallLogList({ tripId }: { tripId?: string }) {
   const { t, i18n } = useTranslation();
@@ -31,7 +32,7 @@ export function CallLogList({ tripId }: { tripId?: string }) {
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-300">
                   <time className="font-display" dateTime={call.occurredAt}>{time}</time>
                   <span aria-hidden="true">·</span>
-                  <Link to={`/trips/${call.tripId}`} className="font-display text-brand-500 hover:underline">{call.plate}</Link>
+                  <Link to={APP_ROUTES.trip(call.tripId)} className="font-display text-brand-500 hover:underline">{call.plate}</Link>
                   <span aria-hidden="true">·</span>
                   <span>{t(isApi ? `api.calls.moment.${call.moment}` : `calls.moment.${call.moment}`)}</span>
                 </p>

@@ -6,6 +6,7 @@ import type { BackendDocument, BackendRequest } from '../../../services/api/type
 import { brl } from '../../../utils/format';
 import { Badge } from '../../../components/Badge';
 import { RouteFiles } from '../../dispatch';
+import { APP_ROUTES } from '../../../lib/routes';
 
 export function RouteDocuments({ routeId, showCommercialValues = true }: { routeId: number; showCommercialValues?: boolean }) {
   const { t, i18n } = useTranslation();
@@ -22,7 +23,7 @@ export function RouteDocuments({ routeId, showCommercialValues = true }: { route
   }, [routeId]);
   return <div className="space-y-5">
     <RouteFiles routeId={routeId} />
-    <Link to="/dispatch" className="inline-block text-sm text-brand-500 hover:underline">{t('dispatch.nav')}</Link>
+    <Link to={APP_ROUTES.dispatch} className="inline-block text-sm text-brand-500 hover:underline">{t('dispatch.nav')}</Link>
     <section className="space-y-3 border-t border-ink-700 pt-5">
       <h3 className="font-display font-semibold">{t('dispatch.documents.title')}</h3>
       <p className="text-xs leading-relaxed text-ink-300">{t('dispatch.documents.notice')}</p>

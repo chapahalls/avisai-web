@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { getApiClient, useConnection } from '../services/operations';
 import type { BackendOperatorCall } from '../services/api/types';
+import { APP_ROUTES } from '../lib/routes';
 
 type JoinState = 'idle' | 'joining' | 'active' | 'error';
 
@@ -81,7 +82,7 @@ export function OperatorPage() {
 
   return (
     <section className="mx-auto max-w-2xl">
-      <Link to="/" className="text-sm text-brand-500 hover:underline">← {t('trip.back')}</Link>
+      <Link to={APP_ROUTES.dashboard} className="text-sm text-brand-500 hover:underline">← {t('trip.back')}</Link>
       <div className="mt-5">
         <PageHeader eyebrow={t('operator.eyebrow')} title={t('operator.title')} description={t('operator.hint')} />
       </div>

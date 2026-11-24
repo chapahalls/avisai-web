@@ -18,7 +18,10 @@
     "receivers": "Receivers",
     "calls": "Calls",
     "workspace": "Control center",
-    "main": "Main navigation"
+    "main": "Main navigation",
+    "monitoring": "Monitoring",
+    "dispatch": "Trip dispatch",
+    "analytics": "Analytics"
   },
   "auth": {
     "title": "Every waiting hour tells a story.",
@@ -342,7 +345,9 @@
       "stayHint": "demo calculation",
       "escalated": "Escalated tasks",
       "escalatedHint": "awaiting operator action"
-    }
+    },
+    "brand": "RODAR · CCO",
+    "brandSubtitle": "Operations control center"
   },
   "dossier": {
     "title": "Trip dossier",

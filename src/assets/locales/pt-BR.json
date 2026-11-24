@@ -18,7 +18,10 @@
     "receivers": "Recebedores",
     "calls": "Ligações",
     "workspace": "Central de controle",
-    "main": "Navegação principal"
+    "main": "Navegação principal",
+    "monitoring": "Monitoramento",
+    "dispatch": "Trip dispatch",
+    "analytics": "Análises"
   },
   "auth": {
     "title": "Cada hora parada tem uma história.",
@@ -342,7 +345,9 @@
       "stayHint": "regra da demonstração",
       "escalated": "Tasks escaladas",
       "escalatedHint": "aguardando ação do CCO"
-    }
+    },
+    "brand": "RODAR · CCO",
+    "brandSubtitle": "Centro de Controle Operacional"
   },
   "dossier": {
     "title": "Dossiê da viagem",

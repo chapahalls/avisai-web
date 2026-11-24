@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useOps } from '../../../services/operations';
+import { APP_ROUTES } from '../../../lib/routes';
 
 type AlertToast = {
   id: string;
@@ -96,12 +97,12 @@ export function LiveAlerts({ onAlertSelect }: { onAlertSelect?: (tripId: string)
               className="rounded p-1 text-ink-200 hover:bg-ink-950/30" aria-label={t('alerts.dismiss')}>×</button>
           </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
-            {toast.tripId && <Link className="text-ink-50 underline" to={`/trips/${toast.tripId}`}>{t('alerts.openTrip')}</Link>}
+            {toast.tripId && <Link className="text-ink-50 underline" to={APP_ROUTES.trip(toast.tripId)}>{t('alerts.openTrip')}</Link>}
             {toast.tripId && onAlertSelect && <button type="button" onClick={() => {
               onAlertSelect(toast.tripId);
               setToasts((current) => current.filter((item) => item.id !== toast.id));
             }} className="text-ink-50 underline">{t('alerts.sendMessage')}</button>}
-            {toast.priority === 'critico' && <Link className="text-ink-50 underline" to="/operator">{t('alerts.openOperator')}</Link>}
+            {toast.priority === 'critico' && <Link className="text-ink-50 underline" to={APP_ROUTES.operator}>{t('alerts.openOperator')}</Link>}
           </div>
         </article>
       ))}

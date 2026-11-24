@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BUSINESS } from '../../../lib/config';
 import { stayValue } from '../../../utils/stay';
 import type { DockSceneController } from '../three/createDockScene';
-import { DOCK_PROVE_TIMING, DOCK_STEPS, dockStepAt } from '../three/createDockScene';
+import { DOCK_PROVE_TIMING, DOCK_STEPS, dockStepAt } from '../three/dockTimeline';
 import { clamp01 } from '../three/timeline';
 
 /** Dados fictícios da cena: 22 t e espera de 5h09. */

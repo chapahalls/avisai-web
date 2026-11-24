@@ -5,6 +5,7 @@ import { receiverById, useConnection, useOps } from '../../../services/operation
 import { hhmm } from '../../../utils/format';
 import { brl } from '../../../utils/format';
 import { Badge } from '../../../components/Badge';
+import { APP_ROUTES } from '../../../lib/routes';
 
 const order = { escalated: 0, open: 1, acknowledged: 2, closed: 3 } as const;
 const tone = { escalated: 'alert', open: 'wait', acknowledged: 'ok', closed: 'brand' } as const;
@@ -38,7 +39,7 @@ export function TaskQueue() {
               <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <Link to={`/trips/${task.tripId}`} className="font-display text-base font-semibold hover:text-brand-500">{trip?.plate ?? meta?.plate ?? t('common.unavailable')}</Link>
+                  <Link to={APP_ROUTES.trip(task.tripId)} className="font-display text-base font-semibold hover:text-brand-500">{trip?.plate ?? meta?.plate ?? t('common.unavailable')}</Link>
                   <Badge tone={tone[task.status]} label={t(`tasks.status.${task.status}`)} />
                 </div>
                 <p className="mt-2 text-sm text-ink-300">
