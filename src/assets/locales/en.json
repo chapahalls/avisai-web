@@ -390,7 +390,27 @@
       "escalatedHint": "awaiting operator action"
     },
     "brand": "RODAR · CCO",
-    "brandSubtitle": "Operations control center"
+    "brandSubtitle": "Operations control center",
+    "mode": {
+      "demo": "Demo mode",
+      "demoLabel": "DEMO",
+      "live": "Live mode",
+      "liveLabel": "LIVE",
+      "menu": "Operation mode",
+      "useDemo": "Use demo",
+      "useLive": "Connect to live mode",
+      "liveUnavailable": "Live mode unavailable: configure the API URL.",
+      "retry": "Retry connection"
+    },
+    "access": {
+      "title": "Access and profiles",
+      "subtitle": "Hierarchical access flow",
+      "admin": "An administrator registers the user, corporate email, and access role.",
+      "invite": "The invitation is sent to the provided corporate email.",
+      "password": "The user opens the temporary link and sets their own password.",
+      "twoFactor": "Sign-in requires two-factor authentication (2FA) through Keycloak.",
+      "note": "Interface preview. Sending invitations and validating 2FA require identity-service integration."
+    }
   },
   "dossier": {
     "title": "Trip dossier",

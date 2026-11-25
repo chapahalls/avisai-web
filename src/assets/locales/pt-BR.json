@@ -20,7 +20,7 @@
     "workspace": "Central de controle",
     "main": "Navegação principal",
     "monitoring": "Monitoramento",
-    "dispatch": "Trip dispatch",
+    "dispatch": "Despacho de viagens",
     "analytics": "Análises",
     "mobileDemo": "Demo mobile"
   },
@@ -390,7 +390,27 @@
       "escalatedHint": "aguardando ação do CCO"
     },
     "brand": "RODAR · CCO",
-    "brandSubtitle": "Centro de Controle Operacional"
+    "brandSubtitle": "Centro de Controle Operacional",
+    "mode": {
+      "demo": "Modo de demonstração",
+      "demoLabel": "DEMO",
+      "live": "Modo ao vivo",
+      "liveLabel": "LIVE",
+      "menu": "Modo de operação",
+      "useDemo": "Usar demonstração",
+      "useLive": "Conectar ao modo ao vivo",
+      "liveUnavailable": "Modo ao vivo indisponível: configure a URL da API.",
+      "retry": "Tentar conexão novamente"
+    },
+    "access": {
+      "title": "Acesso e perfis",
+      "subtitle": "Fluxo hierárquico de acesso",
+      "admin": "O administrador cadastra o usuário, o e-mail corporativo e o perfil de acesso.",
+      "invite": "O convite segue para o e-mail corporativo informado.",
+      "password": "O usuário abre o link temporário e define a própria senha.",
+      "twoFactor": "O acesso exige autenticação em duas etapas (2FA) pelo Keycloak.",
+      "note": "Prévia da interface. O envio do convite e a validação 2FA dependem da integração com o serviço de identidade."
+    }
   },
   "dossier": {
     "title": "Dossiê da viagem",
@@ -498,7 +518,7 @@
   },
   "api": {
     "workspace": "Operação conectada",
-    "clock": "Horário local · backend",
+    "clock": "Horário local · API",
     "summaryMock": "Indicadores simulados · sem API de métricas",
     "rankingMock": "Ranking simulado · sem API de recebedores",
     "callsHint": "Ligações, resultados e transcrições recebidos do backend.",

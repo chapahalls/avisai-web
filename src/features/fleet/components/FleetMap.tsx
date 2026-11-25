@@ -452,11 +452,11 @@ export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
         </aside>}
         <div className="tracking-map-column">
           <RoadMap trips={visibleTrips} selected={selected} onSelect={selectTruck} following={following && !!selected} fitRequest={fitRequest} />
-          <div className="tracking-route-strip">
+          {(!embedded || selected) && <div className="tracking-route-strip">
             <div><span>{selected?.plate ?? t('tracking.entireFleet')}</span><strong>{selected?.backend ? `${selected.backend.originName} → ${selected.backend.destinationName}` : selected ? t('tracking.routeDirection', { city: cities[selected.receiverId] }) : t(mode === 'api' ? 'api.region' : 'tracking.region')}</strong></div>
             <div><span>{t('tracking.distanceLeft')}</span><strong>{typeof distance === 'number' ? t('tracking.km', { value: distance.toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) }) : '—'}</strong></div>
             <div><span>{t(mode === 'api' ? 'api.arrivalEstimate' : 'tracking.arrivalEstimate')}</span><strong>{selected ? selected.phase === 'waiting' || selected.phase === 'unloaded' ? t('tracking.arrived') : typeof eta === 'number' ? clock(simMinutes + eta) : '—' : '—'}</strong></div>
-          </div>
+          </div>}
           <p className="tracking-attribution">{mode === 'api' ? <>{t('api.backendRoute')}{selected && !getTripRoute(selected).points.length && ` · ${t('api.noGeometry')}`}{selected?.positionKnown === false && ` · ${t('api.noPosition')}`}{selected?.positionSource && ` · ${t('api.positionSource', { source: t(`api.positionSources.${selected.positionSource}`) })}`}{selected?.lastPositionAt && ` · ${t('api.lastPosition', { time: new Intl.DateTimeFormat(i18n.resolvedLanguage, { timeStyle: 'medium' }).format(new Date(selected.lastPositionAt)) })}`}{selected?.lastPositionAt && Date.now() - new Date(selected.lastPositionAt).getTime() > 120_000 && ` · ${t('api.stalePosition')}`}</> : <>{t('tracking.routeData')} · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> / OSRM</>}</p>
         </div>
         {!tripId && !embedded && selected && <aside id={panelId} ref={panel} className="tracking-trip-panel" aria-label={t('tracking.selectedTruck', { plate: selected.plate })}>

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DriverRequests } from '../features/tasks';
 import { FleetMap } from '../features/fleet';
 import { AgentDecisions, DriverMessages, EventFeed, LiveAlerts } from '../features/trips';
-import { AlertQueue, deriveAlerts, DockWindows, LiveCall, MonitoringKpis, TripGrid, VehiclePanel } from '../features/monitoring';
+import { AlertQueue, deriveAlerts, DockWindows, MonitoringKpis, TripGrid, VehiclePanel } from '../features/monitoring';
 import { useMode, useOps } from '../services/operations';
 import '../features/monitoring/monitoring.css';
 
@@ -12,6 +12,8 @@ export function DashboardPage({ initialTripId }: { initialTripId?: string } = {}
   const { t } = useTranslation();
   const mode = useMode();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(initialTripId ?? null);
+  const [alertQueueExpanded, setAlertQueueExpanded] = useState(true);
+  const [selectionDismissed, setSelectionDismissed] = useState(false);
   const [alertTripId, setAlertTripId] = useState<string | null>(null);
   const trips = useOps((state) => state.trips);
   const tasks = useOps((state) => state.tasks);
@@ -21,29 +23,38 @@ export function DashboardPage({ initialTripId }: { initialTripId?: string } = {}
   // Seleção inicial: o alerta mais grave; sem alertas, a primeira viagem ativa.
   useEffect(() => {
     if (selectedTripId && trips.some((trip) => trip.id === selectedTripId)) return;
+    if (selectionDismissed) return;
     const firstAlert = deriveAlerts({ trips, tasks, simMinutes })[0]?.tripId;
-    setSelectedTripId(firstAlert ?? trips.find((trip) => trip.phase !== 'unloaded')?.id ?? trips[0]?.id ?? null);
-  }, [selectedTripId, trips, tasks, simMinutes]);
+    const nextTripId = firstAlert ?? trips.find((trip) => trip.phase !== 'unloaded')?.id ?? trips[0]?.id ?? null;
+    if (nextTripId !== selectedTripId) setSelectedTripId(nextTripId);
+  }, [selectedTripId, selectionDismissed, trips, tasks, simMinutes]);
+
+  const selectTrip = (tripId: string) => {
+    setSelectionDismissed(false);
+    setSelectedTripId(tripId);
+  };
+
+  const closeVehiclePanel = () => {
+    setSelectionDismissed(true);
+    setSelectedTripId(null);
+  };
 
   const selectFromAlert = (tripId: string) => {
     setAlertTripId(tripId);
-    setSelectedTripId(tripId);
+    selectTrip(tripId);
   };
 
   return (
     <div className="mon">
       <h1 className="sr-only">{t('monitoring.title')}</h1>
       <MonitoringKpis />
-      <div className="mon-main">
-        <AlertQueue selectedTripId={selectedTripId} onSelect={setSelectedTripId} />
-        <div className="mon-map"><FleetMap key={mode} selectedTripId={selectedTripId} onSelectTrip={setSelectedTripId} /></div>
-        <div className="mon-side">
-          <VehiclePanel tripId={selectedTripId} />
-          <LiveCall tripId={selectedTripId} />
-        </div>
+      <div className="mon-main" data-selected={Boolean(selectedTripId)} data-alert-expanded={alertQueueExpanded}>
+        <AlertQueue expanded={alertQueueExpanded} onToggle={() => setAlertQueueExpanded((value) => !value)} selectedTripId={selectedTripId} onSelect={selectTrip} />
+        <div className="mon-map"><FleetMap key={mode} selectedTripId={selectedTripId} onSelectTrip={selectTrip} /></div>
+        {selectedTripId && <div className="mon-side"><VehiclePanel key={selectedTripId} tripId={selectedTripId} onClose={closeVehiclePanel} /></div>}
       </div>
-      <TripGrid selectedTripId={selectedTripId} onSelect={setSelectedTripId} />
-      <DockWindows onSelect={setSelectedTripId} />
+      <TripGrid selectedTripId={selectedTripId} onSelect={selectTrip} />
+      <DockWindows onSelect={selectTrip} />
       <LiveAlerts onAlertSelect={selectFromAlert} />
       {alertTrip?.backendId && <section className="cco-alert-message" aria-label={t('driverMessages.alertTitle')}>
         <DriverMessages key={alertTrip.id} routeId={alertTrip.backendId} driverName={alertTrip.driver} highlighted onDismissHighlight={() => setAlertTripId(null)} />
