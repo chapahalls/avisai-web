@@ -86,7 +86,7 @@ export function LiveAlerts({ onAlertSelect }: { onAlertSelect?: (tripId: string)
   return (
     <aside className="fixed right-4 top-16 z-50 grid w-[min(26rem,calc(100vw-2rem))] gap-3 sm:top-4" aria-live="assertive" aria-label={t('alerts.live')}>
       {toasts.map((toast, index) => (
-        <article key={toast.id} className={`rounded-card border-l-4 p-4 shadow-xl shadow-ink-950/40 ${index > 0 ? 'max-sm:hidden' : ''} ${priorityClass[toast.priority]}`}>
+        <article key={toast.id} className={`rounded-card border-l-4 p-4 shadow-xl shadow-depth/40 ${index > 0 ? 'max-sm:hidden' : ''} ${priorityClass[toast.priority]}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-display text-sm font-semibold">{toast.title}</p>

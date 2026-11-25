@@ -92,7 +92,7 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
       <div className="flex flex-wrap justify-end gap-3">
         {!highlighted && <button type="button" onClick={() => setOpen(false)} className="rounded-input border border-ink-700 px-4 py-2 text-sm font-semibold">{t('driverMessages.cancel')}</button>}
         <button type="submit" disabled={connection.status !== 'connected' || pending || !remetente.trim() || !texto.trim()} aria-busy={pending}
-          className="rounded-input bg-brand-500 px-4 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
+          className="rounded-input bg-brand-500 text-on-accent px-4 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
           {t(pending ? 'driverMessages.sending' : 'driverMessages.send')}
         </button>
       </div>
@@ -109,7 +109,7 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
         <div className="flex items-center gap-2">
           {highlighted && onDismissHighlight && <button type="button" onClick={onDismissHighlight} className="rounded-input border border-ink-700 px-3 py-2 text-sm font-semibold hover:bg-ink-800">{t('driverMessages.dismiss')}</button>}
           {!highlighted && <button type="button" onClick={() => setOpen(true)} disabled={connection.status !== 'connected'}
-            className="rounded-input bg-brand-500 px-3 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
+            className="rounded-input bg-brand-500 text-on-accent px-3 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
             {t('driverMessages.open')}
           </button>}
         </div>

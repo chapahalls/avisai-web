@@ -25,6 +25,9 @@
   --color-forest-800: #1d4033;
   --color-moss-600: #4f5d47;
   --color-rodar-600: #5f9e0f;
+  --color-on-accent: #f6f8f6;
+  --color-on-wait: #050806;
+  --color-depth: #090b09;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-brand: 'Kumbh Sans', 'Space Grotesk', sans-serif;
@@ -63,6 +66,28 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Tema claro do painel CCO: o Layout grava data-theme no <html> enquanto o painel está montado.
+ * Os nomes ink-* seguem o papel (950 = fundo, 50 = texto principal), não a luminosidade.
+ * Acentos escurecem para manter contraste AA como texto sobre fundo claro.
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-ink-950: #f3f5f2;
+  --color-ink-900: #ffffff;
+  --color-ink-800: #e9eee8;
+  --color-ink-700: #cfd7d0;
+  --color-ink-300: #566159;
+  --color-ink-50: #111511;
+  --color-wait-500: #b54708;
+  --color-alert-500: #c4291d;
+  --color-ok-500: #067647;
+  --color-rodar-400: #3f6d06;
+  --color-rodar-mark: var(--color-rodar-600);
+  --color-on-wait: #ffffff;
+  --color-depth: rgb(17 21 17 / 0.28);
 }
 
 body {

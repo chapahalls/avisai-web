@@ -39,6 +39,16 @@ A interface identifica a fonte operacional **API** ou **Demo**. No modo API, mé
 | `radius-card` | 12 px | Cards |
 | `radius-input` | 8 px | Campos e botões |
 
+**Tema claro do painel:** o escuro é o padrão; o botão sol/lua na barra superior alterna o tema e a escolha fica salva no navegador (`rodar.theme`, `src/lib/theme.ts`). O `Layout` grava `data-theme` no `<html>` só enquanto o painel está montado, então home, login e o app mobile mantêm o visual próprio. Em `:root[data-theme='light']` (`src/index.css`) os tokens `ink-*` trocam de valor mantendo o papel (950 = fundo, 900 = card, 800 = campo, 700 = borda, 300 = texto secundário, 50 = texto principal); `wait-500`, `alert-500`, `ok-500` e `rodar-400` escurecem para contraste AA como texto sobre fundo claro; `rodar-mark` passa a `rodar-600`. O Google Maps acompanha o tema (`colorScheme`), recriando o mapa na troca.
+
+| Token semântico | Escuro | Claro | Uso |
+|---|---|---|---|
+| `on-accent` | `#F6F8F6` | `#F6F8F6` | Texto sobre fundo sólido `brand-500` |
+| `on-wait` | `#050806` | `#FFFFFF` | Texto sobre fundo sólido `wait-500` |
+| `depth` | `#090B09` | `rgb(17 21 17 / .28)` | Sombras de painéis flutuantes e toasts |
+
+Texto sobre fundo sólido de acento nunca herda `ink-50`: usa `on-accent`/`on-wait`, senão inverte junto com o tema.
+
 Fontes da aplicação são locais, sem requisições ao Google Fonts para carregá-las.
 
 **Marca:** o símbolo e a assinatura ficam em `src/components/RodarLogo.tsx` (`RodarMark` e `RodarLogo`), a partir de `docs/RODAR-telas/marca/rodar-icone.svg`. O "R" do símbolo é vazado e mostra o fundo. Na assinatura, a palavra "RODAR" (Kumbh Sans 750, espaçamento 0,01 em, cor `ink-50`) tem altura de maiúscula ≈ 0,53 × a altura do símbolo e fica a ≈ 0,2 × essa altura dele. A barra superior do painel mostra o símbolo com “RODAR · CCO”; a home e o login mostram a assinatura. O SDK do Google Maps faz suas próprias requisições externas para o mapa. Espaçamento usa múltiplos de 4 px; números de KPIs e tempo recebem destaque sem competir com as ações da fila.

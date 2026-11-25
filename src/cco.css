@@ -36,7 +36,9 @@
 .cco-demo-menu > summary { display: flex; min-height: 34px; align-items: center; gap: 7px; border: 1px dashed var(--color-ink-700); border-radius: 8px; padding: 7px 10px; color: var(--color-ink-300); font-size: 11px; list-style: none; cursor: pointer; }
 .cco-demo-menu > summary::-webkit-details-marker { display: none; }
 .cco-demo-menu[open] > summary, .cco-demo-menu > summary:hover { background: var(--color-ink-800); color: var(--color-ink-50); }
-.cco-demo-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: min(340px, calc(100vw - 32px)); border-radius: 12px; background: var(--color-ink-900); box-shadow: 0 12px 40px color-mix(in srgb, var(--color-ink-950) 85%, transparent); }
+.cco-demo-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: min(340px, calc(100vw - 32px)); border-radius: 12px; background: var(--color-ink-900); box-shadow: 0 12px 40px color-mix(in srgb, var(--color-depth) 85%, transparent); }
+.cco-theme-toggle { display: flex; min-width: 34px; min-height: 34px; align-items: center; justify-content: center; border: 1px solid var(--color-ink-700); border-radius: 8px; color: var(--color-ink-300); }
+.cco-theme-toggle:hover { background: var(--color-ink-800); color: var(--color-ink-50); }
 .cco-language-picker { position: relative; }
 .cco-language-picker select { width: 60px; min-height: 34px; appearance: none; border: 1px solid var(--color-ink-700); border-radius: 8px; background: var(--color-ink-900); padding: 7px 22px 7px 10px; font-size: 11px; }
 .cco-language-picker > svg { position: absolute; top: 11px; right: 7px; pointer-events: none; color: var(--color-ink-300); }

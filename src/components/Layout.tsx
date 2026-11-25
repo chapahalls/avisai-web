@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiConfigured, retryConnection, setMode, useConnection, useOps } from '../services/operations';
@@ -9,6 +10,7 @@ import { RodarMark } from './RodarLogo';
 import { ConnectionBanner } from './ConnectionBanner';
 import '../cco.css';
 import { APP_ROUTES } from '../lib/routes';
+import { useTheme } from '../lib/theme';
 
 const links = [
   { to: APP_ROUTES.dashboard, key: 'nav.monitoring', icon: 'truck' },
@@ -28,10 +30,18 @@ export function Layout() {
   const connectedMode = connection.mode === 'api';
   const logout = useSession((state) => state.logout);
   const session = useSession((state) => state.session);
+  const theme = useTheme((state) => state.theme);
+  const toggleTheme = useTheme((state) => state.toggle);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    return () => { delete root.dataset.theme; };
+  }, [theme]);
 
   return (
     <div className="cco-shell">
-      <a href="#main-content" className="sr-only z-50 rounded-input bg-brand-500 p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">{t('app.skipContent')}</a>
+      <a href="#main-content" className="sr-only z-50 rounded-input bg-brand-500 text-on-accent p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">{t('app.skipContent')}</a>
       <header className="cco-topbar">
         <Link to={APP_ROUTES.dashboard} className="cco-brand" aria-label={t('app.name')}>
           <RodarMark className="cco-brand-mark" />
@@ -66,6 +76,9 @@ export function Layout() {
             <summary><Icon name={running ? 'pause' : 'play'} className="h-3.5 w-3.5" /><span>{t('cco.demoControls')}</span><Icon name="chevron" className="h-3 w-3" /></summary>
             <div className="cco-demo-panel"><DemoControls /></div>
           </details>}
+          <button type="button" className="cco-theme-toggle" onClick={toggleTheme} aria-pressed={theme === 'light'} aria-label={t('app.themeLight')} title={t(theme === 'light' ? 'app.themes.light' : 'app.themes.dark')}>
+            <Icon name={theme === 'light' ? 'sun' : 'moon'} className="h-4 w-4" />
+          </button>
           <div className="cco-language-picker">
             <select aria-label={t('app.language')} value={i18n.resolvedLanguage === 'en' ? 'en' : 'pt-BR'} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
               <option value="pt-BR">{t('app.languages.pt')}</option>
