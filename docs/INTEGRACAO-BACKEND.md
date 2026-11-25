@@ -14,7 +14,7 @@ Preencha a variável na `.env` local e reinicie o Vite. A URL aponta para a raiz
 
 Com URL configurada, o painel inicia em carregamento e busca o estado da API. Uma falha mostra erro e a ação **Tentar novamente**; não inicia a simulação automaticamente. **Usar demo** é uma escolha explícita do operador. Enquanto o SSE reconecta, o último estado recebido deve ser identificado como desatualizado, sem inventar novos eventos ou avançar o GPS.
 
-O backend atual permite CORS para qualquer origem nos endpoints operacionais e não exige autenticação nessas rotas. `/auth/sso` é MOCK e fornece token fake; não cria autorização real. O endpoint de LLM tem configuração própria de segredo, que não pertence ao frontend. Antes de produção, o backend precisa autenticar/autorizar usuários, empresas, viagens e arquivos.
+O backend aceita CORS só das origens em `CORS_ORIGENS`. `/auth/sso` é um login sem senha que devolve um JWT assinado; com `AUTH_OBRIGATORIA=true` (padrão), toda escrita exige esse token, as ações da central exigem o papel `cco` e o motorista só age na própria rota. O endpoint de LLM tem configuração própria de segredo, que não pertence ao frontend. Antes de produção ainda faltam login de verdade, 2FA para a central, leituras protegidas e separação por empresa.
 
 ## APIs integradas no painel
 

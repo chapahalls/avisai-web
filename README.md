@@ -44,7 +44,7 @@ O motorista fala com o AI pelo celular, sem digitar. O AI avisa o recebedor ante
 | 📈 | **Escalável** | Toda mudança vira evento: viagem, aproximação, ligação, Task, descarga. O backend é dono do estado e transmite ao vivo (SSE). O painel e o app só leem e reagem. Uma rota ou a frota inteira usam o mesmo fluxo, sem ninguém ao telefone por caminhão. |
 | 🔇 | **Menos comunicação com a central** | O AI pede status ao motorista por voz, liga para o recebedor e registra as respostas. O CCO recebe só exceções, numa fila ordenada por severidade: recebedor que não atende, ocorrência, espera acima da franquia. |
 | 📍 | **Rastreio completo da mercadoria** | Da retirada à descarga, cada viagem guarda posição, paradas, ocorrências, ligações transcritas, mensagens, documentos e decisões do agente, numa linha do tempo filtrável. |
-| ⏱️ | **Menos estadia na entrega** | A 8 km do destino, o AI liga para o recebedor e confirma doca e horário. Na chegada, o contador de estadia começa (franquia de 5 h, Lei 11.442) e as Análises mostram espera média, avisos antecipados e estadia devida. |
+| ⏱️ | **Menos estadia na entrega** | Na Demo, o aviso simulado ocorre a 8 km do destino. No modo API, o backend usa o ETA configurado na rota (15 min por padrão) e só liga se a telefonia estiver configurada. Na chegada, o contador de estadia começa (franquia de 5 h, Lei 11.442) e as Análises mostram espera média, avisos antecipados e estadia devida. |
 
 ## Como funciona
 
@@ -114,7 +114,7 @@ O AI roda no celular do motorista. Retirada, chegada, descarga e ocorrências s�
 <summary><strong>3 · Aviso ao recebedor antes da chegada</strong></summary>
 <br />
 
-A 8 km do destino, o AI se apresenta como assistente virtual da transportadora, informa a placa e pergunta doca e horário. O aviso só conta como efetivo se o recebedor atende antes da chegada. Uma tentativa sem resposta também fica registrada, como evidência.
+Na Demo, o aviso simulado é disparado a 8 km do destino. No modo API, a aproximação segue o ETA configurado na rota (15 min por padrão) e a chamada depende da telefonia configurada. O aviso pergunta doca e horário; uma tentativa sem resposta também fica registrada.
 
 <img src="docs/assets/readme/home-dock.jpg" alt="Home, Como funciona: o AI liga para o recebedor antes da chegada e o caminhão segue para a doca" width="49%" />
 <img src="docs/assets/readme/dashboard.jpg" alt="Monitoramento: KPIs, fila de alertas, mapa da frota, veículo selecionado e a última ligação do AI com transcrição" width="49%" />
@@ -230,7 +230,7 @@ O painel lê a operação, acompanha o SSE e consulta Tasks, chamadas, eventos, 
 
 KPIs e ranking vêm de `/api/metrics` e `/api/receivers`, com populações e unidades do backend. Sem amostras, valores nulos aparecem como `—`. A API não tem série diária nem estadia cobrada: o painel informa a ausência e não usa o histórico fictício para preenchê-las.
 
-`/auth/sso` devolve um token fake. `/api/documents` entrega NF-e/CT-e com `mock:true` e `fileUri:null`, separados dos anexos reais. O backend atual permite CORS amplo e não verifica a autorização de usuários, viagens ou arquivos: autenticação e autorização são pendências antes de produção.
+`/auth/sso` é um login sem senha que devolve um JWT assinado. Com `AUTH_OBRIGATORIA=true` (padrão do backend), toda escrita exige esse token e as ações da central exigem o papel `cco`; o CORS aceita só as origens configuradas. `/api/documents` entrega NF-e/CT-e com `mock:true` e `fileUri:null`, separados dos anexos reais. Login de verdade, 2FA e leituras protegidas ainda faltam: veja o [README do backend](https://github.com/rodarglobal/rodar-backend#o-que-falta-para-produção).
 
 **Rotas, motoristas e arquivos.** `/dashboard/dispatch` consulta só perfis de motorista já cadastrados. O CCO publica a rota para um deles ou troca o motorista enquanto a viagem não saiu; não há cadastro de motorista nessas telas. O CCO pode anexar arquivos reais (PDF/JPEG/PNG/WebP/GIF, até 10 MiB por padrão) e baixá-los depois. Os metadados ficam no banco e os binários no volume `ARQUIVOS_DIR` do backend; o backup precisa incluir os dois.
 
