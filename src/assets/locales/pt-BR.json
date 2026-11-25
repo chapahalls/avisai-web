@@ -429,14 +429,11 @@
       "dryGoods": "Mercearia seca"
     },
     "communications": {
-      "summaryTitle": "Situação no simulador",
-      "summaries": {
-        "driving": "{{driver}} está em rota para {{receiver}}.",
-        "approaching": "{{driver}} está próximo de {{receiver}}. O aviso de aproximação faz parte do cenário simulado.",
-        "waiting": "{{driver}} aguarda descarga em {{receiver}}. A chegada e as ocorrências aparecem na linha do tempo.",
-        "unloaded": "A descarga de {{driver}} em {{receiver}} foi concluída no simulador."
-      },
-      "hint": "Relatos fictícios e eventos locais do simulador. Nenhuma mensagem foi enviada ao motorista.",
+      "paginationLabel": "Paginação das comunicações",
+      "range": "{{from}}–{{to}} de {{total}}",
+      "previous": "Anterior",
+      "next": "Próxima",
+      "page": "Página {{page}} de {{pages}}",
       "kinds": {
         "event": "Evento",
         "message": "Relato fictício"

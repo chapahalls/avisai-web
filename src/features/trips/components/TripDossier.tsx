@@ -8,6 +8,7 @@ import { brl, clock } from '../../../utils/format';
 import { ApiTripDossier } from './ApiTripDossier';
 
 const tabs = ['cargo', 'invoices', 'communications'] as const;
+const COMMUNICATIONS_PAGE_SIZE = 4;
 type DossierTab = typeof tabs[number];
 
 function CargoItemCard({ item, compact, showCommercialValues }: { item: CargoItem; compact: boolean; showCommercialValues: boolean }) {
@@ -44,12 +45,21 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
   const events = useOps((state) => state.feed);
   const simMinutes = useOps((state) => state.simMinutes);
   const [activeTab, setActiveTab] = useState<DossierTab>('cargo');
+  const [communicationsPage, setCommunicationsPage] = useState(0);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const componentId = useId();
   const visibleTabs = apiComplement ? tabs.filter((tab) => tab !== 'communications') : tabs;
   const dossier = useMemo(() => trip ? buildTripDossier(apiComplement ? { ...trip, id: `complement-${trip.id}`, capacityTons: 14, receiverId: 'r1' } : trip) : undefined, [trip?.id, trip?.capacityTons, trip?.receiverId, apiComplement]);
   const communications = useMemo(() => trip && !apiComplement ? buildTripCommunications(trip, events, simMinutes) : [], [trip, events, simMinutes, apiComplement]);
-  useEffect(() => { setActiveTab('cargo'); }, [tripId]);
+  const communicationsPageCount = Math.max(1, Math.ceil(communications.length / COMMUNICATIONS_PAGE_SIZE));
+  const currentCommunicationsPage = Math.min(communicationsPage, communicationsPageCount - 1);
+  const visibleCommunications = communications.slice(
+    currentCommunicationsPage * COMMUNICATIONS_PAGE_SIZE,
+    (currentCommunicationsPage + 1) * COMMUNICATIONS_PAGE_SIZE,
+  );
+  const communicationsRangeStart = communications.length ? currentCommunicationsPage * COMMUNICATIONS_PAGE_SIZE + 1 : 0;
+  const communicationsRangeEnd = Math.min((currentCommunicationsPage + 1) * COMMUNICATIONS_PAGE_SIZE, communications.length);
+  useEffect(() => { setActiveTab('cargo'); setCommunicationsPage(0); }, [tripId]);
   const number = (value: number) => value.toLocaleString(locale);
   const handleTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     let nextIndex: number;
@@ -135,13 +145,8 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
         )}
         {activeTab === 'communications' && (
           <>
-            <div className="rounded-input border border-brand-500/25 bg-brand-500/5 p-3 text-xs leading-relaxed text-ink-300">
-              <p className="mb-1 font-semibold text-brand-500">{t('dossier.communications.summaryTitle')}</p>
-              <p>{t(`dossier.communications.summaries.${trip.phase}`, { driver: t('drivers.name', { letter: trip.driver.slice(-1) }), receiver: receiver.name })}</p>
-            </div>
-            <p className="text-xs text-ink-300">{t('dossier.communications.hint')}</p>
             <ol className="space-y-3">
-              {communications.map((message) => (
+              {visibleCommunications.map((message) => (
                 <li key={message.id} className={`rounded-input border p-3 ${message.source === 'driver' ? 'border-brand-500/25 bg-brand-500/5' : 'border-ink-700 bg-ink-950/40'}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className={`font-semibold ${message.source === 'driver' ? 'text-brand-500' : 'text-wait-500'}`}>{t(`sources.${message.source}`)}</span>
@@ -155,6 +160,16 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
                 </li>
               ))}
             </ol>
+            {communications.length > COMMUNICATIONS_PAGE_SIZE && (
+              <nav className="trv-comms-pagination" aria-label={t('dossier.communications.paginationLabel')}>
+                <span>{t('dossier.communications.range', { from: communicationsRangeStart, to: communicationsRangeEnd, total: communications.length })}</span>
+                <div>
+                  <button type="button" className="trv-comms-page-button" disabled={currentCommunicationsPage === 0} onClick={() => setCommunicationsPage(currentCommunicationsPage - 1)}>{t('dossier.communications.previous')}</button>
+                  <span aria-live="polite">{t('dossier.communications.page', { page: currentCommunicationsPage + 1, pages: communicationsPageCount })}</span>
+                  <button type="button" className="trv-comms-page-button" disabled={currentCommunicationsPage >= communicationsPageCount - 1} onClick={() => setCommunicationsPage(currentCommunicationsPage + 1)}>{t('dossier.communications.next')}</button>
+                </div>
+              </nav>
+            )}
           </>
         )}
       </div>

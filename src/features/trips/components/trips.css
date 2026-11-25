@@ -1,8 +1,8 @@
 /* Motorista e viagem (mockup 06) · cores só por tokens (src/index.css) */
 .trv { display: grid; gap: 16px; }
 .trv-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.trv-back { color: var(--color-ok-500); font-size: 13px; }
-.trv-back:hover { text-decoration: underline; }
+.trv-back { display: inline-flex; min-height: 36px; align-items: center; border: 1px solid color-mix(in srgb, var(--color-ok-500) 38%, var(--color-ink-700)); border-radius: 8px; background: color-mix(in srgb, var(--color-ok-500) 8%, transparent); padding: 0 12px; color: var(--color-ok-500); font-size: 13px; font-weight: 600; transition: background 150ms, border-color 150ms; }
+.trv-back:hover { border-color: var(--color-ok-500); background: color-mix(in srgb, var(--color-ok-500) 14%, transparent); }
 .trv-header h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 6px; font-family: var(--font-display); font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; }
 .trv-header p { margin-top: 4px; color: var(--color-ink-300); font-size: 13px; }
 .trv-plate { color: var(--color-ok-500); font-family: var(--font-mono); font-size: .7em; font-weight: 600; }
@@ -17,12 +17,16 @@
 .trv-button[data-variant='primary'] { border-color: var(--color-brand-500); background: var(--color-brand-500); }
 .trv-button[data-variant='primary']:hover { background: var(--color-brand-600); }
 .trv-button:disabled { cursor: wait; opacity: .55; }
-:is(.trv-button, .trv-chips button, .trv-link, .trv-suggestions button, .trv-send :is(input, button)):focus-visible { outline: 2px solid var(--color-rodar-mark); outline-offset: 2px; }
+:is(.trv-back, .trv-button, .trv-chips button, .trv-link, .trv-suggestions button, .trv-send :is(input, button)):focus-visible { outline: 2px solid var(--color-rodar-mark); outline-offset: 2px; }
 .trv-error { flex-basis: 100%; border: 1px solid color-mix(in srgb, var(--color-alert-500) 35%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--color-alert-500) 6%, transparent); padding: 8px 12px; color: var(--color-alert-500); font-size: 12px; }
 
-.trv-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 340px; align-items: start; gap: 16px; }
-.trv-left, .trv-center, .trv-right { display: grid; min-width: 0; gap: 16px; }
-.trv-right { position: sticky; top: 84px; }
+.trv-layout { display: grid; grid-template-columns: minmax(210px, 0.9fr) minmax(0, 2.2fr) minmax(260px, 1.1fr); grid-template-areas: 'driver history timeline' 'map dossier timeline'; align-items: stretch; gap: 16px; }
+.trv-driver { grid-area: driver; }
+.trv-history { grid-area: history; }
+.trv-dossier { display: flex; grid-area: dossier; min-width: 0; }
+.trv-dossier > * { flex: 1; min-width: 0; }
+.trv-map { grid-area: map; min-width: 0; }
+.trv-right { grid-area: timeline; min-width: 0; }
 .trv-card { min-width: 0; border: 1px solid var(--color-ink-700); border-radius: 12px; background: var(--color-ink-900); padding: 16px; }
 .trv-card > h2, .trv-card-heading h2, .trv-chat-heading h2 { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
 .trv-card-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
@@ -75,6 +79,12 @@
 .trv-timeline [data-category='receiver'] .trv-dot { background: var(--color-wait-500); }
 .trv-timeline [data-category='stops'] .trv-dot { background: var(--color-alert-500); }
 .trv-timeline [data-category='cco'] .trv-dot { background: var(--color-rodar-400); }
+.trv-comms-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--color-ink-700); margin-top: 12px; padding-top: 12px; color: var(--color-ink-300); font-size: 11px; }
+.trv-comms-pagination > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.trv-comms-page-button { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; border: 1px solid var(--color-ink-700); border-radius: 8px; padding: 0 10px; background: transparent; color: var(--color-ink-50); font-size: 12px; }
+.trv-comms-page-button:hover { background: var(--color-ink-800); }
+.trv-comms-page-button:disabled { cursor: not-allowed; opacity: .45; }
+.trv-comms-page-button:focus-visible { outline: 2px solid var(--color-rodar-mark); outline-offset: 2px; }
 .trv-event-title { font-size: 14px; font-weight: 600; }
 .trv-event-body { margin-top: 3px; color: var(--color-ink-300); font-size: 13px; line-height: 1.45; }
 .trv-link { margin-top: 6px; color: var(--color-ok-500); font-size: 12px; }
@@ -105,11 +115,9 @@
 .trv-send button:disabled { cursor: not-allowed; opacity: .5; }
 .trv-note { color: var(--color-ink-300); font-size: 11px; }
 
-@media (max-width: 1280px) {
-  .trv-layout { grid-template-columns: 240px minmax(0, 1fr); }
-  .trv-right { position: static; grid-column: 1 / -1; }
+@media (max-width: 1120px) {
+  .trv-layout { grid-template-columns: minmax(220px, 0.9fr) minmax(0, 2fr); grid-template-areas: 'driver history' 'map dossier' 'timeline timeline'; }
 }
 @media (max-width: 900px) {
-  .trv-layout { grid-template-columns: minmax(0, 1fr); }
-  .trv-left { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .trv-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'driver' 'history' 'map' 'dossier' 'timeline'; }
 }
