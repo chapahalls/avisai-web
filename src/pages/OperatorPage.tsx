@@ -103,7 +103,7 @@ export function OperatorPage() {
               <button type="button" onClick={() => void leave()} className="rounded-input border border-ink-700 px-4 py-2.5 text-sm font-semibold">{t('operator.leave')}</button>
             ) : (
               <button type="button" onClick={() => void answer()} disabled={joinState === 'joining' || call.status !== 'agora_tocando'}
-                aria-busy={joinState === 'joining'} className="rounded-input bg-brand-500 px-4 py-2.5 text-sm font-semibold hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">
+                aria-busy={joinState === 'joining'} className="rounded-input bg-brand-500 text-on-accent px-4 py-2.5 text-sm font-semibold hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">
                 {t(joinState === 'joining' ? 'operator.connecting' : 'operator.answer')}
               </button>
             )}

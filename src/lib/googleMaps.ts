@@ -48,7 +48,7 @@ interface MapsLibrary {
     center: LatLng;
     zoom: number;
     mapId: string;
-    colorScheme: 'DARK';
+    colorScheme: 'DARK' | 'LIGHT';
     mapTypeControl: boolean;
     streetViewControl: boolean;
     fullscreenControl: boolean;

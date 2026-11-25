@@ -13,7 +13,7 @@
 .anl-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; border: 1px solid var(--color-ink-700); border-radius: 12px; background: var(--color-ink-900); padding: 12px 14px; }
 .anl-segmented { display: flex; gap: 4px; border: 1px solid var(--color-ink-700); border-radius: 10px; padding: 4px; }
 .anl-segmented button { min-height: 30px; border-radius: 7px; padding: 0 12px; color: var(--color-ink-300); font-size: 13px; }
-.anl-segmented button[aria-pressed='true'] { background: var(--color-brand-500); color: var(--color-ink-50); font-weight: 600; }
+.anl-segmented button[aria-pressed='true'] { background: var(--color-brand-500); color: var(--color-on-accent); font-weight: 600; }
 .anl-filters label { display: flex; align-items: center; gap: 8px; color: var(--color-ink-300); font-size: 13px; }
 .anl-filters select { min-width: 150px; min-height: 36px; border: 1px solid var(--color-ink-700); border-radius: 8px; background: var(--color-ink-950); padding: 0 10px; color: var(--color-ink-50); font-size: 13px; }
 .anl-filter-state { margin-left: auto; color: var(--color-ink-300); font-size: 12px; }

@@ -9,6 +9,11 @@
       "pt": "PT",
       "en": "EN"
     },
+    "themeLight": "Tema claro",
+    "themes": {
+      "light": "Claro",
+      "dark": "Escuro"
+    },
     "skipContent": "Ir para o conteúdo",
     "localMock": "Demo local · dados fictícios"
   },

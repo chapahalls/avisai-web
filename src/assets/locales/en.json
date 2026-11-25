@@ -9,6 +9,11 @@
       "pt": "PT",
       "en": "EN"
     },
+    "themeLight": "Light theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
     "skipContent": "Skip to content",
     "localMock": "Local demo · fictional data"
   },

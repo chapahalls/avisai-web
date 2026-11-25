@@ -97,7 +97,7 @@ export function RouteRequests({ routeId }: { routeId: number }) {
     <p className="text-xs leading-relaxed text-ink-300">{t('dispatch.requests.notice')}</p>
     <form onSubmit={(event) => void send(event)} className="space-y-3">
       <label className="block text-xs text-ink-300">{t('dispatch.requests.question')}<textarea value={question} onChange={(event) => setQuestion(event.target.value)} required maxLength={2000} disabled={pending} className="mt-2 min-h-20 w-full resize-y rounded-input border border-ink-700 bg-ink-950 p-3 text-sm text-ink-50" /></label>
-      <button type="submit" disabled={pending || !question.trim()} aria-busy={pending} className="rounded-input bg-brand-500 px-4 py-2.5 text-sm font-semibold hover:bg-brand-600 disabled:opacity-50">{t(pending ? 'dispatch.requests.sending' : 'dispatch.requests.send')}</button>
+      <button type="submit" disabled={pending || !question.trim()} aria-busy={pending} className="rounded-input bg-brand-500 text-on-accent px-4 py-2.5 text-sm font-semibold hover:bg-brand-600 disabled:opacity-50">{t(pending ? 'dispatch.requests.sending' : 'dispatch.requests.send')}</button>
     </form>
     {error && <p role="alert" className="text-sm text-alert-500">{t(`dispatch.requests.${error}`)}</p>}
     {loading && <p role="status" className="text-sm text-ink-300">{t('dispatch.loading')}</p>}

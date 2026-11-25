@@ -19,6 +19,7 @@ import type { Trip } from '../../../types/ops';
 import type { LatLng } from '../../../types/geo';
 import './FleetMap.css';
 import { APP_ROUTES } from '../../../lib/routes';
+import { useTheme } from '../../../lib/theme';
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? '';
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim() || 'DEMO_MAP_ID';
@@ -77,6 +78,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
   trips: Trip[]; selected?: Trip; onSelect: (vehicleId: string) => void; following: boolean; fitRequest: number;
 }) {
   const { t, i18n } = useTranslation();
+  const theme = useTheme((state) => state.theme);
   const allTrips = useOps((state) => state.trips);
   const mode = useMode();
   const receivers = useReceivers();
@@ -190,7 +192,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
     void loadTrackingMaps(apiKey, initialLanguage.current).then((api) => {
       if (cancelled || authFailed) return;
       const map = new api.Map(host, {
-        center: latest.current.allTrips[0]?.origin ?? MOCK_ROAD_ROUTES.r1.snappedOrigin, zoom: 10, mapId, colorScheme: 'DARK',
+        center: latest.current.allTrips[0]?.origin ?? MOCK_ROAD_ROUTES.r1.snappedOrigin, zoom: 10, mapId, colorScheme: theme === 'light' ? 'LIGHT' : 'DARK',
         mapTypeControl: false, streetViewControl: false, fullscreenControl: true,
         clickableIcons: false, gestureHandling: 'cooperative',
       });
@@ -294,7 +296,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
       if (resources.current === owned) resources.current = undefined;
       host.replaceChildren();
     };
-  }, [retry, mode, routeSignature]);
+  }, [retry, mode, routeSignature, theme]);
 
   useEffect(() => { updateTrucks(); }, [trips, allTrips, running, selected?.vehicleId, t]);
   useEffect(() => {

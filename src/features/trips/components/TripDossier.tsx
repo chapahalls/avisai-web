@@ -66,7 +66,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
   const receiver = apiComplement ? { name: t('api.dossier.mockReceiver') } : receiverById(trip.receiverId);
   const title = t(apiComplement ? 'api.dossier.mockComplements' : 'dossier.title');
   return (
-    <section className={`min-w-0 overflow-hidden rounded-card border border-ink-700 bg-ink-900 ${compact ? '' : 'shadow-lg shadow-ink-950/20'}`} aria-label={title}>
+    <section className={`min-w-0 overflow-hidden rounded-card border border-ink-700 bg-ink-900 ${compact ? '' : 'shadow-lg shadow-depth/20'}`} aria-label={title}>
       <div className={compact ? 'p-4' : 'p-5'}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-semibold">{title}</h2>
