@@ -133,6 +133,7 @@ Carga, notas fiscais e mensagens do dossiê da Demo são fictícias, sem validad
 | 14 | Sem sinal em trechos da rodovia | Cobertura celular irregular | Fila local de reportes e reenvio automático; Starlink como opção | Decidido |
 | 15 | Wake word falha em cabine ruidosa | Motor, rádio e vento | Medir falso acionamento; botão no volante como alternativa | Decidido |
 | 16 | Reporte marcado como completo com resposta vaga | LLM aceita "tudo certo" para vários campos | Critério de aceite por campo obrigatório | Decidido |
+| 18 | Fala do motorista sem sinal | Sem rede, a voz não chega ao agente e nenhum modelo roda no celular | Com sinal, voz direta sem gravação. Sem sinal, o app grava cada fala (WAV) até o envio; o servidor transcreve, o agente responde e o arquivo local é apagado na confirmação | Decidido |
 
 ## Regras do modo API
 

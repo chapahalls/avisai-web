@@ -28,9 +28,9 @@
 |---|---|
 | **Trilha** | Logística & automação |
 | **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
-| **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
+| **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [tour do app do motorista (1 min)](https://github.com/rodarglobal/rodar-mobile/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) (este) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) |
-| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 512 testes automatizados: 299 no backend, 127 no web, 86 no mobile |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 524 testes automatizados: 299 no backend, 127 no web, 98 no mobile |
 | **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
 | **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado) |
 <!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
@@ -104,7 +104,7 @@ Em `/dashboard/dispatch`, o CCO vê os motoristas cadastrados e suas viagens. A 
 <summary><strong>2 · O motorista fala, não digita</strong> (app e agente de voz)</summary>
 <br />
 
-O AI roda no celular do motorista. Retirada, chegada, descarga e ocorrências são confirmadas por voz, e o motorista pode perguntar sobre os documentos da rota. O GPS do caminhão é a prova forte da posição. O app mobile fica em outro repositório; o contrato está em [CONTRATO-MOBILE.md](docs/CONTRATO-MOBILE.md).
+O AI roda no celular do motorista. Retirada, chegada, descarga e ocorrências são confirmadas por voz, e o motorista pode perguntar sobre os documentos da rota. O GPS do caminhão é a prova forte da posição. Com sinal, a voz vai direto ao agente, sem gravação; sem sinal, o app grava cada fala e envia quando a rede volta, e o AvisAI responde depois. O app mobile fica em outro repositório, com as [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo); o contrato está em [CONTRATO-MOBILE.md](docs/CONTRATO-MOBILE.md).
 
 <img src="docs/assets/readme/home-phone.jpg" alt="Home: o AI cabe no celular do motorista, na cabine do caminhão" width="49%" />
 <img src="docs/assets/readme/home-truck.jpg" alt="Home: cada caminhão vira dado vivo" width="49%" />
