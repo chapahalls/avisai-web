@@ -37,7 +37,7 @@ export function Layout() {
           <span className="cco-brand-text"><strong>{t('cco.brand')}</strong><span>{t('cco.brandSubtitle')}</span></span>
         </Link>
         <nav aria-label={t('nav.main')} className="cco-top-nav">
-          {links.map((link) => (
+          {links.filter((link) => !connectedMode || link.to !== APP_ROUTES.mobileDemo).map((link) => (
             <NavLink key={link.to} to={link.to} end={link.to === APP_ROUTES.dashboard} className={({ isActive }) => `cco-nav-link${isActive ? ' is-active' : ''}`}>
               <Icon name={link.icon} className="h-4 w-4" />
               <span>{t(link.key)}</span>

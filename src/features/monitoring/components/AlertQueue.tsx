@@ -51,7 +51,7 @@ export function AlertQueue({ selectedTripId, onSelect }: { selectedTripId: strin
               <p>{t(`monitoring.alerts.kinds.${alert.kind}.body`, values)}</p>
               <div className="mon-alert-actions">
                 {alert.taskId && (
-                  <button type="button" className="mon-button" data-variant="primary" disabled={pending || isApi && connection.status !== 'connected'} aria-busy={pending} onClick={() => void acknowledge(alert.taskId!)}>
+                  <button type="button" className="mon-button" data-variant="primary" data-tour-target={selectedTripId === alert.tripId ? 'dashboard-task-action' : undefined} disabled={pending || isApi && connection.status !== 'connected'} aria-busy={pending} onClick={() => void acknowledge(alert.taskId!)}>
                     {t(pending ? 'monitoring.alerts.taking' : 'monitoring.alerts.take')}
                   </button>
                 )}

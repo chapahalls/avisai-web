@@ -35,7 +35,34 @@
     },
     "dashboardPane": "Dashboard de monitoramento da demonstração",
     "mobilePane": "App mobile do motorista",
-    "apiNotice": "A integração interativa usa a Demo local. No modo API, o app de demonstração fica isolado dos dados do servidor."
+    "apiNotice": "A integração interativa usa a Demo local. No modo API, o app de demonstração fica isolado dos dados do servidor.",
+    "tour": {
+      "label": "Tour automático do app",
+      "step": "Etapa {{current}} de {{total}}",
+      "pause": "Pausar tour",
+      "resume": "Continuar tour",
+      "skip": "Pular tour",
+      "replay": "Reexecutar tour",
+      "complete": "Tour concluído",
+      "doneTitle": "Você viu o fluxo completo",
+      "doneBody": "As ações do motorista e do CCO ficaram registradas na demonstração. Você pode continuar explorando o app e o dashboard.",
+      "close": "Fechar tutorial",
+      "steps": {
+        "login": { "title": "Acesso do motorista", "body": "O app abre com um acesso simulado, sem pedir senha. O tour entra no perfil para começar a operação." },
+        "start": { "title": "Início da viagem", "body": "O motorista confirma que iniciou a rota. Esse registro atualiza o andamento da viagem no dashboard." },
+        "approach": { "title": "Aproximação do destino", "body": "Ao se aproximar, o app registra a etapa e tenta avisar o recebedor antes da chegada." },
+        "arrival": { "title": "Chegada registrada", "body": "A confirmação cria a Task de acompanhamento e inicia a contagem do tempo de espera." },
+        "queue": { "title": "Fila de descarga", "body": "Esta área mostra a espera no pátio, o prazo combinado e as atualizações para o motorista." },
+        "push": { "title": "Aviso no app", "body": "A primeira atualização aparece como push para informar o motorista sobre a Task criada." },
+        "panel": { "title": "Acompanhamento no painel", "body": "Se a espera continua, a operação registra uma atualização no painel para o CCO acompanhar." },
+        "call": { "title": "Contato por telefone", "body": "Sem resolução, o fluxo registra uma tentativa de contato e mantém o histórico ligado à viagem." },
+        "escalation": { "title": "Task escalada", "body": "Ao atingir o limite de espera, a Task é escalada e aparece como pendência para o CCO no dashboard." },
+        "acknowledge": { "title": "Ação do CCO", "body": "O tour assume a Task no dashboard. Essa ação real da demo sincroniza o reconhecimento com o app." },
+        "acknowledgeLocal": { "title": "Reconhecimento da Task", "body": "O tour registra o reconhecimento da Task nesta demonstração e atualiza a linha do tempo do app." },
+        "home": { "title": "Resumo da viagem", "body": "Na tela inicial, o motorista acompanha a rota, o status e a linha do tempo dos eventos registrados." },
+        "unload": { "title": "Descarga concluída", "body": "A confirmação encerra a espera e registra a entrega no histórico e nos indicadores da demonstração." }
+      }
+    }
   },
   "auth": {
     "title": "Cada hora parada tem uma história.",

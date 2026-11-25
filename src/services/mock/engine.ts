@@ -13,7 +13,7 @@ export interface FeedEvent extends DomainEvent {
   simMin: number;
 }
 
-export type MobileDriverAction = 'start' | 'approach' | 'arrive' | 'occurrence' | 'message' | 'acknowledge' | 'unload' | 'advance';
+export type MobileDriverAction = 'start' | 'approach' | 'arrive' | 'occurrence' | 'message' | 'acknowledge' | 'unload' | 'advance' | 'reset';
 
 export interface OpsState {
   simMinutes: number;
@@ -239,6 +239,29 @@ export function createOpsStore(options: EngineOptions = {}) {
         const trip = state.trips[index];
         if (!trip) return;
         const now = state.simMinutes;
+
+        if (action === 'reset') {
+          const route = getMockRoadRoute(trip.receiverId);
+          const resetTrip = {
+            ...trip,
+            phase: 'driving' as const,
+            progress: 0,
+            position: interpolateRoute(route, 0)!,
+            notifiedBeforeArrival: false,
+            arrivedAtMin: undefined,
+            unloadAtMin: undefined,
+            unloadedAtMin: undefined,
+          };
+          set({
+            trips: state.trips.map((candidate) => candidate.id === tripId ? resetTrip : candidate),
+            tasks: state.tasks.filter((candidate) => candidate.tripId !== tripId),
+            calls: state.calls.filter((candidate) => candidate.tripId !== tripId),
+            feed: state.feed.filter((candidate) => candidate.tripId !== tripId),
+            history: state.history.filter((candidate) => candidate.tripId !== tripId),
+          });
+          delete reports[tripId];
+          return;
+        }
 
         if (action === 'acknowledge') {
           const task = state.tasks.find((candidate) => candidate.tripId === tripId && (candidate.status === 'open' || candidate.status === 'escalated'));

@@ -35,7 +35,34 @@
     },
     "dashboardPane": "Demo fleet monitoring dashboard",
     "mobilePane": "Driver mobile app",
-    "apiNotice": "Interactive sync uses the local Demo. In API mode, the demo app stays separate from server data."
+    "apiNotice": "Interactive sync uses the local Demo. In API mode, the demo app stays separate from server data.",
+    "tour": {
+      "label": "Automatic app tour",
+      "step": "Step {{current}} of {{total}}",
+      "pause": "Pause tour",
+      "resume": "Resume tour",
+      "skip": "Skip tour",
+      "replay": "Replay tour",
+      "complete": "Tour complete",
+      "doneTitle": "You have seen the full workflow",
+      "doneBody": "Driver and control center actions are recorded in the demo. You can keep exploring the app and dashboard.",
+      "close": "Close tutorial",
+      "steps": {
+        "login": { "title": "Driver sign in", "body": "The app opens with a simulated sign in and no password prompt. The tour enters the profile to start the operation." },
+        "start": { "title": "Trip started", "body": "The driver confirms the route has started. This record updates trip progress on the dashboard." },
+        "approach": { "title": "Approaching the destination", "body": "As the driver gets close, the app records the step and attempts to notify the receiver before arrival." },
+        "arrival": { "title": "Arrival recorded", "body": "The confirmation creates a follow up Task and starts the waiting time." },
+        "queue": { "title": "Unloading queue", "body": "This area shows yard wait time, the agreed window, and updates for the driver." },
+        "push": { "title": "App notification", "body": "The first update appears as a push notification to tell the driver a Task was created." },
+        "panel": { "title": "Control panel update", "body": "If the wait continues, the operation records a panel update for the control center to follow." },
+        "call": { "title": "Phone contact", "body": "If the issue remains unresolved, the workflow records a contact attempt in the trip history." },
+        "escalation": { "title": "Task escalated", "body": "When the waiting limit is reached, the Task is escalated and appears as an open item for the control center." },
+        "acknowledge": { "title": "Control center action", "body": "The tour takes the Task on the dashboard. This real demo action syncs the acknowledgement with the app." },
+        "acknowledgeLocal": { "title": "Task acknowledgement", "body": "The tour records the Task acknowledgement in this demo and updates the app timeline." },
+        "home": { "title": "Trip summary", "body": "On the home screen, the driver can follow the route, status, and timeline of recorded events." },
+        "unload": { "title": "Unloading completed", "body": "Confirming completion ends the wait and records the delivery in demo history and metrics." }
+      }
+    }
   },
   "auth": {
     "title": "Every waiting hour tells a story.",

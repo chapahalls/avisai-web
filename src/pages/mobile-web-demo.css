@@ -262,3 +262,44 @@
   .mw-demo-grid-embedded .mw-phone-column, .mw-demo-grid-embedded .mw-phone-frame { width: 100%; }
   .mw-demo-grid-embedded .mw-phone-screen { height: max(580px, min(720px, calc(100dvh - 160px))); min-height: 580px; border: 0; border-radius: 0; }
 }
+
+.mw-tour-card { position: fixed; z-index: 1000; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-sizing: border-box; width: min(340px, calc(100vw - 24px)); max-height: min(70vh, 420px); overflow-y: auto; margin: 0; padding: 13px 14px; border: 1px solid #70874e; border-radius: 14px; color: #edf3e9; background: linear-gradient(145deg, #1a2718, #0e150f 75%); box-shadow: 0 14px 42px #000b, 0 0 20px #a2f20018; }
+.mw-tour-card::before { content: ''; position: absolute; left: calc(50% - 8px); width: 0; height: 0; border: 8px solid transparent; }
+.mw-tour-card[data-placement='above']::before { bottom: -16px; border-top-color: #70874e; }
+.mw-tour-card[data-placement='below']::before { top: -16px; border-bottom-color: #70874e; }
+.mw-tour-copy { min-width: 0; flex: 1; }
+.mw-tour-meta { display: flex; justify-content: space-between; gap: 10px; color: #a2f200; font: 700 9px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.mw-tour-meta span:last-child { color: #bdc9b8; letter-spacing: .04em; }
+.mw-tour-progress { height: 3px; margin-top: 9px; overflow: hidden; border-radius: 99px; background: #2d392b; }
+.mw-tour-progress span { display: block; height: 100%; border-radius: inherit; background: #a2f200; transition: width .3s ease; }
+.mw-tour-card h2 { margin: 8px 0 4px; color: #f3f7f0; font: 500 17px var(--font-display); }
+.mw-tour-card p { margin: 0; color: #c1cbbd; font-size: 10px; line-height: 1.5; }
+.mw-tour-actions { display: flex; flex: none; align-items: center; gap: 5px; }
+.mw-tour-actions button { min-height: 30px; padding: 0 8px; border: 1px solid #3a4936; border-radius: 8px; color: #dbe5d6; background: #172117; font-size: 9px; font-weight: 700; white-space: nowrap; }
+.mw-tour-actions button:hover { border-color: #a2f200; }
+.mw-tour-actions .mw-tour-skip { border-color: transparent; color: #aeb9aa; background: transparent; }
+.mw-tour-actions button:focus-visible { outline: 2px solid #a2f200; outline-offset: 2px; }
+.mw-tour-replay { position: fixed; z-index: 1000; right: 18px; bottom: 18px; min-height: 40px; padding: 0 14px; border: 1px solid #70874e; border-radius: 999px; color: #14200f; background: #a2f200; box-shadow: 0 8px 26px #0009; font-size: 11px; font-weight: 800; }
+.mw-tour-replay:hover { filter: brightness(1.08); }
+.mw-tour-replay:focus-visible { outline: 2px solid #f3ffd6; outline-offset: 3px; }
+[data-tour-focus='true'] { position: relative; z-index: 6; outline: 3px solid #a2f200 !important; outline-offset: 4px; box-shadow: 0 0 0 8px #a2f20035, 0 0 26px #a2f27799 !important; animation: mw-tour-pulse 1.25s ease-in-out infinite alternate; }
+.mw-tour-cursor { position: fixed; z-index: 1010; width: 28px; height: 34px; overflow: visible; pointer-events: none; filter: drop-shadow(0 2px 4px #000); transform: translate(-2px, -2px); transition: top .65s cubic-bezier(.2,.75,.25,1), left .65s cubic-bezier(.2,.75,.25,1), transform .12s ease-out; }
+.mw-tour-cursor.is-clicking { transform: translate(-1px, 0) scale(.88); }
+@keyframes mw-tour-pulse { from { outline-color: #a2f200; } to { outline-color: #e4ff9b; } }
+
+@media (max-width: 700px) {
+  .mw-tour-card { align-items: flex-start; flex-direction: column; gap: 8px; padding: 12px; }
+  .mw-tour-actions { width: 100%; justify-content: flex-end; }
+  .mw-tour-card h2 { font-size: 16px; }
+}
+
+.mw-embedded .mw-tour-card { width: min(340px, calc(100vw - 24px)); padding: 12px 13px; }
+.mw-embedded .mw-tour-card h2 { margin-top: 7px; font-size: 15px; }
+.mw-embedded .mw-tour-card p { font-size: 10px; }
+.mw-embedded .mw-tour-actions button { min-height: 32px; font-size: 9px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mw-tour-progress span { transition: none; }
+  [data-tour-focus='true'] { animation: none; }
+  .mw-tour-cursor { transition: none; }
+}

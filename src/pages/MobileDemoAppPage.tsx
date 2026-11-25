@@ -1,17 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DashboardPage } from './DashboardPage';
 import { MobileWebDemoPage } from './MobileWebDemoPage';
-import { useMode, useOps } from '../services/operations';
+import { useConnection, useMode, useOps } from '../services/operations';
+import { APP_ROUTES } from '../lib/routes';
 import './mobile-demo-app.css';
 
 type WorkspaceView = 'split' | 'mobile' | 'dashboard';
 
 export function MobileDemoAppPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const mode = useMode();
+  const connection = useConnection();
   const tripId = useOps((state) => state.trips[0]?.id);
   const [view, setView] = useState<WorkspaceView>('split');
+
+  useEffect(() => {
+    if (mode === 'api' && connection.status === 'connected') {
+      navigate(APP_ROUTES.dashboard, { replace: true });
+    }
+  }, [connection.status, mode, navigate]);
 
   return (
     <section className="mobile-demo-app-page" aria-labelledby="mobile-demo-title">

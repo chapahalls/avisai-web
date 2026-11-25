@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
@@ -15,10 +15,28 @@ type VoiceCommand = 'start' | 'approach' | 'arrive' | 'occurrence' | 'invoice' |
 type EventKey = 'assigned' | 'pickup' | 'approach' | 'receiverCall' | 'arrival' | 'task' | 'push' | 'panel' | 'call' | 'escalated' | 'acknowledged' | 'occurrence' | 'message' | 'unload';
 type DemoEvent = { key: EventKey; minute: number };
 type ChatLine = { from: 'driver' | 'cco'; text: string };
+type MobileTourStep = { target: string; title: string; body: string; delay: number; click?: boolean };
+type TourPlacement = 'above' | 'below';
+type TourPosition = { top: number; left: number; placement: TourPlacement };
+type TourCursorPosition = { top: number; left: number; visible: boolean; clicking: boolean };
 
 const profiles = ['Carlos Andrade', 'Marina Souza', 'João Pereira'];
 const baseClockMin = 14 * 60;
 const commandIds: VoiceCommand[] = ['start', 'approach', 'arrive', 'occurrence', 'invoice', 'map', 'documents', 'queue', 'message', 'unload'];
+const mobileTourSteps: MobileTourStep[] = [
+  { target: 'mobile-login', title: 'login', body: 'login', delay: 3600 },
+  { target: 'mobile-start', title: 'start', body: 'start', delay: 3600 },
+  { target: 'mobile-approach', title: 'approach', body: 'approach', delay: 4200 },
+  { target: 'mobile-arrival', title: 'arrival', body: 'arrival', delay: 4200 },
+  { target: 'mobile-queue-tab', title: 'queue', body: 'queue', delay: 3200 },
+  { target: 'mobile-push', title: 'push', body: 'push', delay: 3600, click: false },
+  { target: 'mobile-advance-20', title: 'panel', body: 'panel', delay: 4200 },
+  { target: 'mobile-advance-20', title: 'call', body: 'call', delay: 4200 },
+  { target: 'mobile-advance-20', title: 'escalation', body: 'escalation', delay: 4200 },
+  { target: 'dashboard-task-action', title: 'acknowledge', body: 'acknowledge', delay: 4200 },
+  { target: 'mobile-home-tab', title: 'home', body: 'home', delay: 3000 },
+  { target: 'mobile-unload', title: 'unload', body: 'unload', delay: 4200 },
+];
 
 function timeLabel(minute: number, integrated = false) {
   if (integrated) return clock(minute);
@@ -54,7 +72,7 @@ function tripPhase(phase: 'driving' | 'approaching' | 'waiting' | 'unloaded'): P
   return phase;
 }
 
-export function MobileWebDemoPage({ embedded = false, integrated = false }: { embedded?: boolean; integrated?: boolean }) {
+export function MobileWebDemoPage({ embedded = false, integrated = false, guided = true }: { embedded?: boolean; integrated?: boolean; guided?: boolean }) {
   const { t, i18n } = useTranslation();
   const mobileTripId = useOps((state) => state.trips[0]?.id ?? null);
   const mobileTrip = useOps((state) => integrated && mobileTripId ? state.trips.find((trip) => trip.id === mobileTripId) : undefined);
@@ -63,6 +81,9 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
   const sharedFeed = useOps((state) => state.feed);
   const simMinutes = useOps((state) => state.simMinutes);
   const simulationRunning = useOps((state) => state.running);
+  const operatorResponsiveness = useOps((state) => state.operatorResponsiveness);
+  const toggleSimulation = useOps((state) => state.toggle);
+  const setResponsiveness = useOps((state) => state.setResponsiveness);
   const mobileTask = useOps((state) => integrated && mobileTripId ? state.tasks.find((task) => task.tripId === mobileTripId) : undefined);
   const [authenticated, setAuthenticated] = useState(false);
   const [profile, setProfile] = useState(profiles[0]);
@@ -77,6 +98,17 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
   const [mobileStarted, setMobileStarted] = useState(false);
   const [messageDraft, setMessageDraft] = useState('');
   const [documentOpen, setDocumentOpen] = useState<'nfe' | 'cte' | null>(null);
+  const [tourIndex, setTourIndex] = useState(0);
+  const [tourPlaying, setTourPlaying] = useState(guided);
+  const [tourDone, setTourDone] = useState(false);
+  const [tourDismissed, setTourDismissed] = useState(false);
+  const [tourPaused, setTourPaused] = useState(false);
+  const [tourPosition, setTourPosition] = useState<TourPosition>({ top: 16, left: 16, placement: 'above' });
+  const [tourCursor, setTourCursor] = useState<TourCursorPosition>({ top: 0, left: 0, visible: false, clicking: false });
+  const tourCardRef = useRef<HTMLElement | null>(null);
+  const originalSimulationRef = useRef<{ running: boolean; responsiveness: number } | null>(null);
+  const currentSimulationRef = useRef({ running: simulationRunning, responsiveness: operatorResponsiveness, toggle: toggleSimulation, setResponsiveness });
+  currentSimulationRef.current = { running: simulationRunning, responsiveness: operatorResponsiveness, toggle: toggleSimulation, setResponsiveness };
   const linkedEvents = useMemo(() => integrated && mobileTripId
     ? sharedFeed.filter((event) => event.tripId === mobileTripId).reverse().flatMap((event) => {
       const key = eventKey(event);
@@ -119,6 +151,15 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
     if (integrated && mobileTripId) applyMobileDemoAction(mobileTripId, action, value);
   };
 
+  const restoreTourEnvironment = useCallback(() => {
+    const original = originalSimulationRef.current;
+    if (!original || !integrated) return;
+    const current = currentSimulationRef.current;
+    current.setResponsiveness(original.responsiveness);
+    if (current.running !== original.running) current.toggle();
+    originalSimulationRef.current = null;
+  }, [integrated]);
+
   const sayOutLoud = (text: string) => {
     if (!audioEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -142,6 +183,115 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
     window.addEventListener('storage', syncLanguage);
     return () => window.removeEventListener('storage', syncLanguage);
   }, [embedded, i18n]);
+
+  useEffect(() => {
+    if (!guided || tourDismissed || tourDone) return;
+    if (tourIndex >= mobileTourSteps.length) {
+      setTourPlaying(false);
+      setTourDone(true);
+      restoreTourEnvironment();
+      return;
+    }
+    if (!tourPlaying || tourPaused) return;
+
+    if (integrated && !originalSimulationRef.current) {
+      const current = currentSimulationRef.current;
+      originalSimulationRef.current = { running: current.running, responsiveness: current.responsiveness };
+      if (!current.running) current.toggle();
+      current.setResponsiveness(0);
+    }
+
+    const step = mobileTourSteps[tourIndex];
+    const targetName = step.target === 'dashboard-task-action' && !integrated ? 'mobile-task-ack' : step.target;
+    const selector = `[data-tour-target="${targetName}"]`;
+    let waitTimer: number | undefined;
+    let stepTimer: number | undefined;
+    let clickResetTimer: number | undefined;
+    let positionFrame: number | undefined;
+    let positionTourCard: (() => void) | undefined;
+    const waitStartedAt = Date.now();
+    const focusAndRunStep = () => {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (!target || !target.getClientRects().length) {
+        if (Date.now() - waitStartedAt >= 12000) {
+          setTourIndex((index) => index + 1);
+          return;
+        }
+        waitTimer = window.setTimeout(focusAndRunStep, 200);
+        return;
+      }
+      const scrollTargetIntoView = () => {
+        const mobileContent = target.closest<HTMLElement>('.mw-app-content');
+        const dashboardPane = target.closest<HTMLElement>('.mobile-demo-dashboard-pane');
+        const scrollContainer = mobileContent ?? dashboardPane;
+        if (!scrollContainer) return;
+        const targetRect = target.getBoundingClientRect();
+        const contentRect = scrollContainer.getBoundingClientRect();
+        const targetTop = targetRect.top - contentRect.top + scrollContainer.scrollTop;
+        const targetBottom = targetTop + targetRect.height;
+        const visibleTop = scrollContainer.scrollTop + 12;
+        const visibleBottom = scrollContainer.scrollTop + scrollContainer.clientHeight - 12;
+        if (targetTop < visibleTop || targetBottom > visibleBottom) {
+          const centeredTop = targetTop - (scrollContainer.clientHeight - targetRect.height) / 2;
+          scrollContainer.scrollTo({ top: Math.max(0, centeredTop), behavior: 'smooth' });
+        }
+      };
+      const updateTourCardPosition = () => {
+        const card = tourCardRef.current;
+        if (!card) return;
+        const targetRect = target.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const margin = 12;
+        const left = Math.round(Math.max(margin, Math.min(window.innerWidth - cardRect.width - margin, targetRect.left + targetRect.width / 2 - cardRect.width / 2)));
+        const cursorLeft = Math.round(targetRect.right - 8);
+        const cursorTop = Math.round(targetRect.top + targetRect.height / 2);
+        const hasRoomAbove = targetRect.top >= cardRect.height + 28;
+        const placement: TourPlacement = hasRoomAbove ? 'above' : 'below';
+        const top = Math.round(hasRoomAbove
+          ? targetRect.top - cardRect.height - 16
+          : Math.min(window.innerHeight - cardRect.height - margin, targetRect.bottom + 16));
+        setTourPosition((current) => current.top === top && current.left === left && current.placement === placement ? current : { top, left, placement });
+        setTourCursor((current) => current.top === cursorTop && current.left === cursorLeft && current.visible
+          ? current
+          : { ...current, top: cursorTop, left: cursorLeft, visible: true });
+      };
+      positionTourCard = updateTourCardPosition;
+      window.addEventListener('scroll', updateTourCardPosition, true);
+      window.addEventListener('resize', updateTourCardPosition);
+      scrollTargetIntoView();
+      target.setAttribute('data-tour-focus', 'true');
+      positionFrame = window.requestAnimationFrame(updateTourCardPosition);
+      stepTimer = window.setTimeout(() => {
+        const currentTarget = document.querySelector<HTMLElement>(selector);
+        if (step.click !== false && currentTarget && !('disabled' in currentTarget && currentTarget.disabled)) {
+          setTourCursor((current) => ({ ...current, clicking: true }));
+          currentTarget.click();
+          clickResetTimer = window.setTimeout(() => {
+            setTourCursor((current) => ({ ...current, clicking: false }));
+            setTourIndex((index) => index + 1);
+          }, 180);
+          return;
+        }
+        setTourIndex((index) => index + 1);
+      }, step.delay);
+    };
+    focusAndRunStep();
+
+    return () => {
+      if (waitTimer !== undefined) window.clearTimeout(waitTimer);
+      if (stepTimer !== undefined) window.clearTimeout(stepTimer);
+      if (clickResetTimer !== undefined) window.clearTimeout(clickResetTimer);
+      if (positionFrame !== undefined) window.cancelAnimationFrame(positionFrame);
+      setTourCursor((current) => current.clicking ? { ...current, clicking: false } : current);
+      if (positionTourCard) {
+        window.removeEventListener('scroll', positionTourCard, true);
+        window.removeEventListener('resize', positionTourCard);
+      }
+      document.querySelectorAll('[data-tour-focus="true"]').forEach((element) => element.removeAttribute('data-tour-focus'));
+    };
+  }, [guided, integrated, restoreTourEnvironment, tourDone, tourDismissed, tourIndex, tourPaused, tourPlaying]);
+
+  useEffect(() => () => restoreTourEnvironment(), [restoreTourEnvironment]);
 
   const startTrip = () => {
     if (!canStartTrip) return;
@@ -219,6 +369,9 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
   };
 
   const [chat, setChat] = useState<ChatLine[]>([]);
+
+  const currentTourStep = mobileTourSteps[Math.min(tourIndex, mobileTourSteps.length - 1)];
+  const tourVisible = guided && !tourDismissed;
 
   const submitMessage = () => {
     const clean = messageDraft.trim();
@@ -300,10 +453,10 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
         <div className="mw-dock-card"><span className="mw-dock-symbol">⌖</span><span>{t('mobileWeb.queue.dock')}</span><strong>{t('mobileWeb.queue.dockTime')}</strong><small>{receiverNotified ? t('mobileWeb.confirmed') : t('mobileWeb.receiverPending')}</small></div>
         <div className="mw-wait-card"><span>{t('mobileWeb.queue.elapsed')}</span><strong>{arrived ? durationLabel(elapsed) : '—:—'}</strong><div className="mw-progress-track"><span style={{ width: `${arrived ? Math.min(100, elapsed / 3) : 0}%` }} /></div><span>{t('mobileWeb.queue.franchise')}</span><b>{remain > 0 ? t('mobileWeb.stayRemaining', { count: Math.ceil(remain / 60) }) : t('mobileWeb.overstay')}</b></div>
         <p className="mw-inline-note">{arrived ? t(taskClosed ? 'mobileWeb.taskClosed' : hasCcoAcknowledged ? 'mobileWeb.taskTaken' : 'mobileWeb.taskOpen') : t('mobileWeb.queue.waiting')} · {t('mobileWeb.queue.position')}</p>
-        {arrived && phase === 'waiting' && <div className="mw-advance-buttons"><button type="button" onClick={() => advanceTime(20)} disabled={integrated && !simulationRunning}>{t('mobileWeb.queue.advance')}</button><button type="button" onClick={() => advanceTime(60)} disabled={integrated && !simulationRunning}>{t('mobileWeb.queue.advanceHour')}</button></div>}
-        {escalated && !hasCcoAcknowledged && !taskClosed && <button type="button" className="mw-primary-button" onClick={() => { applyDriverAction('acknowledge'); setCcoAcknowledged(true); addEvent('acknowledged'); }}>{t('mobileWeb.taskAcknowledge')}</button>}
+        {arrived && phase === 'waiting' && <div className="mw-advance-buttons"><button type="button" data-tour-target="mobile-advance-20" onClick={() => advanceTime(20)} disabled={integrated && !simulationRunning}>{t('mobileWeb.queue.advance')}</button><button type="button" onClick={() => advanceTime(60)} disabled={integrated && !simulationRunning}>{t('mobileWeb.queue.advanceHour')}</button></div>}
+        {escalated && !hasCcoAcknowledged && !taskClosed && <button type="button" className="mw-primary-button" data-tour-target="mobile-task-ack" onClick={() => { applyDriverAction('acknowledge'); setCcoAcknowledged(true); addEvent('acknowledged'); }}>{t('mobileWeb.taskAcknowledge')}</button>}
         <p className="mw-inline-note">{t(taskClosed ? 'mobileWeb.taskClosed' : hasCcoAcknowledged ? 'mobileWeb.taskTaken' : escalated ? 'mobileWeb.taskEscalated' : 'mobileWeb.taskChannels')}</p>
-        <div className="mw-channel-list">{([['push', 'channelPush'], ['panel', 'channelPanel'], ['call', 'channelCall'], ['escalated', 'channelEscalation']] as const).map(([key, label], index) => { const event = events.some((item) => item.key === key); return <div key={key}><span>{t(`mobileWeb.${label}`)}</span><b>{event ? t('mobileWeb.sent') : index === 0 && arrived ? t('mobileWeb.sent') : t('mobileWeb.waiting')}</b></div>; })}</div>
+        <div className="mw-channel-list">{([['push', 'channelPush'], ['panel', 'channelPanel'], ['call', 'channelCall'], ['escalated', 'channelEscalation']] as const).map(([key, label], index) => { const event = events.some((item) => item.key === key); return <div key={key} data-tour-target={key === 'push' ? 'mobile-push' : undefined}><span>{t(`mobileWeb.${label}`)}</span><b>{event ? t('mobileWeb.sent') : index === 0 && arrived ? t('mobileWeb.sent') : t('mobileWeb.waiting')}</b></div>; })}</div>
       </>;
     }
 
@@ -314,10 +467,10 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
         <div className="mw-route-stop"><i className="mw-route-origin" /><div><small>{t('mobileWeb.origin')}</small><strong>{t('mobileWeb.routeOrigin')}</strong></div></div>
         <div className="mw-route-connector" />
         <div className="mw-route-stop"><i className="mw-route-end" /><div><small>{t('mobileWeb.destination')}</small><strong>{destinationName}</strong><small>{t('mobileWeb.unloadWindow')}</small></div></div>
-        {canStartTrip ? <button type="button" className="mw-primary-button" onClick={startTrip}>{t('mobileWeb.startTrip')}</button> : <>
+        {canStartTrip ? <button type="button" className="mw-primary-button" data-tour-target="mobile-start" onClick={startTrip}>{t('mobileWeb.startTrip')}</button> : <>
           <div className="mw-status-row"><span className="mw-phase-pill">{t(`mobileWeb.phases.${phase}`)}</span><span className="mw-location-distance">{t('mobileWeb.kmAway', { count: currentDistance })}</span></div>
           <div className="mw-step-bars" aria-label={t('mobileWeb.routeProgress')}>{['idle', 'driving', 'approaching', 'waiting', 'unloaded'].map((step, index) => <i key={step} data-state={phase === step || (step === 'waiting' && arrived) || (step === 'unloaded' && phase === 'unloaded') ? 'active' : index < ['idle', 'driving', 'approaching', 'waiting', 'unloaded'].indexOf(phase) ? 'done' : 'future'} />)}</div>
-          <div className="mw-trip-shortcuts">{phase === 'driving' && <button type="button" onClick={approachReceiver}>{t('mobileWeb.approach')}</button>}{phase === 'approaching' && <button type="button" onClick={registerArrival}>{t('mobileWeb.arrival')}</button>}{phase === 'waiting' && <button type="button" onClick={confirmUnload}>{t('mobileWeb.unload')}</button>}{phase === 'unloaded' && <span>✓ {t('mobileWeb.unloaded')}</span>}</div>
+          <div className="mw-trip-shortcuts">{phase === 'driving' && <button type="button" data-tour-target="mobile-approach" onClick={approachReceiver}>{t('mobileWeb.approach')}</button>}{phase === 'approaching' && <button type="button" data-tour-target="mobile-arrival" onClick={registerArrival}>{t('mobileWeb.arrival')}</button>}{phase === 'waiting' && <button type="button" data-tour-target="mobile-unload" onClick={confirmUnload}>{t('mobileWeb.unload')}</button>}{phase === 'unloaded' && <span>✓ {t('mobileWeb.unloaded')}</span>}</div>
         </>}
         {receiverNotified && <div className="mw-receiver-confirmation"><span>✓</span><p><b>{t('mobileWeb.receiverNotified')}</b><small>{t('mobileWeb.dockConfirmed')}</small></p></div>}
         {arrived && <div className="mw-receiver-confirmation"><span>◷</span><p><b>{t('mobileWeb.arrivalRegistered')}</b><small>{t('mobileWeb.stay')}: {durationLabel(elapsed)} · {t('mobileWeb.stayLimit')}</small></p></div>}
@@ -327,20 +480,58 @@ export function MobileWebDemoPage({ embedded = false, integrated = false }: { em
     </>;
   };
 
+  const skipTour = () => {
+    setTourPlaying(false);
+    setTourDismissed(true);
+    restoreTourEnvironment();
+  };
+
+  const restartTour = () => {
+    if (integrated && mobileTripId) applyMobileDemoAction(mobileTripId, 'reset');
+    resetDemo();
+    setTourIndex(0);
+    setTourDone(false);
+    setTourDismissed(false);
+    setTourPaused(false);
+    setTourPlaying(true);
+  };
+
   return <div className={`mobile-web-page${embedded ? ' mw-embedded' : ''}`}>
     {!embedded && <header className="mw-topbar"><Link to="/home" aria-label={t('app.name')}><RodarLogo size={34} /></Link><div className="mw-topbar-actions"><Link to="/home" className="mw-top-link">{t('mobileWeb.back')}</Link><Link to="/login" className="mw-top-cco"><Icon name="dashboard" />{t('mobileWeb.dashboard')}</Link><select value={isEn ? 'en' : 'pt-BR'} onChange={(event) => void i18n.changeLanguage(event.target.value)} aria-label={t('app.language')}><option value="pt-BR">PT</option><option value="en">EN</option></select></div></header>}
     <main className={`mw-main${embedded ? ' mw-main-embedded' : ''}`}>
       {embedded ? <h1 className="sr-only">{t('mobileWeb.title')}</h1> : <section className="mw-intro"><p className="mw-eyebrow"><span />{t('mobileWeb.eyebrow')}</p><h1>{t('mobileWeb.title')}</h1><p className="mw-intro-copy">{t('mobileWeb.intro')}</p><span className="mw-demo-badge">◉ {t('mobileWeb.mockNote')}</span></section>}
+      {tourVisible && <section ref={tourCardRef} className="mw-tour-card" data-placement={tourPosition.placement} style={{ top: tourPosition.top, left: tourPosition.left }} aria-live="polite" aria-atomic="true">
+        <div className="mw-tour-copy">
+          <div className="mw-tour-meta"><span>{t('mobileDemo.tour.label')}</span>{tourDone ? <span>{t('mobileDemo.tour.complete')}</span> : <span>{t('mobileDemo.tour.step', { current: tourIndex + 1, total: mobileTourSteps.length })}</span>}</div>
+          <div className="mw-tour-progress" aria-hidden="true"><span style={{ width: `${tourDone ? 100 : (tourIndex / mobileTourSteps.length) * 100}%` }} /></div>
+          <h2>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneTitle') : t(`mobileDemo.tour.steps.${currentTourStep.title === 'acknowledge' && !integrated ? 'acknowledgeLocal' : currentTourStep.title}.title`)}</h2>
+          <p>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneBody') : t(`mobileDemo.tour.steps.${currentTourStep.title === 'acknowledge' && !integrated ? 'acknowledgeLocal' : currentTourStep.body}.body`)}</p>
+        </div>
+        <div className="mw-tour-actions">
+          {!tourDone ? <>
+            <button type="button" className="mw-tour-pause" onClick={() => setTourPaused((paused) => !paused)}>{t(tourPaused ? 'mobileDemo.tour.resume' : 'mobileDemo.tour.pause')}</button>
+            <button type="button" className="mw-tour-skip" onClick={skipTour}>{t('mobileDemo.tour.skip')}</button>
+          </> : <>
+            <button type="button" className="mw-tour-pause" onClick={restartTour}>{t('mobileDemo.tour.replay')}</button>
+            <button type="button" className="mw-tour-skip" onClick={skipTour}>{t('mobileDemo.tour.close')}</button>
+          </>}
+        </div>
+      </section>}
+      {tourVisible && !tourDone && tourCursor.visible && <svg className={`mw-tour-cursor${tourCursor.clicking ? ' is-clicking' : ''}`} style={{ top: tourCursor.top, left: tourCursor.left }} viewBox="0 0 28 34" aria-hidden="true">
+        <path d="M3 2v21l5.5-5.3 4.1 10 4.2-1.8-4.2-9.9H23L3 2Z" fill="#a2f200" stroke="#071007" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="m5.4 6.2 12.2 8.5h-6.1l4.1 9.7-1.5.7-4-9.8-4.7 4.4V6.2Z" fill="#efffc9" opacity=".8" />
+      </svg>}
+      {guided && tourDismissed && <button type="button" className="mw-tour-replay" onClick={restartTour}>{t('mobileDemo.tour.replay')}</button>}
       <div className={`mw-demo-grid${embedded ? ' mw-demo-grid-embedded' : ''}`}>
         {!embedded && <aside className="mw-guide-panel"><p className="mw-guide-label">{t('mobileWeb.systemTitle')}</p><ul>{(t('mobileWeb.systemItems', { returnObjects: true }) as string[]).map((item, index) => <li key={item}><span>{String(index + 1).padStart(2, '0')}</span>{item}</li>)}</ul><p className="mw-guide-foot">{t('mobileWeb.systemFoot')}</p><Link to="/login" className="mw-guide-link">{t('mobileWeb.ccoLink')} ↗</Link></aside>}
         <section className="mw-phone-column" aria-label={t('mobileWeb.phoneLabel')}>
           <div className="mw-phone-frame"><div className="mw-phone-camera" /><div className="mw-phone-screen">
           <div className="mw-phone-status"><span>{integrated ? currentClock : '9:41'}</span><span>●●●　◖　▰</span></div>
-            {!authenticated ? <div className="mw-login-screen"><div className="mw-login-brand"><RodarMark /><span>RODAR</span></div><p className="mw-login-overline">{t('mobileWeb.driverDemo')}</p><h2>{t('mobileWeb.loginTitle')}</h2><p>{t('mobileWeb.loginSubtitle')}</p><label htmlFor="mw-profile-select">{t('mobileWeb.profile')}</label><select id="mw-profile-select" value={driverName} onChange={(event) => setProfile(event.target.value)}>{(integrated ? [driverName] : profiles).map((name) => <option key={name}>{name}</option>)}</select><button type="button" className="mw-primary-button" onClick={login}>{t('mobileWeb.enter')}</button><span className="mw-login-mock">● {t('mobileWeb.mockLogin')}</span></div> : <>
+            {!authenticated ? <div className="mw-login-screen"><div className="mw-login-brand"><RodarMark /><span>RODAR</span></div><p className="mw-login-overline">{t('mobileWeb.driverDemo')}</p><h2>{t('mobileWeb.loginTitle')}</h2><p>{t('mobileWeb.loginSubtitle')}</p><label htmlFor="mw-profile-select">{t('mobileWeb.profile')}</label><select id="mw-profile-select" value={driverName} onChange={(event) => setProfile(event.target.value)}>{(integrated ? [driverName] : profiles).map((name) => <option key={name}>{name}</option>)}</select><button type="button" className="mw-primary-button" data-tour-target="mobile-login" onClick={login}>{t('mobileWeb.enter')}</button><span className="mw-login-mock">● {t('mobileWeb.mockLogin')}</span></div> : <>
               <div className="mw-app-topline"><div><strong>RODAR</strong><span>{t(`mobileWeb.phases.${phase}`)}</span></div><button type="button" onClick={sendToSignIn} aria-label={t('mobileWeb.reset')}>{driverName.slice(0, 1)}</button></div>
               <div className="mw-app-content" key={screen}>{renderScreen()}</div>
               {voiceOpen && <div className="mw-voice-panel"><div className="mw-voice-panel-head"><div><span className="mw-voice-orb small">✦</span><span><b>{t('mobileWeb.voiceTitle')}</b><small>{t('mobileWeb.voiceMock')}</small></span></div><button type="button" onClick={() => setVoiceOpen(false)} aria-label={t('mobileWeb.voiceClose')}>×</button></div><p className="mw-voice-hint">{t('mobileWeb.voiceHint')}</p><div className="mw-transcript-list">{transcript.length ? transcript.slice(-4).map((line, index) => <div className={`mw-transcript-line ${line.from}`} key={`${index}-${line.text}`}><small>{t(line.from === 'driver' ? 'mobileWeb.voiceUser' : 'mobileWeb.voiceAgent')}</small><span>{line.text}</span></div>) : <p className="mw-agent-greeting">{t('mobileWeb.voiceGreeting')}</p>}</div><div className="mw-voice-audio-toggle"><span>{t('mobileWeb.voiceSpeak')}</span><button type="button" aria-pressed={audioEnabled} onClick={() => setAudioEnabled((value) => !value)}>{t(audioEnabled ? 'mobileWeb.voiceOn' : 'mobileWeb.voiceOff')}</button></div><div className="mw-command-list">{commandIds.map((command) => <button key={command} type="button" onClick={() => runVoiceCommand(command)}><span>“{t(`mobileWeb.voice.${command}.say`)}”</span><b>↗</b></button>)}</div></div>}
-              <nav className="mw-phone-tabs" aria-label={t('mobileWeb.phoneLabel')}>{(['home', 'map', 'documents', 'messages', 'queue'] as const).map((tab) => <button type="button" key={tab} aria-current={screen === tab ? 'page' : undefined} onClick={() => voiceNav(tab)}><span>{tab === 'home' ? '⌂' : tab === 'map' ? '⌖' : tab === 'documents' ? '▤' : tab === 'messages' ? '◌' : '◷'}</span><small>{t(`mobileWeb.tabs.${tab}`)}</small></button>)}</nav>
+              <nav className="mw-phone-tabs" aria-label={t('mobileWeb.phoneLabel')}>{(['home', 'map', 'documents', 'messages', 'queue'] as const).map((tab) => <button type="button" key={tab} data-tour-target={tab === 'queue' ? 'mobile-queue-tab' : tab === 'home' ? 'mobile-home-tab' : undefined} aria-current={screen === tab ? 'page' : undefined} onClick={() => voiceNav(tab)}><span>{tab === 'home' ? '⌂' : tab === 'map' ? '⌖' : tab === 'documents' ? '▤' : tab === 'messages' ? '◌' : '◷'}</span><small>{t(`mobileWeb.tabs.${tab}`)}</small></button>)}</nav>
             </>}
           </div></div>
           {!embedded && <p className="mw-phone-caption">{t('mobileWeb.phoneLabel')}</p>}
