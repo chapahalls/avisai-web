@@ -1,90 +1,169 @@
-# RODAR Web · CCO
-
-Painel da central de operação do RODAR: frota, Tasks, ligações, indicadores, publicação de rotas e anexos. **Modo API** usa operação, métricas/ranking e arquivos do backend RODAR; **modo Demo** executa a simulação no navegador. Login e documentos fiscais permanecem declarados como MOCK. O mapa base usa Google Maps JavaScript API quando uma chave é configurada.
-
-![Fluxo visual da plataforma RODAR: publicação da rota, motorista, monitoramento, aviso prévio, Task e descarga](docs/assets/avisai-workflow.gif)
-
-O fluxo mostra uma operação fictícia da Demo: o CCO publica e atribui a rota, acompanha a viagem, recebe o aviso de aproximação, trata a Task de chegada e confirma a descarga. Os estados exibidos não comprovam GPS, telefonia ou autenticação reais.
-
-## Como os papéis se conectam
-
-![Fluxograma do RODAR: CCO, agente de voz, motorista e recebedor](docs/images/fluxograma.png)
-
-| Papel | Onde | O que faz |
-|---|---|---|
-| 🖥️ **Central (CCO)** | Este painel | Publica ou reatribui rotas para motoristas já cadastrados, organiza documentos, recebe reportes, ocorrências e a Task de chegada com tempo parado e estadia; assume a Task e confirma a descarga. |
-| 🎙️ **Agente de voz** | Backend + Agora | Pede status por voz, valida retirada e chegada pelo GPS do celular e do caminhão, avisa o recebedor na aproximação e liga para ele quando o CCO não responde após 3 tentativas. |
-| 🚚 **Motorista** | App mobile | Confirma retirada, chegada e descarga por voz, reporta ocorrências e pergunta sobre os documentos da rota. |
-| 🏭 **Recebedor da carga** | Ligação | Recebe o aviso prévio e informa doca, horário e previsão de descarga. |
-
-O aviso na aproximação antecipa a doca; a Task na chegada inicia a contagem da estadia; a ligação ao recebedor fecha o ciclo quando o CCO não responde. Nesta Demo, voz, GPS e ligações são simulados (ver [O que é simulado](#o-que-é-simulado)). Problemas e decisões por trás do fluxo: [REGRAS-DE-NEGOCIO.md](docs/REGRAS-DE-NEGOCIO.md).
-
-## Propósito e limites
-
-O painel torna visível a operação que tende a ficar dispersa entre motorista, recebedor e CCO: viagem atribuída, aproximação, chegada, espera, Tasks, mensagens, alertas e decisões do agente. Ele não é um rastreador veicular nem substitui uma integração de autenticação, GPS, telefonia ou emissão fiscal de produção.
-
-| Origem selecionada | O que o painel usa | O que ele não inventa |
-|---|---|---|
-| **API** | rotas, GPS, Tasks, estadias, chamadas, alertas, mensagens, arquivos, métricas e ranking recebidos do backend | posição ausente, estrada, valores financeiros, histórico ou resultado de telefonia |
-| **Demo** | frota, relógio, eventos, rotas rodoviárias versionadas, histórico e indicadores locais | GPS, documentos fiscais, login, ligação telefônica ou comunicação reais |
-
-## Telas do painel
-
-O painel do CCO vive em `/dashboard` e suas derivações; todas exigem uma sessão CCO, hoje deliberadamente MOCK. `/` e os endereços antigos (`/metrics`, `/trips/:id`, …) redirecionam para o equivalente em `/dashboard`.
-
-| URL | Área | Uso principal |
-|---|---|---|
-| `/home` | Home pública RODAR | carregamento, história 3D (chip → mundo), plataforma, como funciona (caminhão 3D na doca), calculadora de estadia, perguntas e contato; não usa API nem Demo. Os formulários da calculadora e de contato são MOCK: validam no navegador e não enviam dados |
-| `/dashboard` | Monitoramento | 7 KPIs da operação, fila de alertas, mapa, veículo selecionado e última chamada do AI, grade de viagens, janelas de doca do dia, solicitações e eventos |
-| `/dashboard/dispatch` | Trip dispatch | motoristas cadastrados e suas viagens (filtros por situação e busca); rota editável só antes da saída, com troca de motorista e arquivos no painel lateral. Paradas extras ainda não são aceitas pelo backend |
-| `/dashboard/dispatch/new` | Cadastrar viagem | 4 etapas (motorista cadastrado, destino e entrega, regras do AI somente leitura, documentos) com resumo; publica a rota e envia os documentos em seguida, sem repetição automática. Rascunho salvo só neste navegador (sem arquivos). `?driver=` já seleciona o motorista |
-| `/dashboard/trips/:id` | Motorista e viagem | motorista, últimos 7 dias (Demo), onde parou, linha do tempo filtrável (paradas, agente, CCO, recebedor) com transcrição das ligações, mensagem por voz ao motorista (API), mapa e dossiê com notas MOCK e arquivos |
-| `/dashboard/metrics` | Análises | período (hoje, 7 e 30 dias) e filtros por recebedor, motorista e ocorrência; 10 indicadores, funil dos avisos, Agente × CCO por dia, ocorrências por tipo e abas Ocorrências, Chamadas e solicitações (com transcrição), Contatos com o CCO, Motoristas e Recebedores; exporta a aba em CSV. No modo API, indicadores e ranking vêm do servidor e as listas mostram o que a sessão recebeu. `/dashboard/receivers` e `/dashboard/calls` abrem as abas correspondentes |
-| `/dashboard/operator` | Operador | atendimento do fallback de chamada do agente via Agora RTC |
-
-## Arquitetura do front-end
-
-```text
-src/
-├── app/                 composição, guarda de sessão e rotas
-├── pages/               telas conectadas ao roteador
-├── features/            domínio de cada área; somente index.ts é entrada pública
-│   ├── auth/            sessão SSO MOCK
-│   ├── home/            home pública: loader, abertura e rolagem suave
-│   ├── fleet/           mapa e seleção da frota
-│   ├── trips/           dossiê, mensagens, alertas e decisões do agente
-│   ├── tasks/           fila operacional e ação Assumir
-│   ├── dispatch/        publicação, atribuição e arquivos
-│   ├── metrics/         KPIs e gráficos
-│   ├── receivers/       ranking
-│   └── calls/           histórico de ligações
-├── services/
-│   ├── api/             contrato validado, REST e SSE
-│   ├── operations/      seleção API/Demo e reconciliação do estado
-│   ├── analytics/       métricas e ranking da API
-│   └── mock/            motor, fixtures, histórico e dossiê da Demo
-├── components/          layout e componentes compartilhados
-├── lib/                 configuração, i18n e Google Maps
-├── types/               contratos de domínio
-└── utils/               geometria, estadia, formatação e rotas
-```
-
-As dependências seguem `pages → features → components/services/lib/utils/types`. A [documentação de arquitetura](docs/ARQUITETURA.md) detalha a reconciliação REST/SSE, os contratos e a separação entre API e Demo.
-
-## Capturas da interface
-
-O GIF abaixo foi gerado a partir da gravação da demonstração do painel e reduzido para uma resolução adequada ao README. Dados, perfis, rota, NF e GPS exibidos são fictícios; a animação não comprova credenciais, GPS ou telefonia reais.
-
-![Demonstração do painel RODAR: monitoramento da frota, mapa e dossiê da viagem](docs/assets/dashboard-demo.gif)
-
-As imagens estáticas mostram a sessão e o dashboard conectados a uma base de demonstração. A ausência de GPS ou de documento completo deve continuar visível como limitação da API.
-
 <p align="center">
-  <img src="docs/assets/login.png" alt="Login do painel RODAR com seletor de perfil CCO" width="300" />
-  <img src="docs/assets/dashboard-api.jpg" alt="Dashboard do RODAR conectado à API com rota, mapa e dossiê" width="700" />
+  <img src="docs/RODAR-telas/marca/rodar-icone.svg" alt="Marca RODAR" width="72" />
 </p>
 
-## Como rodar
+<h1 align="center">RODAR</h1>
+
+<p align="center">
+  <strong>O agente de voz que conecta motorista, recebedor e central de operação (CCO).</strong><br />
+  Este repositório é o <strong>site público</strong> e o <strong>painel web do CCO</strong>.
+</p>
+
+<p align="center">
+  <img src="docs/assets/readme/tour.gif" alt="Tour do RODAR: a home 3D explica o agente no celular do motorista, o aviso ao recebedor e o mapa; depois o painel do CCO mostra a frota ao vivo, um alerta escalado assumido com um clique, a linha do tempo da viagem com transcrição e as análises de estadia" width="820" />
+</p>
+
+<p align="center">
+  <sub>Gravado em modo Demo, com dados fictícios. Voz, GPS e telefonia são simulados nesta gravação.</sub><br />
+  <sub>▶️ <a href="docs/assets/readme/tour.mp4">Ver em vídeo (MP4, 1280 px, 1 min 9 s)</a></sub>
+</p>
+
+## Para que serve
+
+O motorista fala com o AI pelo celular, sem digitar. O AI avisa o recebedor antes da chegada, acompanha a espera na doca e só chama a central quando alguém precisa decidir.
+
+| | Pilar | Como o RODAR entrega |
+|---|---|---|
+| 📈 | **Escalável** | Toda mudança vira evento: viagem, aproximação, ligação, Task, descarga. O backend é dono do estado e transmite ao vivo (SSE). O painel e o app só leem e reagem. Uma rota ou a frota inteira usam o mesmo fluxo, sem ninguém ao telefone por caminhão. |
+| 🔇 | **Menos comunicação com a central** | O AI pede status ao motorista por voz, liga para o recebedor e registra as respostas. O CCO recebe só exceções, numa fila ordenada por severidade: recebedor que não atende, ocorrência, espera acima da franquia. |
+| 📍 | **Rastreio completo da mercadoria** | Da retirada à descarga, cada viagem guarda posição, paradas, ocorrências, ligações transcritas, mensagens, documentos e decisões do agente, numa linha do tempo filtrável. |
+| ⏱️ | **Menos estadia na entrega** | A 8 km do destino, o AI liga para o recebedor e confirma doca e horário. Na chegada, o contador de estadia começa (franquia de 5 h, Lei 11.442) e as Análises mostram espera média, avisos antecipados e estadia devida. |
+
+## Como funciona
+
+O fluxograma abaixo mostra uma viagem do início ao fim. No GitHub, use os controles do diagrama para ampliar e arrastar. Em seguida, abra cada etapa para ver a tela correspondente.
+
+```mermaid
+flowchart TD
+  P["🖥️ 1 · CCO publica a rota<br/>motorista, destino, janela e documentos"]:::cco
+  R["🚚 2 · Motorista recebe no celular<br/>e confirma a retirada por voz"]:::mot
+  G["📍 Em rota: GPS do caminhão e do celular,<br/>paradas e ocorrências por voz"]:::mot
+  O{"Precisa<br/>do CCO?"}:::ai
+  X["🖥️ Alerta na fila do CCO<br/>com transcrição"]:::cco
+  A{"🎙️ 3 · A 8 km<br/>do destino?"}:::ai
+  L["🎙️ AI liga para o recebedor<br/>e pede doca e horário"]:::ai
+  D["🏭 Recebedor confirma<br/>doca e horário"]:::rec
+  C["📍 Chegada: geocerca + check-in por voz"]:::mot
+  T["⏱️ 4 · Task de chegada: a estadia começa a contar<br/>CCO avisado em T+0 push · T+20 painel · T+40 ligação"]:::ai
+  N{"🖥️ CCO<br/>respondeu?"}:::cco
+  E["🎙️ Task escalada<br/>e nova ligação ao recebedor"]:::ai
+  U["✅ 5 · Descarga confirmada<br/>por voz ou pelo CCO"]:::mot
+  S["📊 6 · Estadia fechada<br/>e indicadores atualizados"]:::cco
+
+  P --> R --> G --> A
+  G -- ocorrência --> O
+  O -- sim --> X
+  O -- não --> G
+  A -- ainda não --> G
+  A -- sim --> L
+  L -- atendeu --> D --> C
+  L -. não atendeu: fica registrado .-> C
+  C --> T --> N
+  N -- sim --> U
+  N -- não, T+60 --> E --> U
+  U --> S
+
+  classDef cco fill:#a2f200,stroke:#090b09,color:#090b09
+  classDef ai fill:#17b26a,stroke:#090b09,color:#f6f8f6
+  classDef mot fill:#f5a524,stroke:#090b09,color:#090b09
+  classDef rec fill:#f6f8f6,stroke:#354037,color:#090b09
+```
+
+<sub>Cores por papel: 🟩 lima = CCO · 🟢 verde = agente de voz · 🟧 âmbar = motorista e caminhão · ⬜ claro = recebedor.</sub>
+
+<details>
+<summary><strong>1 · O CCO publica a rota</strong> (Trip dispatch)</summary>
+<br />
+
+Em `/dashboard/dispatch`, o CCO vê os motoristas cadastrados e suas viagens. A rota só pode ser editada antes da saída: publicada, planejada ou na origem. `/dashboard/dispatch/new` cadastra a viagem em 4 etapas: motorista, destino e entrega, regras do agente e documentos. O resumo estima o custo de voz no pior caso.
+
+<img src="docs/assets/readme/dispatch.jpg" alt="Trip dispatch: motoristas cadastrados, status da viagem, rota, janela de descarga e regras do agente" width="49%" />
+<img src="docs/assets/readme/dispatch-new.jpg" alt="Cadastrar viagem: quatro etapas e resumo com o custo de voz estimado" width="49%" />
+
+<sub>Capturas em modo API, com os perfis fictícios do seed do backend.</sub>
+</details>
+
+<details>
+<summary><strong>2 · O motorista fala, não digita</strong> (app e agente de voz)</summary>
+<br />
+
+O AI roda no celular do motorista. Retirada, chegada, descarga e ocorrências são confirmadas por voz, e o motorista pode perguntar sobre os documentos da rota. O GPS do caminhão é a prova forte da posição. O app mobile fica em outro repositório; o contrato está em [CONTRATO-MOBILE.md](docs/CONTRATO-MOBILE.md).
+
+<img src="docs/assets/readme/home-phone.jpg" alt="Home: o AI cabe no celular do motorista, na cabine do caminhão" width="49%" />
+<img src="docs/assets/readme/home-truck.jpg" alt="Home: cada caminhão vira dado vivo" width="49%" />
+</details>
+
+<details>
+<summary><strong>3 · Aviso ao recebedor antes da chegada</strong></summary>
+<br />
+
+A 8 km do destino, o AI se apresenta como assistente virtual da transportadora, informa a placa e pergunta doca e horário. O aviso só conta como efetivo se o recebedor atende antes da chegada. Uma tentativa sem resposta também fica registrada, como evidência.
+
+<img src="docs/assets/readme/home-dock.jpg" alt="Home, Como funciona: o AI liga para o recebedor antes da chegada e o caminhão segue para a doca" width="49%" />
+<img src="docs/assets/readme/dashboard.jpg" alt="Monitoramento: KPIs, fila de alertas, mapa da frota, veículo selecionado e a última ligação do AI com transcrição" width="49%" />
+</details>
+
+<details>
+<summary><strong>4 · Task de chegada e escalonamento só quando precisa</strong></summary>
+<br />
+
+A chegada cria a Task e inicia a espera. O CCO é avisado em canais cada vez mais fortes: push em T+0, destaque no painel em T+20 e ligação em T+40. Sem resposta, em T+60 a Task é escalada e o AI liga de novo para o recebedor. **Assumir** encerra as novas tentativas. No monitoramento (`/dashboard`), a fila de alertas é ordenada por severidade e tempo.
+
+<img src="docs/assets/readme/dashboard.jpg" alt="Monitoramento com dois alertas críticos de recebedor que não respondeu" width="80%" />
+</details>
+
+<details>
+<summary><strong>5 · Rastreio completo da viagem</strong></summary>
+<br />
+
+Em `/dashboard/trips/:id` ficam o motorista e os últimos 7 dias dele, onde ele parou e uma linha do tempo filtrável (paradas, agente, CCO, recebedor) com a transcrição das ligações. A tela também traz a mensagem por voz ao motorista (API), o mapa da rota e o dossiê com documentos.
+
+<img src="docs/assets/readme/trip.jpg" alt="Motorista e viagem: onde parou, linha do tempo com ligações e Tasks, histórico de 7 dias e mensagem ao motorista" width="80%" />
+</details>
+
+<details>
+<summary><strong>6 · Estadia fechada e análises</strong></summary>
+<br />
+
+A descarga, confirmada por voz ou pelo CCO, encerra o contador. Em `/dashboard/metrics`, as análises cruzam período, recebedor, motorista e tipo de ocorrência. Mostram o funil dos avisos, ligações do agente × escaladas ao CCO por dia, espera média, estadia devida e contatos evitados, com exportação em CSV.
+
+<img src="docs/assets/readme/metrics.jpg" alt="Análises: indicadores, funil dos avisos do agente, Agente × CCO por dia e ocorrências por tipo" width="80%" />
+</details>
+
+## Telas
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/assets/readme/home-chip.jpg" alt="Home: tudo começa num chip de inteligência" /><br /><sub><b>Home</b> · <code>/home</code>: história 3D guiada pela rolagem</sub></td>
+    <td width="33%"><img src="docs/assets/readme/home-map.jpg" alt="Home: cada rota do Brasil, ao vivo, num só mapa" /><br /><sub>Cada rota do Brasil num só mapa</sub></td>
+    <td width="33%"><img src="docs/assets/readme/home-globe.jpg" alt="Home: do motorista ao CCO, do Brasil para o mundo" /><br /><sub>Do motorista ao CCO, do Brasil para o mundo</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/readme/home-calculator.jpg" alt="Home: calculadora de quanto a espera custa para a frota" /><br /><sub>Calculadora de estadia (MOCK, não envia dados)</sub></td>
+    <td><img src="docs/assets/readme/home-plugin.jpg" alt="Home: a RODAR se encaixa na operação do cliente, como um plug-in" /><br /><sub>Encaixa no TMS/ERP, na telefonia e no CCO do cliente</sub></td>
+    <td><img src="docs/assets/readme/login.jpg" alt="Login do painel com globo 3D e rotas rodoviárias do Brasil" /><br /><sub><b>Login</b> · <code>/login</code>: SSO simulado</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/readme/dashboard.jpg" alt="Monitoramento do CCO" /><br /><sub><b>Monitoramento</b> · <code>/dashboard</code></sub></td>
+    <td><img src="docs/assets/readme/dispatch.jpg" alt="Trip dispatch" /><br /><sub><b>Trip dispatch</b> · <code>/dashboard/dispatch</code></sub></td>
+    <td><img src="docs/assets/readme/dispatch-new.jpg" alt="Cadastrar viagem" /><br /><sub><b>Cadastrar viagem</b> · <code>/dashboard/dispatch/new</code></sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/readme/trip.jpg" alt="Motorista e viagem" /><br /><sub><b>Motorista e viagem</b> · <code>/dashboard/trips/:id</code></sub></td>
+    <td><img src="docs/assets/readme/metrics.jpg" alt="Análises" /><br /><sub><b>Análises</b> · <code>/dashboard/metrics</code></sub></td>
+    <td valign="top"><sub><b>Operador</b> · <code>/dashboard/operator</code>: atende o fallback de chamada do agente via Agora RTC.<br /><br /><code>/</code> e os endereços antigos (<code>/metrics</code>, <code>/trips/:id</code>…) redirecionam para o equivalente em <code>/dashboard</code>. <code>/dashboard/receivers</code> e <code>/dashboard/calls</code> abrem as abas das Análises.</sub></td>
+  </tr>
+</table>
+
+## Como escala
+
+- **Eventos, não telefonemas.** Cada transição é um evento com contrato único (`src/types/events.ts`), o mesmo do app mobile. A central acompanha a frota pelos eventos no painel em vez de ligar para cada motorista.
+- **O backend é dono do estado.** No modo API, estadia, capacidade, tarifa e contadores vêm do servidor. O painel recebe um snapshot e depois acompanha o SSE, sem recalcular valores financeiros. Em uma reconexão, os dados ficam marcados como desatualizados.
+- **Exceção em vez de rotina.** O agente faz as ligações repetitivas e escala só o que precisa de decisão. A carga do CCO cresce com as exceções, não com o número de caminhões.
+- **Plug-in na operação do cliente.** O setup se adapta à infraestrutura existente: TMS ou ERP, telefonia, CCO e o celular do motorista.
+- **Front-end por domínio.** Cada área (`monitoring`, `dispatch`, `trips`, `analytics`…) é uma feature isolada que só expõe o `index.ts`. Novas telas entram sem mexer nas outras.
+
+## Rodar localmente
 
 Use Node.js **22.22.3 ou superior** e npm.
 
@@ -93,18 +172,30 @@ npm install
 npm run dev
 ```
 
-Abra a URL indicada pelo Vite, normalmente `http://localhost:5173`. O login da Demo usa uma sessão local após 600 ms; no modo API, lista os perfis CCO cadastrados em `/usuarios?role=cco` e chama `/auth/sso` com o e-mail escolhido. Ambos são MOCK, sem autenticação real.
+Abra a URL indicada pelo Vite, normalmente `http://localhost:5173`. Sem `VITE_API_BASE_URL`, o painel roda a **Demo** no navegador. Basta clicar em **Entrar com SSO**.
 
 ```bash
 npm test
-npm run typecheck
-npm run build
-npm run preview
 ```
 
-O servidor do Vite serve os arquivos locais durante o desenvolvimento. Sem chave Google, o mapa informa a limitação e mantém a visão local, a lista da frota e a seleção de viagens.
+```bash
+npm run typecheck
+```
 
-## Conectar ao backend RODAR
+```bash
+npm run build
+```
+
+| `VITE_API_BASE_URL` | Origem | O que o painel usa | O que ele não inventa |
+|---|---|---|---|
+| vazia | **Demo** | frota, relógio, eventos, rotas rodoviárias versionadas, histórico e indicadores locais | GPS, documentos fiscais, login, ligação ou comunicação reais |
+| preenchida, ex.: `http://127.0.0.1:8000` | **API** | rotas, GPS, Tasks, estadias, chamadas, alertas, mensagens, arquivos, métricas e ranking do backend | posição ausente, estrada, valores financeiros, histórico ou resultado de telefonia |
+
+Se a API falhar, o painel mostra o erro e **Tentar novamente**. A troca para **Usar demo** é sempre uma ação explícita: não há fallback automático nem repetição automática de POST.
+
+<details>
+<summary><strong>Conectar ao backend RODAR</strong></summary>
+<br />
 
 Configure a `.env` local e reinicie o Vite:
 
@@ -112,134 +203,118 @@ Configure a `.env` local e reinicie o Vite:
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Uma URL preenchida seleciona **API**: o painel lê a operação, acompanha SSE e consulta Tasks, chamadas, eventos, rotas, métricas e recebedores. **Assumir** confirma a Task; **Confirmar descarga** encerra a estadia no servidor. GPS, estados e valores financeiros são apresentados como recebidos, sem usar a fórmula ou o relógio da demo.
+O painel lê a operação, acompanha o SSE e consulta Tasks, chamadas, eventos, rotas, métricas e recebedores. **Assumir** confirma a Task e **Confirmar descarga** encerra a estadia no servidor. GPS, estados e valores financeiros aparecem como foram recebidos, sem a fórmula ou o relógio da Demo.
 
-A variável vazia seleciona **Demo**. Se a API falhar, o painel mostra carregamento/erro e **Tentar novamente**; a troca para **Usar demo** exige uma ação explícita. Durante uma reconexão, os dados operacionais ficam identificados como desatualizados.
+KPIs e ranking vêm de `/api/metrics` e `/api/receivers`, com populações e unidades do backend. Sem amostras, valores nulos aparecem como `—`. A API não tem série diária nem estadia cobrada: o painel informa a ausência e não usa o histórico fictício para preenchê-las.
 
-KPIs e ranking vêm de `/api/metrics` e `/api/receivers`, com populações e unidades do backend. Sem amostras, valores nulos aparecem como `—`. Não há série temporal ou estadia cobrada nessa API; o painel informa a ausência e não usa o histórico fictício para preenchê-las.
+`/auth/sso` devolve um token fake. `/api/documents` entrega NF-e/CT-e com `mock:true` e `fileUri:null`, separados dos anexos reais. O backend atual permite CORS amplo e não verifica a autorização de usuários, viagens ou arquivos: autenticação e autorização são pendências antes de produção.
 
-`/auth/sso` devolve token fake; `/api/documents` entrega NF-e/CT-e com `mock:true`, `fileUri:null`. Esses documentos são separados dos anexos reais. O histórico de 63 entregas pertence somente à Demo. O backend atual permite CORS amplo e não verifica autorização de usuários, viagens ou arquivos; autenticação/autorização são pendências antes de produção.
+**Rotas, motoristas e arquivos.** `/dashboard/dispatch` consulta só perfis de motorista já cadastrados. O CCO publica a rota para um deles ou troca o motorista enquanto a viagem não saiu; não há cadastro de motorista nessas telas. O CCO pode anexar arquivos reais (PDF/JPEG/PNG/WebP/GIF, até 10 MiB por padrão) e baixá-los depois. Os metadados ficam no banco e os binários no volume `ARQUIVOS_DIR` do backend; o backup precisa incluir os dois.
 
-O seed do backend tem uma rota de 28 t com trajeto linear; o painel mostra esse caminho como fornecido pela API. Não cria oito caminhões, estrada ou GPS para completar os dados. O painel não reseta rotas nem envia posições; a única telefonia exposta é a cascata auditável do agente descrita abaixo.
-
-Consulte a [matriz de integração](docs/INTEGRACAO-BACKEND.md) para endpoints, limites, recursos pendentes e validação. Com banco/API locais, as cinco leituras REST retornaram HTTP 200 e o SSE publicou `snapshot` e `contador`. O navegador mostrou a rota de Carlos, 28 t, NF `000.482.913`, ausência de GPS, Google Maps com o trajeto linear de 41 pontos, pt-BR/en e recursos MOCK identificados.
-
-**Assumir** e **Confirmar descarga** foram verificados com transportes controlados nos testes. Nenhum desses POSTs foi executado no backend ativo, que não tinha Tasks ou estadias para essas ações. O backend foi iniciado sem túnel público.
-
-## Rotas, motoristas e arquivos
-
-No modo API, `/dashboard/dispatch` consulta somente perfis de motorista já cadastrados e vinculados ao banco. O CCO publica a rota para um desses usuários em `/dashboard/dispatch/new` ou troca o motorista enquanto a viagem não saiu (publicada, planejada ou na origem); não há cadastro de motorista nessas telas. O backend publica eventos de atribuição que o mobile pode acompanhar. POSTs não são repetidos automaticamente.
-
-O CCO pode anexar **arquivos reais** à rota e baixá-los depois. São aceitos PDF/JPEG/PNG/WebP/GIF, até 10 MiB por padrão; o limite é configurável no backend. O dossiê também consulta pedidos/respostas da central e metadados fiscais MOCK, preservando sua origem.
-
-Esta entrega modifica também `/home/henry/Documents/rodar-backend/backend`, fora do repositório web. Metadados dos anexos ficam no banco e os binários em `ARQUIVOS_DIR`; o Compose monta `./backend/data/arquivos:/app/data/arquivos`. A migration e esse volume precisam acompanhar o backend; backup inclui banco e arquivos. Reset operacional preserva anexos.
-
-Para implementar o consumo pelo app do motorista, use o [modelo mobile](docs/CONTRATO-MOBILE.md) e o [exemplo TypeScript independente](docs/examples/mobile-client.ts). São referências de integração, não um app mobile entregue.
-
-## Alertas, decisões e voz do agente
-
-Cada fala recebida da sessão do motorista gera `alerta_motorista` no stream com tipo, resumo, transcrição, prioridade e horário. O Dashboard mostra toast, feed e som curto para prioridade crítica; problemas e atrasos também criam uma decisão auditável em **Decisões do agente**.
-
-No dossiê da viagem, **Enviar mensagem ao motorista** persiste a mensagem e pede que o agente a fale. O status é `enviada`, `falada`, `respondida` ou `offline`; uma resposta por voz fica vinculada à mensagem. Sem sessão de voz ativa, o backend registra a indisponibilidade e inicia a cascata `ligar(operador, motivo)`.
-
-A cascata tenta Twilio PSTN primeiro e registra qualquer resultado. Sem credenciais (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`) registra **Twilio não configurado** e segue para Agora RTC. O navegador em `/operator` toca a chamada, permite atender e entrar no canal RTC; em 30 s sem atendimento, o backend publica escalada crítica. Credenciais nunca pertencem a `VITE_*` nem ao repositório. A execução real de PSTN e RTC depende de credenciais, URL pública e permissão de microfone; os testes só verificam os contratos e a cascata.
-
-## Popular o banco e escolher usuários
-
-No repositório do backend (`../rodar-backend`), com os serviços `db` e `api` iniciados:
+**Popular o banco.** No repositório do backend (`../rodar-backend`), com `db` e `api` iniciados:
 
 ```bash
 docker compose exec -T api alembic upgrade head
+```
+
+```bash
 docker compose exec -T api python -m app.seed
 ```
 
-A população complementa os dados existentes: cria dois operadores CCO e quatro motoristas de demonstração, com viagens diferentes e um motorista sem viagem. Reexecutar o comando mantém os mesmos registros e preserva atribuições, status e arquivos existentes. Não use `--reset` para complementar uma base em uso.
+O seed cria dois operadores CCO e quatro motoristas de demonstração, e reexecutá-lo preserva os registros existentes. `GET /usuarios?role=cco` lista os perfis do login; `?role=driver`, os do celular.
 
-`GET /usuarios` (alias `/api/users`) retorna os perfis persistidos. Use `?role=driver` no celular e `?role=cco` no painel. A seleção envia o e-mail cadastrado para `POST /auth/sso`; um e-mail desconhecido recebe 404. O [contrato mobile](docs/CONTRATO-MOBILE.md) descreve os campos e a troca de usuário com encerramento das conexões anteriores.
+**Alertas e voz do agente.** Cada fala do motorista gera `alerta_motorista` no stream, com tipo, resumo, transcrição e prioridade. **Enviar mensagem ao motorista** persiste a mensagem e pede que o agente a fale (`enviada`, `falada`, `respondida` ou `offline`). Sem sessão de voz, o backend inicia a cascata `ligar(operador, motivo)`: primeiro Twilio PSTN, depois Agora RTC em `/dashboard/operator`, e escalada crítica após 30 s. As credenciais ficam só no backend, nunca em `VITE_*` nem no repositório.
 
-## Configurar Google Maps
+Mais detalhes: [matriz de integração](docs/INTEGRACAO-BACKEND.md), [modelo mobile](docs/CONTRATO-MOBILE.md) e [exemplo de cliente TypeScript](docs/examples/mobile-client.ts).
+</details>
 
-Preencha `VITE_GOOGLE_MAPS_API_KEY` no arquivo `.env` local. Se precisar recriar o arquivo, copie `.env.example` para `.env`. Reinicie o Vite após alterar as variáveis.
+<details>
+<summary><strong>Configurar Google Maps</strong></summary>
+<br />
+
+Preencha a `.env` local (copie de `.env.example`) e reinicie o Vite:
 
 ```dotenv
 VITE_GOOGLE_MAPS_API_KEY=
 VITE_GOOGLE_MAPS_MAP_ID=DEMO_MAP_ID
 ```
 
-`VITE_GOOGLE_MAPS_MAP_ID` é opcional; sem valor, o app usa `DEMO_MAP_ID`.
+Habilite **Maps JavaScript API** no Google Cloud e restrinja a chave por **HTTP referrers** e por API. Variáveis `VITE_` entram no bundle: a chave é pública e depende dessas restrições. `.env` é ignorada pelo Git; nunca registre o valor no repositório.
 
-No projeto do Google Cloud, habilite **Maps JavaScript API** e configure a cobrança exigida pelo Google Maps Platform. Restrinja a chave por **HTTP referrers** aos endereços permitidos de desenvolvimento e produção, e por API a **Maps JavaScript API**. Routes API não é necessária para esta demo. O app não habilita APIs nem altera a conta ou cobrança.
+O Google Maps é só o mapa base. A Demo usa snapshots rodoviários OSRM versionados e o modo API usa o trajeto e o GPS do backend. Não há Routes API nem rota recalculada a cada tick. Sem chave, o painel mostra um aviso traduzido e mantém a visão local, a lista da frota e a seleção de viagens.
 
-Variáveis `VITE_` entram no bundle do navegador: essa chave é pública para o cliente e depende dessas restrições. `.env` é ignorado pelo Git; não registre seu valor na documentação, em logs ou no repositório.
-
-O SDK faz requisições ao Google para o mapa base. Fontes e traduções continuam locais; não há solicitação de rota ao Google ou OSRM durante a execução. A Demo usa snapshots rodoviários locais; o modo API usa o trajeto entregue pelo backend. O mapa carrega o SDK diretamente, sem acrescentar uma biblioteca de integração.
-
-Referências: [carregar Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/load-maps-js-api), [restrições de chaves](https://developers.google.com/maps/api-security-best-practices), [OSRM](https://project-osrm.org/) e [atribuição OpenStreetMap](https://www.openstreetmap.org/copyright).
-
-## Dependências
-
-React, Vite, TypeScript strict, Tailwind CSS v4 com `@tailwindcss/vite`, React Router, zustand, Recharts, i18next/react-i18next, `agora-rtc-sdk-ng` e `lenis` (rolagem suave somente na home pública). As versões instaladas estão no `package-lock.json`. Os testes usam `node:test`, sem biblioteca de testes adicional.
+Referências: [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/load-maps-js-api), [segurança de chaves](https://developers.google.com/maps/api-security-best-practices), [OSRM](https://project-osrm.org/) e [OpenStreetMap](https://www.openstreetmap.org/copyright).
+</details>
 
 ## O que é simulado
 
-No modo API, operação, KPIs/ranking e anexos vêm do backend. SSO, notas fiscais e complementos comerciais continuam identificados como MOCK; campos comerciais recebidos da rota são preservados. Os itens abaixo descrevem a **Demo local**:
+No modo API, a operação, os KPIs/ranking e os anexos vêm do backend. **SSO, notas fiscais e complementos comerciais continuam MOCK** e aparecem identificados assim. Os itens abaixo valem para a **Demo local**:
 
-- **SSO:** atraso local de 600 ms e usuário fictício; não autentica em provedor externo.
-- **Frota:** oito caminhões, cinco recebedores e seus dados operacionais são fictícios na região de Campinas/SP. O progresso e a posição do caminhão seguem o caminho local da demo; não existe GPS real.
-- **Caminhos:** cinco snapshots OSRM/OpenStreetMap versionados no projeto representam os trajetos rodoviários. A demonstração não consulta tráfego nem recalcula caminhos em serviços externos.
-- **Dossiê da viagem:** carga, notas fiscais e mensagens ilustrativas são dados comerciais fictícios; não há documento fiscal válido, leitura de documentos ou canal de comunicação real.
-- **Tempo:** cada segundo real avança um minuto da operação, a partir de 08:00. Pausar interrompe o avanço.
+- **SSO:** atraso local de 600 ms e usuário fictício, sem provedor externo.
+- **Frota:** oito caminhões e cinco recebedores fictícios na região de Campinas/SP. Não existe GPS real.
+- **Caminhos:** cinco snapshots OSRM/OpenStreetMap versionados (obtidos em 22/11/2026). Não há consulta de tráfego.
+- **Tempo:** cada segundo real avança um minuto da operação, a partir das 08:00. Pausar congela o relógio.
 - **Eventos e Tasks:** aproximação, chegada, avisos, resposta do operador, escalada, ocorrência e descarga são gerados localmente.
-- **Ligações:** resultado e transcrição são texto simulado. Não há áudio, SIP ou chamada telefônica.
-- **Histórico:** 63 entregas fictícias, nove por dia durante sete dias, geradas com mulberry32 e seed 42.
-- **Indicadores:** calculados sobre esse histórico e as entregas concluídas na sessão; não representam desempenho real.
-- **Cobrança:** marca fictícia de cobrança em aproximadamente 15% das entregas com estadia positiva.
+- **Ligações:** resultado e transcrição são texto simulado, sem áudio, SIP ou chamada telefônica.
+- **Histórico:** 63 entregas fictícias (nove por dia em sete dias), com seed 42. Os indicadores não representam desempenho real.
+- **Dossiê:** carga, notas fiscais e mensagens são fictícias.
+- **Cobrança:** marca fictícia em cerca de 15% das entregas com estadia positiva.
+- **Home:** os formulários da calculadora e de contato validam no navegador e não enviam dados.
 
-O estado da Demo fica em memória. Recarregar inicia outra sessão de demonstração. No modo API, o painel recarrega o estado mantido pelo backend; não possui persistência operacional própria. Após editar o módulo do motor durante o desenvolvimento, recarregue a página para iniciar o relógio com a nova instância do store.
+O estado da Demo fica em memória: recarregar a página inicia outra sessão. Regras completas e parâmetros: [REGRAS-DE-NEGOCIO.md](docs/REGRAS-DE-NEGOCIO.md) e `src/lib/config.ts`. A estadia local é calculada só em `src/utils/stay.ts`:
 
-## Mapa e monitoramento
+```text
+ceil(max(0, espera_em_min / 60 − 5)) × toneladas × R$ 2,50
+```
 
-- **Mapa base real:** Google Maps JavaScript API apresenta a região e os marcadores; não fornece posição, tempo ou estado operacional dos caminhões.
-- **Caminhos da Demo:** o motor e o mapa usam a mesma geometria local por recebedor. A distância é medida ao longo dos segmentos e `trip.progress` posiciona o caminhão nesse caminho, mantendo 70 km/h e o relógio simulado.
-- **Caminhos e posições da API:** a geometria e o último GPS são os informados pelo backend. Sem posição, o painel informa a ausência; não gera GPS ou movimento pelo relógio da Demo nem troca o trajeto por uma estrada local.
-- **Sem recálculo por tick:** os snapshots da Demo são preparados em memória; no modo API, o detalhe da rota fornece o caminho. Navegar, selecionar caminhões e receber atualizações não solicita rotas ao Google ou OSRM.
-- **Atribuição:** geometrias obtidas com OSRM em 22/11/2026, sobre dados © OpenStreetMap contributors. Cada fixture registra origem da consulta e ajustes dos extremos à via.
+## Arquitetura do front-end
 
-O Dashboard prioriza o mapa em largura: lista da frota à esquerda, mapa no centro e dossiê da viagem selecionada à direita. Busca, filtros e seleção sincronizam lista e marcadores; detalhes de carga, notas e comunicações permanecem visíveis sem sair do monitoramento. Avisos/eventos e o resumo completo de dez KPIs ficam abaixo.
+React, Vite, TypeScript strict, Tailwind CSS v4, React Router, zustand, Recharts, i18next (pt-BR e en), three.js na home e no login, `agora-rtc-sdk-ng` e `lenis`. Os testes usam `node:test`, sem biblioteca adicional.
 
-Na Demo, o caminho selecionado separa o trecho percorrido contínuo e o restante tracejado. Os caminhões avançam suavemente pelos segmentos, com orientação conforme a via; **Seguir caminhão** acompanha a posição. Pausar congela o progresso. Esses controles não aceleram nem pausam o backend.
+```text
+src/
+├── app/                 composição, guarda de sessão e rotas
+├── pages/               telas conectadas ao roteador
+├── features/            um domínio por pasta; só o index.ts é público
+│   ├── home/            site público: cenas 3D, calculadora e contato
+│   ├── auth/            sessão SSO MOCK
+│   ├── monitoring/      KPIs, fila de alertas, veículo, última chamada, docas
+│   ├── fleet/           mapa e seleção da frota
+│   ├── dispatch/        motoristas, publicação, edição de rota e arquivos
+│   ├── trips/           viagem, linha do tempo, conversa e dossiê
+│   ├── tasks/           Tasks e solicitações do motorista
+│   ├── analytics/       análises, filtros, funil e exportação CSV
+│   ├── metrics/         KPIs da API
+│   ├── receivers/       ranking da API
+│   └── calls/           histórico de ligações
+├── services/
+│   ├── api/             contrato validado, REST e SSE
+│   ├── operations/      seleção API/Demo e reconciliação do estado
+│   ├── analytics/       métricas e ranking da API
+│   └── mock/            motor, fixtures, histórico e dossiê da Demo
+├── components/          layout e componentes compartilhados
+├── lib/                 configuração, rotas, i18n e Google Maps
+├── types/               contratos de domínio e eventos
+└── utils/               geometria, estadia, formatação e rotas
+```
 
-Sem chave ou diante de falha do SDK, o painel informa a limitação em pt-BR ou inglês e apresenta as geometrias disponíveis em uma visão local, com seleção de caminhões. A fonte operacional selecionada continua funcionando.
+As dependências seguem `pages → features → components/services/lib/utils/types`. As cores vêm só dos tokens de `src/index.css` ([DESIGN.md](docs/DESIGN.md)) e todos os textos passam pelo i18n.
 
-## Decisões da demonstração
+## Documentação
 
-Estas regras pertencem à Demo; no modo API, o servidor governa tentativas, tempo, estados e estadia.
-
-- Aviso efetivo exige ligação atendida antes da chegada; tentativa sem atendimento permanece no log.
-- A Task recebe avisos em T+0, T+20 e T+40 min. Sem resposta, fica escalada em T+60 min. A chance inicial de resposta mock é 35% por tentativa; o controle permite alterá-la.
-- “Assumir” funciona para Tasks abertas ou escaladas. Descarga fecha a Task e encerra o contador.
-- A resposta “só amanhã às 7h” é informativa nesta versão; não agenda a descarga. A espera segue o perfil fictício do recebedor.
-- Placa e motorista permanecem associados ao mesmo caminhão; cada ciclo cria uma nova viagem, 30 min após a descarga.
-- O histórico usa contagens de avisos efetivos `4, 5, 6, 6, 7, 8, 8` por dia: cerca de 44% a 89%. Com nove entregas, a resolução é 11,1 pontos percentuais; os alvos de 45% a 93% do briefing não são percentuais exatos observáveis.
-- A composição do histórico é controlada para mostrar aumento dos avisos e queda da espera. Isso é um roteiro sintético, não prova de causalidade.
-- O simulador usa sequências aleatórias independentes por caminhão e domínio, com sementes derivadas da base 42 e separadas do histórico, para tornar a demonstração reproduzível.
-- A estadia segue exclusivamente a fórmula definida para a demo; o aviso prévio não acrescenta outra condição ao cálculo.
-
-## Componentes preexistentes
-
-Nenhuma fonte anterior ao hackathon. O repositório já continha uma base do painel criada durante o hackathon; esta entrega completa e corrige essa base. As bibliotecas utilizadas estão listadas acima.
-
-## Documentação e ajustes futuros
-
-- [Arquitetura, fórmulas e roteiro de dois minutos](docs/ARQUITETURA.md)
+- [Arquitetura, reconciliação REST/SSE e roteiro de demo](docs/ARQUITETURA.md)
 - [Integração com o backend: APIs, MOCK e pendências](docs/INTEGRACAO-BACKEND.md)
 - [Modelo mobile: identidade, rota atribuída e anexos](docs/CONTRATO-MOBILE.md)
-- [Regras da simulação](docs/REGRAS-DE-NEGOCIO.md)
+- [Regras da simulação e problemas resolvidos pelo time](docs/REGRAS-DE-NEGOCIO.md)
 - [Design e acessibilidade](docs/DESIGN.md)
-- [Fluxograma completo do produto](docs/ARQUITETURA.md#fluxo-completo-do-produto) e [problemas resolvidos pelo time](docs/REGRAS-DE-NEGOCIO.md), vindos do repositório de ideias `chapahalls-ideas`
+- [Mockups das telas](docs/RODAR-telas/index.html)
+- Skill de manutenção: `.agents/skills/avisai-web-maintenance`
+- Cenas 3D da home: os `.glb` versionados em `src/features/home/assets` saem dos scripts `npm run generate:*`. Os modelos de origem (`docs/RODAR-telas/landing-page/3d-model/`, cerca de 80 MB e de terceiros) não ficam no git; para regerar os `.glb`, coloque-os nessa pasta.
 
-A skill de manutenção `avisai-web-maintenance` reúne o contexto necessário para ajustar domínio, telas e traduções preservando os limites entre a operação simulada e as integrações autorizadas. Ela acompanha o repositório em `.agents/skills/avisai-web-maintenance`.
+## Licença e versão
 
-## Versão entregue
+[MIT](LICENSE) · **v0.1.0**
 
-**v0.1.0**
+**Histórico:** o projeto começou como *AvisAI* no hackathon UNMUTE by Agora (21–22/11/2026) e continua como **RODAR** no Hack Brasil 2026, na trilha Logística & automação. Os repositórios foram criados em 22/11/2026 e todo o histórico de commits está neles; o AvisAI virou o nome do agente de voz do RODAR.
+
+Repositórios: [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) · este (rodar-web).
