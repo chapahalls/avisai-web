@@ -294,6 +294,19 @@ export class ApiClient {
   private readonly fetchRequest: typeof fetch;
   private readonly createEventSource: (url: string) => ApiEventSource;
   private readonly timeoutMs: number;
+  private accessToken: string | null = null;
+
+  /** JWT devolvido pelo /auth/sso. O backend exige papel `cco` nas ações da central quando AUTH_OBRIGATORIA=true. */
+  setAccessToken(token: string | null): void {
+    this.accessToken = typeof token === 'string' && token.trim() ? token.trim() : null;
+  }
+
+  private headersFor(body: unknown): Record<string, string> | undefined {
+    const headers: Record<string, string> = {};
+    if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+    if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
+    return Object.keys(headers).length ? headers : undefined;
+  }
 
   constructor(baseURL: string, options: ApiClientOptions = {}) {
     this.baseURL = normalizeBase(baseURL);
@@ -326,7 +339,7 @@ export class ApiClient {
       let response: Response;
       try {
         response = await this.fetchRequest(`${this.baseURL}${path}`, {
-          method, signal: controller.signal, headers: body === undefined || body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
+          method, signal: controller.signal, headers: this.headersFor(body),
           body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
         });
       } catch {
