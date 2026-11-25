@@ -110,7 +110,8 @@
 @container (max-width: 360px) {
   .mon-vehicle { gap: 12px; padding: 12px; }
   .mon-vehicle-heading { flex-direction: column; }
-  .mon-vehicle-controls { width: 100%; justify-content: space-between; }
+  .mon-vehicle-controls { width: 100%; }
+  .mon-vehicle-controls > .mon-status { margin-right: auto; }
   .mon-vehicle-heading h2 { font-size: 22px; }
   .mon-vehicle-details { gap: 12px; }
   .mon-vehicle-stats { gap: 6px; }
