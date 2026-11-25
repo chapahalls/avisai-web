@@ -224,7 +224,7 @@ test('runtime usa GPS recebido sem extrapolar, mantém estadias encerradas e apl
     assert.equal(runtime.store.getState().trips.length, 2);
     assert.equal(runtime.store.getState().running, false);
     source.emit('posicao', { rota_id: 1, lat: -22.9123, lng: -47.0789, distancia_m: 2000, eta_min: 2, status: 'aproximando' });
-    let trip = runtime.store.getState().trips.find((item) => item.backendId === 1);
+    const trip = runtime.store.getState().trips.find((item) => item.backendId === 1);
     assert.deepEqual(trip.position, { lat: -22.9123, lng: -47.0789 });
     assert.equal(trip.distanceRemainingKm, 2);
     assert.equal(trip.etaMin, 2);

@@ -9,7 +9,7 @@ export function ConnectionBanner() {
     return apiConfigured ? (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-input border border-ink-700 bg-ink-900 px-4 py-3 text-xs">
         <span>{t('app.localMock')}</span>
-        <button className="font-semibold text-brand-500 hover:underline" onClick={() => setMode('api')}>{t('api.connection.useApi')}</button>
+        <button type="button" className="font-semibold text-brand-500 hover:underline" onClick={() => setMode('api')}>{t('api.connection.useApi')}</button>
       </div>
     ) : null;
   }
@@ -22,8 +22,8 @@ export function ConnectionBanner() {
           {time && <span className="text-ink-300">{t('api.connection.lastSync', { time })}</span>}
         </div>
         <div className="flex flex-wrap gap-4">
-          <button onClick={() => { retryConnection(); }} className="font-semibold text-brand-500 hover:underline">{t('api.connection.retry')}</button>
-          <button onClick={() => setMode('demo')} className="text-ink-300 hover:underline">{t('api.connection.useDemo')}</button>
+          <button type="button" onClick={() => { retryConnection(); }} className="font-semibold text-brand-500 hover:underline">{t('api.connection.retry')}</button>
+          <button type="button" onClick={() => setMode('demo')} className="text-ink-300 hover:underline">{t('api.connection.useDemo')}</button>
         </div>
       </div>
       {state.error && <p role="alert" className="text-alert-500">{t('api.connection.error')} <span className="font-mono">{state.error}</span></p>}

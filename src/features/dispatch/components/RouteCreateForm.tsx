@@ -77,7 +77,7 @@ export function RouteCreateForm({ initialDriverId = '', onPublished }: { initial
     event.preventDefault();
     if (!client || busy.current) return;
     if (!selected) { setError('validation.driver'); return; }
-    let input;
+    let input: ReturnType<typeof routeInput>;
     try { input = routeInput(draft, selected.driver.id); }
     catch (cause) { setError(`validation.${cause instanceof Error ? cause.message : 'required'}`); return; }
     busy.current = true; setPending('publish'); setError(null);

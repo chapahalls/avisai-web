@@ -1,5 +1,5 @@
 ---
-name: avisai-web-maintenance
+name: rodar-web-maintenance
 description: Ajustar regras de simulação, métricas, telas e traduções do painel CCO AvisAI Web. Use em manutenção deste repositório; não é uma skill para criar outros produtos ou operar serviços reais.
 ---
 
@@ -9,7 +9,7 @@ Preserve o objetivo da alteração solicitada e a demonstração local do AvisAI
 
 ## Localize o contexto
 
-Identifique a raiz do repositório atual pelo Git e confirme `name: avisai-web` no `package.json`. Os links abaixo são relativos à localização versionada desta skill em `.agents/skills/avisai-web-maintenance`; leia os arquivos correspondentes na raiz encontrada, não um caminho absoluto de outra máquina.
+Identifique a raiz do repositório atual pelo Git e confirme `name: rodar-web` no `package.json`. Os links abaixo são relativos à localização versionada desta skill em `.agents/skills/rodar-web-maintenance`; leia os arquivos correspondentes na raiz encontrada, não um caminho absoluto de outra máquina.
 
 Leia apenas a documentação relacionada à mudança:
 

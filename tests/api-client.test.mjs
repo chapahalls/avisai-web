@@ -706,3 +706,23 @@ test('falha ao criar EventSource gera erro controlado sem URL ou causa', () => {
   assert.ok(!errors[0].message.includes('fixture-private'));
   assert.doesNotThrow(close);
 });
+
+test('token do SSO vai como Bearer em toda chamada e sai no logout', async () => {
+  const requests = [];
+  const api = new ApiClient('/backend', {
+    fetch: async (url, options) => {
+      requests.push(options.headers);
+      return jsonResponse(requests.length === 1 ? sso : [driver]);
+    },
+  });
+  await api.authSso('cco@fixture.test');
+  api.setAccessToken('jwt.fixture.token');
+  await api.listDrivers();
+  api.setAccessToken(null);
+  await api.listDrivers();
+  assert.deepEqual(requests, [
+    { 'Content-Type': 'application/json' },
+    { Authorization: 'Bearer jwt.fixture.token' },
+    undefined,
+  ]);
+});

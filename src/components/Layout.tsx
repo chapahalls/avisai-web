@@ -64,7 +64,7 @@ export function Layout() {
             <span className="cco-profile-avatar" aria-hidden="true">{initials(session?.name ?? t('auth.operator'))}</span>
             <div><strong>{session?.name ?? t('auth.operator')}</strong><span>{t(connectedMode ? 'api.workspace' : 'cco.demoWorkspace')}</span></div>
           </div>
-          <button onClick={logout} className="cco-logout" title={t('auth.logout')} aria-label={t('auth.logout')}><Icon name="logout" className="h-4 w-4" /><span>{t('auth.logout')}</span></button>
+          <button type="button" onClick={logout} className="cco-logout" title={t('auth.logout')} aria-label={t('auth.logout')}><Icon name="logout" className="h-4 w-4" /><span>{t('auth.logout')}</span></button>
         </div>
       </header>
       <main id="main-content" tabIndex={-1} className="cco-main"><ConnectionBanner /><Outlet /></main>

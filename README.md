@@ -5,6 +5,10 @@
 <h1 align="center">RODAR</h1>
 
 <p align="center">
+  <a href="https://github.com/rodarglobal/rodar-web/actions/workflows/ci.yml"><img src="https://github.com/rodarglobal/rodar-web/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+</p>
+
+<p align="center">
   <strong>O agente de voz que conecta motorista, recebedor e central de operação (CCO).</strong><br />
   Este repositório é o <strong>site público</strong> e o <strong>painel web do CCO</strong>.
 </p>
@@ -17,6 +21,19 @@
   <sub>Gravado em modo Demo, com dados fictícios. Voz, GPS e telefonia são simulados nesta gravação.</sub><br />
   <sub>▶️ <a href="docs/assets/readme/tour.mp4">Ver em vídeo (MP4, 1280 px, 1 min 9 s)</a></sub>
 </p>
+
+## Para o júri
+
+| | |
+|---|---|
+| **Trilha** | Logística & automação |
+| **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
+| **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
+| **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) (este) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 512 testes automatizados: 299 no backend, 127 no web, 86 no mobile |
+| **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
+| **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado) |
+<!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
 
 ## Para que serve
 
@@ -183,6 +200,10 @@ npm run typecheck
 ```
 
 ```bash
+npm run lint
+```
+
+```bash
 npm run build
 ```
 
@@ -298,6 +319,8 @@ src/
 └── utils/               geometria, estadia, formatação e rotas
 ```
 
+Cada página é carregada sob demanda (`React.lazy` em `src/app/router.tsx`): o painel não baixa o three.js da home e do login, e o pacote inicial cai de 2,3 MB para cerca de 330 kB (104 kB com gzip). No modo API, o JWT do `/auth/sso` vai como `Authorization: Bearer` em todas as chamadas (`ApiClient.setAccessToken`).
+
 As dependências seguem `pages → features → components/services/lib/utils/types`. As cores vêm só dos tokens de `src/index.css` ([DESIGN.md](docs/DESIGN.md)) e todos os textos passam pelo i18n.
 
 ## Documentação
@@ -308,7 +331,7 @@ As dependências seguem `pages → features → components/services/lib/utils/ty
 - [Regras da simulação e problemas resolvidos pelo time](docs/REGRAS-DE-NEGOCIO.md)
 - [Design e acessibilidade](docs/DESIGN.md)
 - [Mockups das telas](docs/RODAR-telas/index.html)
-- Skill de manutenção: `.agents/skills/avisai-web-maintenance`
+- Skill de manutenção: `.agents/skills/rodar-web-maintenance`
 - Cenas 3D da home: os `.glb` versionados em `src/features/home/assets` saem dos scripts `npm run generate:*`. Os modelos de origem (`docs/RODAR-telas/landing-page/3d-model/`, cerca de 80 MB e de terceiros) não ficam no git; para regerar os `.glb`, coloque-os nessa pasta.
 
 ## Licença e versão

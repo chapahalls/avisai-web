@@ -97,3 +97,8 @@ button:not(:disabled), select, input[type='range'] {
 input[type='range'] {
   min-height: 24px;
 }
+
+/* Espaço reservado enquanto o chunk da página carrega (React.lazy). */
+.page-loading {
+  min-height: 100dvh;
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": { "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.mjs", "tests/**/*.mjs"] },
+  "formatter": { "enabled": false },
+  "organizeImports": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": { "noForEach": "off" },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useNumberNamespace": "off",
+        "useExponentiationOperator": "off",
+        "useSingleVarDeclarator": "off",
+        "noParameterAssign": "off",
+        "useImportType": "off"
+      },
+      "correctness": {
+        "useJsxKeyInIterable": "off",
+        "useExhaustiveDependencies": "warn"
+      },
+      "suspicious": { "noArrayIndexKey": "warn" },
+      "a11y": {
+        "useSemanticElements": "off",
+        "noAriaHiddenOnFocusable": "warn",
+        "noNoninteractiveTabindex": "warn",
+        "useFocusableInteractive": "warn",
+        "useKeyWithClickEvents": "warn"
+      },
+      "performance": { "noDelete": "off" }
+    }
+  }
+}
