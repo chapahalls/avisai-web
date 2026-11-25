@@ -18,7 +18,7 @@ export function HomeFooter() {
         </div>
         <nav aria-labelledby="home-footer-tech">
           <h3 id="home-footer-tech">{t('home.footer.columns.tech.title')}</h3>
-          <Link to="/login">{t('home.footer.columns.tech.app')}</Link>
+          <Link to="/mobile-web">{t('home.footer.columns.tech.app')}</Link>
           <Link to="/login">{t('home.footer.columns.tech.cco')}</Link>
           <a href="#calculadora">{t('home.footer.columns.tech.calculator')}</a>
         </nav>

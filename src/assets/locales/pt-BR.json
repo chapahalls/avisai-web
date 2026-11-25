@@ -21,7 +21,21 @@
     "main": "Navegação principal",
     "monitoring": "Monitoramento",
     "dispatch": "Trip dispatch",
-    "analytics": "Análises"
+    "analytics": "Análises",
+    "mobileDemo": "Demo mobile"
+  },
+  "mobileDemo": {
+    "title": "Demo do app mobile",
+    "description": "Acompanhe as ações do motorista no monitoramento da frota em tempo real.",
+    "viewLabel": "Layout da demonstração",
+    "views": {
+      "split": "Lado a lado",
+      "mobile": "Só o app",
+      "dashboard": "Só o dashboard"
+    },
+    "dashboardPane": "Dashboard de monitoramento da demonstração",
+    "mobilePane": "App mobile do motorista",
+    "apiNotice": "A integração interativa usa a Demo local. No modo API, o app de demonstração fica isolado dos dados do servidor."
   },
   "auth": {
     "title": "Cada hora parada tem uma história.",
@@ -296,6 +310,7 @@
     "TaskEscalated": "Aviso ao CCO",
     "TaskAcknowledged": "CCO assumiu",
     "UnloadConfirmed": "Descarga confirmada",
+    "DriverMessageSent": "Recado enviado pelo motorista",
     "DocumentQuestionAnswered": "Pergunta sobre documento"
   },
   "dashboard": {
@@ -317,7 +332,8 @@
   "channels": {
     "push": "push",
     "panel": "painel",
-    "call": "ligação"
+    "call": "ligação",
+    "app": "app móvel"
   },
   "occurrences": {
     "gateQueue": "Fila na portaria, sem previsão"

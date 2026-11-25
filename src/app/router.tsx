@@ -12,6 +12,8 @@ const TripPage = lazy(() => import('../pages/TripPage').then((m) => ({ default: 
 const DispatchPage = lazy(() => import('../pages/DispatchPage').then((m) => ({ default: m.DispatchPage })));
 const DispatchNewPage = lazy(() => import('../pages/DispatchNewPage').then((m) => ({ default: m.DispatchNewPage })));
 const OperatorPage = lazy(() => import('../pages/OperatorPage').then((m) => ({ default: m.OperatorPage })));
+const MobileDemoAppPage = lazy(() => import('../pages/MobileDemoAppPage').then((m) => ({ default: m.MobileDemoAppPage })));
+const MobileWebDemoPage = lazy(() => import('../pages/MobileWebDemoPage').then((m) => ({ default: m.MobileWebDemoPage })));
 
 function Page({ children }: { children: ReactNode }) {
   return <Suspense fallback={<div className="page-loading" role="status" aria-busy="true" />}>{children}</Suspense>;
@@ -42,6 +44,7 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/home" element={<Page><HomePage /></Page>} />
+        <Route path="/mobile-web" element={<Page><MobileWebDemoPage /></Page>} />
         <Route path="/login" element={<LoginRoute />} />
         <Route path={DASHBOARD_BASE} element={<RequireSession />}>
           <Route element={<Layout />}>
@@ -52,6 +55,7 @@ export function AppRouter() {
             <Route path="dispatch" element={<Page><DispatchPage /></Page>} />
             <Route path="dispatch/new" element={<Page><DispatchNewPage /></Page>} />
             <Route path="operator" element={<Page><OperatorPage /></Page>} />
+            <Route path="mobile-demo" element={<Page><MobileDemoAppPage /></Page>} />
             <Route path="trips/:id" element={<Page><TripPage /></Page>} />
             <Route path="*" element={<Navigate to={APP_ROUTES.dashboard} replace />} />
           </Route>

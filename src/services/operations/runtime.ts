@@ -58,6 +58,7 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
     ...projectSnapshot(snapshot, details, now()), running: false, operatorResponsiveness: 0,
     historicalCalls: [], history: [], tick: () => {}, setResponsiveness: () => {}, toggle: () => {},
     acknowledge: (id) => { void confirmTask(id); },
+    mobileAction: () => {},
   }));
 
   function apply(markSync = true) {

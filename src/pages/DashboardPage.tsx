@@ -8,10 +8,10 @@ import { useMode, useOps } from '../services/operations';
 import '../features/monitoring/monitoring.css';
 
 /** Monitoramento (mockup 02): KPIs, alertas, mapa, veículo, grade e docas. */
-export function DashboardPage() {
+export function DashboardPage({ initialTripId }: { initialTripId?: string } = {}) {
   const { t } = useTranslation();
   const mode = useMode();
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(initialTripId ?? null);
   const [alertTripId, setAlertTripId] = useState<string | null>(null);
   const trips = useOps((state) => state.trips);
   const tasks = useOps((state) => state.tasks);

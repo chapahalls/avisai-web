@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-type IconName = 'dashboard' | 'metrics' | 'receivers' | 'calls' | 'pause' | 'play' | 'logout' | 'truck' | 'clock' | 'chevron';
+type IconName = 'dashboard' | 'metrics' | 'receivers' | 'calls' | 'pause' | 'play' | 'logout' | 'truck' | 'mobile' | 'clock' | 'chevron';
 
 const paths: Record<IconName, string> = {
   dashboard: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
@@ -11,6 +11,7 @@ const paths: Record<IconName, string> = {
   play: 'm8 5 11 7-11 7z',
   logout: 'M10 5H4v14h6M14 8l4 4-4 4M8 12h10',
   truck: 'M3 6h11v12H3zM14 10h4l3 4v4h-7M7 18a2 2 0 1 0 0 .01M18 18a2 2 0 1 0 0 .01',
+  mobile: 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2',
   clock: 'M12 8v4l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   chevron: 'm6 9 6 6 6-6',
 };

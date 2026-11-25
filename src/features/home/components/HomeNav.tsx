@@ -31,7 +31,7 @@ export function HomeNav({ ready }: { ready: boolean }) {
             </button>
           ))}
         </div>
-        <a className="home-nav-product" href="#plataforma">{t('home.story.nav.product')}</a>
+        <Link className="home-nav-product" to="/mobile-web">{t('mobileWeb.navLabel')}</Link>
         <Link className="home-nav-demo" to="/login">{t('home.story.nav.demo')}</Link>
       </div>
     </header>

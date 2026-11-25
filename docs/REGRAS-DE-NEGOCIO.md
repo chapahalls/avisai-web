@@ -119,6 +119,8 @@ O mock registra texto e eventos locais. Não executa chamadas telefônicas, cole
 
 Na Demo, as requisições externas são somente para o mapa base do Google. Caminhos OSRM/OpenStreetMap foram capturados e versionados localmente, com atribuição ao provedor e aos contribuidores de OpenStreetMap; a geometria preparada fica em memória por recebedor. Não existe solicitação de rota por tick ou dependência de Routes API.
 
+Em `/dashboard/mobile-demo`, a Demo local pode ser vista ao lado do monitoramento da frota. O app atua sobre a primeira viagem da sessão e suas ações de iniciar, aproximar, chegar, registrar ocorrência, enviar recado, assumir Task e confirmar descarga entram no mesmo estado Demo, feed e histórico que o dashboard consome. O seletor de visualização pode focar o app ou o dashboard. No modo API, o app permanece como prévia isolada; nenhuma ação mobile fictícia é enviada ao backend.
+
 Carga, notas fiscais e mensagens do dossiê da Demo são fictícias, sem validade fiscal ou envio real. Esses dados não alteram a capacidade do caminhão, cálculo da estadia ou regras do motor. Sem chave Google, a interface informa a ausência do mapa base e mantém frota, dossiê e operação.
 
 **Problemas resolvidos (produto)** · itens do mobile e da voz, fora deste painel

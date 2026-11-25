@@ -21,7 +21,21 @@
     "main": "Main navigation",
     "monitoring": "Monitoring",
     "dispatch": "Trip dispatch",
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "mobileDemo": "Mobile demo"
+  },
+  "mobileDemo": {
+    "title": "Mobile app demo",
+    "description": "See the driver's actions appear in fleet monitoring in real time.",
+    "viewLabel": "Demo layout",
+    "views": {
+      "split": "Side by side",
+      "mobile": "App only",
+      "dashboard": "Dashboard only"
+    },
+    "dashboardPane": "Demo fleet monitoring dashboard",
+    "mobilePane": "Driver mobile app",
+    "apiNotice": "Interactive sync uses the local Demo. In API mode, the demo app stays separate from server data."
   },
   "auth": {
     "title": "Every waiting hour tells a story.",
@@ -296,6 +310,7 @@
     "TaskEscalated": "Control center alert",
     "TaskAcknowledged": "Control center took it",
     "UnloadConfirmed": "Unloading confirmed",
+    "DriverMessageSent": "Driver message sent",
     "DocumentQuestionAnswered": "Document question"
   },
   "dashboard": {
@@ -317,7 +332,8 @@
   "channels": {
     "push": "push",
     "panel": "panel",
-    "call": "call"
+    "call": "call",
+    "app": "mobile app"
   },
   "occurrences": {
     "gateQueue": "Queue at the gate, no estimated time"

@@ -13,6 +13,8 @@ export interface FeedEvent extends DomainEvent {
   simMin: number;
 }
 
+export type MobileDriverAction = 'start' | 'approach' | 'arrive' | 'occurrence' | 'message' | 'acknowledge' | 'unload' | 'advance';
+
 export interface OpsState {
   simMinutes: number;
   running: boolean;
@@ -26,6 +28,7 @@ export interface OpsState {
   history: Delivery[];
   tick: (minutes: number) => void;
   acknowledge: (taskId: string) => void;
+  mobileAction: (tripId: string, action: MobileDriverAction, value?: string | number) => void;
   setResponsiveness: (value: number) => void;
   toggle: () => void;
 }
@@ -48,6 +51,7 @@ export function createOpsStore(options: EngineOptions = {}) {
   const routeRandom = PLATES.map((_, index) => seeded(seed + 100 + index));
   const callRandom = PLATES.map((_, index) => seeded(seed + 200 + index));
   const waitRandom = PLATES.map((_, index) => seeded(seed + 300 + index));
+  const mobileMetricRandom = PLATES.map((_, index) => seeded(seed + 600 + index));
   const occurrenceRandom = seeded(seed + 400);
   const metricRandom = seeded(seed + 500);
   const reports: Record<string, boolean> = {};
@@ -222,6 +226,120 @@ export function createOpsStore(options: EngineOptions = {}) {
           tasks: state.tasks.map((candidate) => candidate.id === taskId ? { ...candidate, status: 'acknowledged', acknowledgedAtMin: state.simMinutes } : candidate),
           feed: [event(trip, 'TaskAcknowledged', state.simMinutes, { by: 'operator' }, 'cco'), ...state.feed].slice(0, SIMULATION.feedLimit),
         });
+      },
+      mobileAction: (tripId, action, value) => {
+        const state = get();
+        if (action === 'advance') {
+          const minutes = Number(value);
+          if (Number.isFinite(minutes) && minutes > 0) state.tick(minutes);
+          return;
+        }
+
+        const index = state.trips.findIndex((candidate) => candidate.id === tripId);
+        const trip = state.trips[index];
+        if (!trip) return;
+        const now = state.simMinutes;
+
+        if (action === 'acknowledge') {
+          const task = state.tasks.find((candidate) => candidate.tripId === tripId && (candidate.status === 'open' || candidate.status === 'escalated'));
+          if (task) state.acknowledge(task.id);
+          return;
+        }
+
+        if (action === 'start') {
+          if (trip.phase === 'unloaded' || trip.phase === 'waiting') return;
+          const route = getMockRoadRoute(trip.receiverId);
+          const nextTrip = { ...trip, phase: 'driving' as const, progress: 0, position: interpolateRoute(route, 0)!, notifiedBeforeArrival: false };
+          set({
+            trips: state.trips.map((candidate) => candidate.id === tripId ? nextTrip : candidate),
+            feed: [event(nextTrip, 'PickupConfirmed', now, { capacityTons: nextTrip.capacityTons, source: 'mobile_demo' }, 'driver'), ...state.feed].slice(0, SIMULATION.feedLimit),
+          });
+          return;
+        }
+
+        if (action === 'approach') {
+          if (trip.phase === 'waiting' || trip.phase === 'unloaded' || state.feed.some((item) => item.tripId === tripId && item.type === 'ApproachDetected')) return;
+          const route = getMockRoadRoute(trip.receiverId);
+          const progress = Math.max(0, 1 - BUSINESS.approachKm / trip.routeKm);
+          const approaching = { ...trip, progress, phase: 'approaching' as const, position: interpolateRoute(route, progress)! };
+          const calls: CallLog[] = [];
+          const feed: FeedEvent[] = [event(approaching, 'ApproachDetected', now, { leftKm: BUSINESS.approachKm, source: 'mobile_demo' }, 'driver')];
+          const call = addCall(approaching, 'approach', now, index, calls, feed);
+          const nextTrip = { ...approaching, notifiedBeforeArrival: call.answered };
+          feed.push(event(nextTrip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: true }, 'agent'));
+          set({
+            trips: state.trips.map((candidate) => candidate.id === tripId ? nextTrip : candidate),
+            calls: [...calls.reverse(), ...state.calls],
+            feed: [...feed.reverse(), ...state.feed].slice(0, SIMULATION.feedLimit),
+          });
+          return;
+        }
+
+        if (action === 'arrive') {
+          if (trip.phase === 'waiting' || trip.phase === 'unloaded') return;
+          const route = getMockRoadRoute(trip.receiverId);
+          const calls: CallLog[] = [];
+          const feed: FeedEvent[] = [];
+          let notifiedBeforeArrival = trip.notifiedBeforeArrival;
+          if (trip.phase === 'driving' && !state.feed.some((item) => item.tripId === tripId && item.type === 'ApproachDetected')) {
+            const call = addCall(trip, 'approach', now, index, calls, feed);
+            notifiedBeforeArrival = call.answered;
+            feed.unshift(event(trip, 'ApproachDetected', now, { leftKm: BUSINESS.approachKm, source: 'mobile_demo' }, 'driver'));
+            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: true }, 'agent'));
+          }
+          const receiver = receiverById(trip.receiverId);
+          const progress = 1;
+          const waitMin = Math.round(receiver.typicalWaitMin * (notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + waitRandom[index]() * 0.8));
+          const arrivedTrip = { ...trip, progress, position: interpolateRoute(route, progress)!, phase: 'waiting' as const, notifiedBeforeArrival, arrivedAtMin: now, unloadAtMin: now + waitMin };
+          feed.push(event(arrivedTrip, 'ArrivalRegistered', now, { geofence: true, voiceCheckin: true, source: 'mobile_demo' }, 'driver'));
+          let task: Task = { id: id('task'), tripId, createdAtMin: now, attempts: 1, status: 'open' };
+          feed.push(event(arrivedTrip, 'TaskCreated', now, { attempt: 1, channel: 'push' }, 'system'));
+          task = autoAcknowledge(task, arrivedTrip, now, index, state.operatorResponsiveness, feed);
+          reports[tripId] = mobileMetricRandom[index]() < 0.75;
+          feed.push(event(arrivedTrip, 'ReportSubmitted', now, { completeFirst: reports[tripId], source: 'mobile_demo' }, 'driver'));
+          if (!reports[tripId]) feed.push(event(arrivedTrip, 'ReportFieldMissing', now, { field: 'cargoCondition' }, 'agent'));
+          set({
+            trips: state.trips.map((candidate) => candidate.id === tripId ? arrivedTrip : candidate),
+            tasks: [...state.tasks, task], calls: [...calls.reverse(), ...state.calls],
+            feed: [...feed.reverse(), ...state.feed].slice(0, SIMULATION.feedLimit),
+          });
+          return;
+        }
+
+        if (action === 'occurrence' || action === 'message') {
+          const text = typeof value === 'string' ? value.trim() : '';
+          if (action === 'message' && !text) return;
+          const type = action === 'occurrence' ? 'OccurrenceCreated' : 'DriverMessageSent';
+          const payload = action === 'occurrence'
+            ? text ? { details: text, source: 'mobile_demo' } : { messageKey: 'occurrences.gateQueue', source: 'mobile_demo' }
+            : { text, channel: 'app', source: 'mobile_demo' };
+          set({ feed: [event(trip, type, now, payload, 'driver'), ...state.feed].slice(0, SIMULATION.feedLimit) });
+          return;
+        }
+
+        if (action === 'unload') {
+          if (trip.phase !== 'waiting') return;
+          const task = state.tasks.find((candidate) => candidate.tripId === tripId && candidate.status !== 'closed');
+          const waitMin = Math.max(0, now - (trip.arrivedAtMin ?? now));
+          const nextTrip = { ...trip, phase: 'unloaded' as const, unloadAtMin: now, unloadedAtMin: now };
+          const delivery: Delivery = {
+            tripId: trip.id, receiverId: trip.receiverId,
+            day: Math.floor((SIMULATION.startHour * 60 + now) / 1440), waitMin,
+            capacityTons: trip.capacityTons, notifiedBeforeArrival: trip.notifiedBeforeArrival,
+            callAnswered: state.calls.some((call) => call.tripId === trip.id && call.answered),
+            ccoActionMin: task?.acknowledgedAtMin === undefined ? null : task.acknowledgedAtMin - task.createdAtMin,
+            escalated: task?.escalatedAtMin !== undefined, reportCompleteFirst: reports[tripId] ?? true, stayCharged: false,
+            contactsAvoided: 2 + Math.floor(mobileMetricRandom[index]() * 4), voiceLatencyMs: Math.round(700 + mobileMetricRandom[index]() * 1300), plate: trip.plate, driver: trip.driver,
+            arrivalMinuteOfDay: ((SIMULATION.startHour * 60 + (trip.arrivedAtMin ?? now)) % 1440 + 1440) % 1440,
+          };
+          const unloadEvent = event(nextTrip, 'UnloadConfirmed', now, { waitMin, source: 'mobile_demo' }, 'driver');
+          set({
+            trips: state.trips.map((candidate) => candidate.id === tripId ? nextTrip : candidate),
+            tasks: state.tasks.map((candidate) => candidate.tripId === tripId && candidate.status !== 'closed' ? { ...candidate, status: 'closed', closedAtMin: now } : candidate),
+            history: [...state.history, delivery], feed: [unloadEvent, ...state.feed].slice(0, SIMULATION.feedLimit),
+          });
+          delete reports[tripId];
+        }
       },
       setResponsiveness: (value) => { if (Number.isFinite(value)) set({ operatorResponsiveness: Math.max(0, Math.min(1, value)) }); },
       toggle: () => set((state) => ({ running: !state.running })),

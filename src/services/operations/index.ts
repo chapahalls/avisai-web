@@ -2,7 +2,7 @@ import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
 import { API_BASE_URL } from '../../lib/apiConfig';
 import { ApiClient } from '../api/client';
-import { opsStore, startEngine, RECEIVERS, type OpsState } from '../mock/engine';
+import { opsStore, startEngine, RECEIVERS, type MobileDriverAction, type OpsState } from '../mock/engine';
 import { createApiRuntime } from './runtime';
 
 type Mode = 'api' | 'demo';
@@ -50,3 +50,7 @@ export function startOperations() {
 }
 export const retryConnection = () => apiRuntime().start();
 export const confirmUnload = (tripId: string) => apiRuntime().confirmUnload(tripId);
+/** Mobile demo actions affect the shared local dashboard only; never write fictitious data to API mode. */
+export function applyMobileDemoAction(tripId: string, action: MobileDriverAction, value?: string | number) {
+  if (source.getState().mode === 'demo') opsStore.getState().mobileAction(tripId, action, value);
+}

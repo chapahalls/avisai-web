@@ -13,6 +13,8 @@ export function describeEvent(event: Pick<FeedEvent, 'type' | 'payload'>, t: TFu
     : isApi && backendType ? t(`api.events.${backendType}`, { defaultValue: backendType }) : t(`events.${event.type}`);
   const message = isApi
     ? typeof event.payload.backendMessage === 'string' ? event.payload.backendMessage : null
-    : typeof event.payload.messageKey === 'string' ? t(event.payload.messageKey) : null;
+    : typeof event.payload.messageKey === 'string' ? t(event.payload.messageKey)
+      : typeof event.payload.text === 'string' ? event.payload.text
+        : typeof event.payload.details === 'string' ? event.payload.details : null;
   return { title, message, result, channel, alertType, priority } as const;
 }

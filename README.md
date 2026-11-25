@@ -172,6 +172,8 @@ A descarga, confirmada por voz ou pelo CCO, encerra o contador. Em `/dashboard/m
   </tr>
 </table>
 
+`/mobile-web` abre uma demonstração pública e interativa do app do motorista, sem login do CCO. O roteiro inclui viagem, aproximação e aviso ao recebedor, check-in, Tasks, recados, documentos, fila e comandos de voz simulados. Nada é enviado à API; o áudio opcional usa a síntese de voz disponível no navegador.
+
 ## Como escala
 
 - **Eventos, não telefonemas.** Cada transição é um evento com contrato único (`src/types/events.ts`), o mesmo do app mobile. A central acompanha a frota pelos eventos no painel em vez de ligar para cada motorista.
