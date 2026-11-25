@@ -111,6 +111,7 @@ function loadSdk(key: string, language: string): Promise<MapsSdk> {
 
   sdkPromise = new Promise<MapsSdk>((resolve, reject) => {
     const script = document.createElement('script');
+    // biome-ignore lint/style/useConst: o timer é criado depois de fail(), que precisa enxergá-lo
     let timeout: ReturnType<typeof setTimeout>;
     const previousAuthFailure = target.gm_authFailure;
     const fail = () => {

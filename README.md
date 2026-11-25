@@ -5,6 +5,10 @@
 <h1 align="center">RODAR</h1>
 
 <p align="center">
+  <a href="https://github.com/rodarglobal/rodar-web/actions/workflows/ci.yml"><img src="https://github.com/rodarglobal/rodar-web/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+</p>
+
+<p align="center">
   <strong>O agente de voz que conecta motorista, recebedor e central de operação (CCO).</strong><br />
   Este repositório é o <strong>site público</strong> e o <strong>painel web do CCO</strong>.
 </p>
@@ -183,6 +187,10 @@ npm run typecheck
 ```
 
 ```bash
+npm run lint
+```
+
+```bash
 npm run build
 ```
 
@@ -298,6 +306,8 @@ src/
 └── utils/               geometria, estadia, formatação e rotas
 ```
 
+Cada página é carregada sob demanda (`React.lazy` em `src/app/router.tsx`): o painel não baixa o three.js da home e do login, e o pacote inicial cai de 2,3 MB para cerca de 330 kB (104 kB com gzip). No modo API, o JWT do `/auth/sso` vai como `Authorization: Bearer` em todas as chamadas (`ApiClient.setAccessToken`).
+
 As dependências seguem `pages → features → components/services/lib/utils/types`. As cores vêm só dos tokens de `src/index.css` ([DESIGN.md](docs/DESIGN.md)) e todos os textos passam pelo i18n.
 
 ## Documentação
@@ -308,7 +318,7 @@ As dependências seguem `pages → features → components/services/lib/utils/ty
 - [Regras da simulação e problemas resolvidos pelo time](docs/REGRAS-DE-NEGOCIO.md)
 - [Design e acessibilidade](docs/DESIGN.md)
 - [Mockups das telas](docs/RODAR-telas/index.html)
-- Skill de manutenção: `.agents/skills/avisai-web-maintenance`
+- Skill de manutenção: `.agents/skills/rodar-web-maintenance`
 - Cenas 3D da home: os `.glb` versionados em `src/features/home/assets` saem dos scripts `npm run generate:*`. Os modelos de origem (`docs/RODAR-telas/landing-page/3d-model/`, cerca de 80 MB e de terceiros) não ficam no git; para regerar os `.glb`, coloque-os nessa pasta.
 
 ## Licença e versão
