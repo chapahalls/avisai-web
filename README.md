@@ -22,6 +22,19 @@
   <sub>▶️ <a href="docs/assets/readme/tour.mp4">Ver em vídeo (MP4, 1280 px, 1 min 9 s)</a></sub>
 </p>
 
+## Para o júri
+
+| | |
+|---|---|
+| **Trilha** | Logística & automação |
+| **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
+| **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
+| **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) (este) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 512 testes automatizados: 299 no backend, 127 no web, 86 no mobile |
+| **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
+| **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado) |
+<!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
+
 ## Para que serve
 
 O motorista fala com o AI pelo celular, sem digitar. O AI avisa o recebedor antes da chegada, acompanha a espera na doca e só chama a central quando alguém precisa decidir.
