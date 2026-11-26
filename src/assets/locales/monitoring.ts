@@ -40,6 +40,15 @@ export const monitoringPt = {
     select: 'Ver no mapa',
   },
   selection: { focus: 'Em destaque' },
+  viewPager: {
+    label: 'Páginas do monitoramento',
+    map: 'Mapa e alertas',
+    trips: 'Grade de viagens e janelas de doca',
+    requests: 'Solicitações e mensagens',
+    previous: 'Tela anterior',
+    next: 'Próxima tela',
+    page: 'Página {{current}} de {{total}}',
+  },
   map: { title: 'Mapa da operação' },
   vehicle: {
     eyebrow: 'Veículo selecionado',
@@ -146,6 +155,15 @@ export const monitoringEn: typeof monitoringPt = {
     select: 'Show on map',
   },
   selection: { focus: 'In focus' },
+  viewPager: {
+    label: 'Monitoring pages',
+    map: 'Map and alerts',
+    trips: 'Trip grid and dock windows',
+    requests: 'Requests and messages',
+    previous: 'Previous screen',
+    next: 'Next screen',
+    page: 'Page {{current}} of {{total}}',
+  },
   map: { title: 'Operations map' },
   vehicle: {
     eyebrow: 'Selected vehicle',

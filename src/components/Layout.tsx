@@ -24,6 +24,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 export function Layout() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const isDashboard = location.pathname === APP_ROUTES.dashboard;
   const simMinutes = useOps((state) => state.simMinutes);
   const running = useOps((state) => state.running);
   const connection = useConnection();
@@ -40,7 +41,7 @@ export function Layout() {
   }, [theme]);
 
   return (
-    <div className="cco-shell">
+    <div className={`cco-shell${isDashboard ? ' cco-shell-dashboard' : ''}`}>
       <a href="#main-content" className="sr-only z-50 rounded-input bg-brand-500 text-on-accent p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">{t('app.skipContent')}</a>
       <header className="cco-topbar">
         <Link to={APP_ROUTES.dashboard} className="cco-brand" aria-label={t('app.name')}>
@@ -106,7 +107,7 @@ export function Layout() {
           <button type="button" onClick={logout} className="cco-logout" title={t('auth.logout')} aria-label={t('auth.logout')}><Icon name="logout" className="h-4 w-4" /><span>{t('auth.logout')}</span></button>
         </div>
       </header>
-      <main id="main-content" tabIndex={-1} className="cco-main">{location.pathname !== APP_ROUTES.dashboard && <ConnectionBanner />}<Outlet /></main>
+      <main id="main-content" tabIndex={-1} className={`cco-main${isDashboard ? ' cco-main-dashboard' : ''}`}>{!isDashboard && <ConnectionBanner />}<Outlet /></main>
     </div>
   );
 }
