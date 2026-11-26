@@ -371,3 +371,18 @@ export interface BackendFile {
   /** Apenas metadado: download usa IDs e a base configurada, nunca esta URL. */
   url_download: string;
 }
+
+/** `GET /livekit/config`: público, sem chave ou segredo. */
+export interface BackendLiveKitConfig {
+  configurado: boolean;
+  url: string | null;
+  agente: string | null;
+}
+
+/** `POST /livekit/token`: token curto de participante assinado pelo backend. */
+export interface BackendLiveKitToken {
+  url: string;
+  token: string;
+  sala: string;
+  identidade: string;
+}

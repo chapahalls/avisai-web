@@ -31,7 +31,6 @@
   },
   "mobileDemo": {
     "title": "Mobile app demo",
-    "description": "See the driver's actions appear in fleet monitoring in real time.",
     "viewLabel": "Demo layout",
     "views": {
       "split": "Side by side",
@@ -53,19 +52,25 @@
       "doneBody": "Driver and control center actions are recorded in the demo. You can keep exploring the app and dashboard.",
       "close": "Close tutorial",
       "steps": {
-        "login": { "title": "Driver sign in", "body": "The app opens with a simulated sign in and no password prompt. The tour enters the profile to start the operation." },
-        "start": { "title": "Trip started", "body": "The driver confirms the route has started. This record updates trip progress on the dashboard." },
-        "approach": { "title": "Approaching the destination", "body": "As the driver gets close, the app records the step and attempts to notify the receiver before arrival." },
-        "arrival": { "title": "Arrival recorded", "body": "The confirmation creates a follow up Task and starts the waiting time." },
-        "queue": { "title": "Unloading queue", "body": "This area shows yard wait time, the agreed window, and updates for the driver." },
-        "push": { "title": "App notification", "body": "The first update appears as a push notification to tell the driver a Task was created." },
+        "login": { "title": "Driver sign in", "body": "The app opens with a simulated sign in and no password. The tour signs in as the trip's driver and AvisAI greets them in the bubble." },
+        "orb": { "title": "AvisAI, the voice copilot", "body": "The green orb is AvisAI. It floats over every screen and can be dragged. The tour taps it to talk." },
+        "sayStart": { "title": "Conversation: trip start", "body": "The driver says “Got the load, truck ok”. AvisAI listens, confirms the pickup and starts the trip." },
+        "reply": { "title": "Agent reply", "body": "The reply shows in the bubble next to the orb and is spoken on the phone. The trip already shows on the dashboard." },
+        "approach": { "title": "Approaching the destination", "body": "At 8 km, AvisAI notifies the receiver and tells the driver the confirmed dock." },
+        "cabin": { "title": "Talking while driving", "body": "With the truck moving, the driver talks without touching the screen. The tour opens AvisAI again." },
+        "openCabin": { "title": "Full screen", "body": "The full-screen conversation shows the large orb and the last line, readable at a glance." },
+        "sayArrive": { "title": "Conversation: arrival", "body": "He says “I arrived at the receiver”. AvisAI checks in, creates the CCO Task and starts counting the wait." },
+        "closeCabin": { "title": "Back home", "body": "Closing the conversation brings the orb back to float over the app." },
+        "queue": { "title": "Unloading queue", "body": "Here are the expected dock, time stopped, the 5 h free time and accrued detention." },
+        "push": { "title": "Escalation to the CCO", "body": "Notices to the CCO move in steps: immediate push, panel and call." },
         "panel": { "title": "Control panel update", "body": "If the wait continues, the operation records a panel update for the control center to follow." },
-        "call": { "title": "Phone contact", "body": "If the issue remains unresolved, the workflow records a contact attempt in the trip history." },
-        "escalation": { "title": "Task escalated", "body": "When the waiting limit is reached, the Task is escalated and appears as an open item for the control center." },
-        "acknowledge": { "title": "Control center action", "body": "The tour takes the Task on the dashboard. This real demo action syncs the acknowledgement with the app." },
-        "acknowledgeLocal": { "title": "Task acknowledgement", "body": "The tour records the Task acknowledgement in this demo and updates the app timeline." },
-        "home": { "title": "Trip summary", "body": "On the home screen, the driver can follow the route, status, and timeline of recorded events." },
-        "unload": { "title": "Unloading completed", "body": "Confirming completion ends the wait and records the delivery in demo history and metrics." }
+        "call": { "title": "Phone contact", "body": "If it remains unresolved, the workflow records a call attempt linked to the trip." },
+        "escalation": { "title": "Task escalated", "body": "After one hour, the Task is escalated and AvisAI tells the driver by voice." },
+        "acknowledge": { "title": "Control center action", "body": "The tour takes the Task on the dashboard. AvisAI tells the driver the CCO took over." },
+        "acknowledgeLocal": { "title": "CCO takes the Task", "body": "The tour records that the CCO took over. AvisAI tells the driver in the bubble." },
+        "home": { "title": "Trip summary", "body": "On the home screen, the driver sees the route, status and the journey of recorded events." },
+        "orbUnload": { "title": "Unloading by voice", "body": "With unloading done, the driver calls AvisAI again." },
+        "sayUnload": { "title": "Conversation: unloading", "body": "He says “I unloaded”. AvisAI closes the detention, notifies the CCO and the delivery joins the metrics." }
       }
     }
   },
@@ -153,6 +158,12 @@
     "replying": "Sending…",
     "loadError": "Could not load driver requests.",
     "replyError": "Could not send the reply.",
+    "message": "Message the driver",
+    "demo": {
+      "flatTire": { "subject": "Flat tire", "description": "The driver reports a flat tire and asks for guidance to reach the nearest tire shop." },
+      "gateClosed": { "subject": "Gate closed", "description": "The receiver has not opened the gate yet. The driver asks whether to wait in the outer yard." },
+      "traffic": { "subject": "Traffic stopped", "description": "Accident ahead. The agent is still collecting the location to suggest a detour." }
+    },
     "status": {
       "coletando": "collecting details",
       "aguardando_cco": "awaiting reply",
@@ -212,6 +223,7 @@
     "sending": "Sending…",
     "connectionRequired": "The API connection must be active to send the message.",
     "response": "Driver reply",
+    "demoReply": "Understood, control center. Proceeding as instructed.",
     "status": {
       "enviada": "sent",
       "falada": "spoken to driver",
@@ -493,6 +505,7 @@
     "mockGps": "Simulated GPS",
     "selectTruck": "Select truck {{plate}}: {{phase}}",
     "fitFleet": "Show entire fleet",
+    "fitRoute": "Show entire route",
     "follow": "Follow truck",
     "fleetList": "Fleet in operation",
     "vehicleCount": "{{count}} vehicles",

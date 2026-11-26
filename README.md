@@ -184,7 +184,9 @@ A descarga, confirmada por voz ou pelo CCO, encerra o contador. Em `/dashboard/m
   </tr>
 </table>
 
-`/mobile-web` abre uma demonstração pública e interativa do app do motorista, sem login do CCO. O roteiro inclui viagem, aproximação e aviso ao recebedor, check-in, Tasks, recados, documentos, fila e comandos de voz simulados. Nada é enviado à API; o áudio opcional usa a síntese de voz disponível no navegador.
+`/mobile-web` abre uma demonstração pública e interativa do app do motorista, sem login do CCO. O roteiro inclui viagem, aproximação e aviso ao recebedor, check-in, Tasks, recados, documentos, fila e comandos de voz simulados. A simulação não envia dados à API; o áudio opcional usa a síntese de voz do navegador. A opção separada **Testar ao vivo (LiveKit)** usa o backend e o microfone quando configurados.
+
+Na Demo do painel, `/dashboard/mobile-demo` reúne o app e o monitoramento filtrado para a viagem do motorista do tour. O tour automático de 18 etapas simula a conversa com o AvisAI, da retirada à descarga, incluindo chegada, escalonamento e atendimento pelo CCO. Ele pode ser pausado, pulado ou reexecutado; reexecutá-lo reinicia a viagem demonstrada. A bola do AvisAI pode ser arrastada ou movida pelo teclado.
 
 ## Como escala
 
@@ -223,10 +225,16 @@ npm run build
 
 | `VITE_API_BASE_URL` | Origem | O que o painel usa | O que ele não inventa |
 |---|---|---|---|
-| vazia | **Demo** | frota, relógio, eventos, rotas rodoviárias versionadas, histórico e indicadores locais | GPS, documentos fiscais, login, ligação ou comunicação reais |
-| preenchida, ex.: `http://127.0.0.1:8000` | **API** | rotas, GPS, Tasks, estadias, chamadas, alertas, mensagens, arquivos, métricas e ranking do backend | posição ausente, estrada, valores financeiros, histórico ou resultado de telefonia |
+| vazia ou preenchida (sempre ao entrar) | **Demo** | frota, relógio, eventos, rotas rodoviárias versionadas, histórico e indicadores locais | GPS, documentos fiscais, login, ligação ou comunicação reais |
+| preenchida, ex.: `http://127.0.0.1:8000`, após **Conectar à API** | **API** | rotas, GPS, Tasks, estadias, chamadas, alertas, mensagens, arquivos, métricas e ranking do backend | posição ausente, estrada, valores financeiros, histórico ou resultado de telefonia |
 
 Se a API falhar, o painel mostra o erro e **Tentar novamente**. A troca para **Usar demo** é sempre uma ação explícita: não há fallback automático nem repetição automática de POST.
+
+### Voz ao vivo na Demo
+
+O botão de conexão ao lado do seletor de visualização, em `/dashboard/mobile-demo`, e a opção equivalente no AvisAI são opcionais e independentes da simulação: para usá-los, configure `VITE_API_BASE_URL` no frontend e `LIVEKIT_URL`, `LIVEKIT_API_KEY` e `LIVEKIT_API_SECRET` no backend. A origem do Vite deve constar em `CORS_ORIGENS` (na configuração local, use `http://localhost:5173`; 5174 e 5175 não estão liberadas). Reinicie os serviços após alterar as variáveis; não coloque segredos no frontend ou no Git.
+
+O botão consulta a configuração pública do backend. Ao conectar, usa o SSO de demonstração e um token temporário para entrar na sala e solicitar acesso ao microfone. O ícone de confirmação aparece quando um participante identificado como agente está presente; entrar na sala, sozinho, não garante uma conversa. `LIVEKIT_AGENT_NAME` permite solicitar seu despacho, mas não inicia o agente. A conexão pode ser encerrada pelo botão ou na conversa em tela cheia. O tour e a operação da Demo continuam simulados, mesmo quando a voz usa o LiveKit. Detalhes e limites estão em [INTEGRACAO-BACKEND.md](docs/INTEGRACAO-BACKEND.md).
 
 <details>
 <summary><strong>Conectar ao backend RODAR</strong></summary>
@@ -291,10 +299,13 @@ No modo API, a operação, os KPIs/ranking e os anexos vêm do backend. **SSO, n
 - **Tempo:** cada segundo real avança um minuto da operação, a partir das 08:00. Pausar congela o relógio.
 - **Eventos e Tasks:** aproximação, chegada, avisos, resposta do operador, escalada, ocorrência e descarga são gerados localmente.
 - **Ligações:** resultado e transcrição são texto simulado, sem áudio, SIP ou chamada telefônica.
+- **App do motorista:** o tour e os comandos sugeridos são simulados; o teste opcional de voz por LiveKit usa uma sala e um agente externos quando configurados.
 - **Histórico:** 63 entregas fictícias (nove por dia em sete dias), com seed 42. Os indicadores não representam desempenho real.
 - **Dossiê:** carga, notas fiscais e mensagens são fictícias.
 - **Cobrança:** marca fictícia em cerca de 15% das entregas com estadia positiva.
 - **Home:** os formulários da calculadora e de contato validam no navegador e não enviam dados.
+- **Solicitações e mensagens:** a terceira tela do Monitoramento traz três chamados fictícios de motorista. Responder tira o chamado da fila; a mensagem ao motorista passa por enviada → falada (2 s) → respondida (6 s) com uma resposta fixa. Nada é enviado à API.
+- **Cadastros:** em Motoristas e viagens, a Demo cadastra motoristas e operadores do CCO só em memória (oito motoristas e um operador fictícios iniciais, e-mails `.test`). Operadores novos aparecem no login da Demo; nada é enviado à API. A tela tem os mesmos cards, colunas e ações da API; os status que a Demo não simula ficam em zero.
 
 O estado da Demo fica em memória: recarregar a página inicia outra sessão. Regras completas e parâmetros: [REGRAS-DE-NEGOCIO.md](docs/REGRAS-DE-NEGOCIO.md) e `src/lib/config.ts`. A estadia local é calculada só em `src/utils/stay.ts`:
 

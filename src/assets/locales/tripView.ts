@@ -1,5 +1,5 @@
 export const tripViewPt = {
-  back: 'Monitoramento',
+  back: 'Despacho de viagens',
   subtitle: 'Viagem {{id}} · {{origin}} → {{receiver}}',
   dock: 'doca {{dock}} às {{time}}',
   statusWaiting: '{{status}} · {{time}}',
@@ -56,7 +56,7 @@ export const tripViewPt = {
 };
 
 export const tripViewEn: typeof tripViewPt = {
-  back: 'Monitoring',
+  back: 'Trip dispatch',
   subtitle: 'Trip {{id}} · {{origin}} → {{receiver}}',
   dock: 'dock {{dock}} at {{time}}',
   statusWaiting: '{{status}} · {{time}}',

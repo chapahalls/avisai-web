@@ -3,7 +3,8 @@
 .trv-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .trv-back { display: inline-flex; min-height: 36px; align-items: center; border: 1px solid color-mix(in srgb, var(--color-ok-500) 38%, var(--color-ink-700)); border-radius: 8px; background: color-mix(in srgb, var(--color-ok-500) 8%, transparent); padding: 0 12px; color: var(--color-ok-500); font-size: 13px; font-weight: 600; transition: background 150ms, border-color 150ms; }
 .trv-back:hover { border-color: var(--color-ok-500); background: color-mix(in srgb, var(--color-ok-500) 14%, transparent); }
-.trv-header h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 6px; font-family: var(--font-display); font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; }
+.trv-title { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.trv-header h1 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-family: var(--font-display); font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; }
 .trv-header p { margin-top: 4px; color: var(--color-ink-300); font-size: 13px; }
 .trv-plate { color: var(--color-ok-500); font-family: var(--font-mono); font-size: .7em; font-weight: 600; }
 .trv-pill { display: inline-flex; align-items: center; border-radius: 6px; padding: 3px 9px; background: var(--color-ink-800); font-family: var(--font-sans); font-size: 12px; font-weight: 600; }
@@ -26,7 +27,10 @@
 .trv-dossier { display: flex; grid-area: dossier; min-width: 0; }
 .trv-dossier > * { flex: 1; min-width: 0; }
 .trv-map { grid-area: map; min-width: 0; }
-.trv-right { grid-area: timeline; min-width: 0; }
+/* Histórico ocupa a coluna inteira, até o fim do Dossiê, e rola por dentro (não estica a página). */
+.trv-right { grid-area: timeline; min-width: 0; min-height: 320px; contain: size; }
+.trv-right > .trv-timeline-card { display: grid; height: 100%; grid-template-rows: auto minmax(0, 1fr); }
+.trv-right .trv-timeline { min-height: 0; align-content: start; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
 .trv-card { min-width: 0; border: 1px solid var(--color-ink-700); border-radius: 12px; background: var(--color-ink-900); padding: 16px; }
 .trv-card > h2, .trv-card-heading h2, .trv-chat-heading h2 { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
 .trv-card-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
@@ -89,6 +93,13 @@
 .trv-event-body { margin-top: 3px; color: var(--color-ink-300); font-size: 13px; line-height: 1.45; }
 .trv-link { margin-top: 6px; color: var(--color-ok-500); font-size: 12px; }
 .trv-link:hover { text-decoration: underline; }
+/* Versão compacta (coluna lateral do dashboard): lista com rolagem própria para não esticar o mapa. */
+.trv-timeline-card[data-compact] { display: grid; height: 100%; min-height: 0; grid-template-rows: auto minmax(0, 1fr); padding: 14px; }
+.trv-timeline-card[data-compact] .trv-card-heading h2 { font-size: 15px; }
+.trv-timeline-card[data-compact] .trv-chips button { min-height: 26px; padding: 0 9px; font-size: 11px; }
+.trv-timeline-card[data-compact] .trv-timeline { max-height: var(--trv-timeline-max, 340px); min-height: 0; align-content: start; margin-top: 12px; padding-right: 4px; overflow-y: auto; overscroll-behavior: contain; }
+.trv-timeline-card[data-compact] .trv-event-title { font-size: 13px; }
+.trv-timeline-card[data-compact] .trv-event-body { font-size: 12px; }
 .trv-transcript { display: grid; gap: 4px; margin-top: 6px; border-left: 2px solid var(--color-ink-700); padding-left: 10px; font-size: 12px; line-height: 1.45; }
 
 .trv-map > :first-child { border-radius: 12px; }
@@ -117,6 +128,8 @@
 
 @media (max-width: 1120px) {
   .trv-layout { grid-template-columns: minmax(220px, 0.9fr) minmax(0, 2fr); grid-template-areas: 'driver history' 'map dossier' 'timeline timeline'; }
+  .trv-right { min-height: 0; contain: none; }
+  .trv-right .trv-timeline { max-height: 480px; }
 }
 @media (max-width: 900px) {
   .trv-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'driver' 'history' 'map' 'dossier' 'timeline'; }

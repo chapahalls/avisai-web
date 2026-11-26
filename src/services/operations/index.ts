@@ -4,9 +4,14 @@ import { API_BASE_URL } from '../../lib/apiConfig';
 import { ApiClient } from '../api/client';
 import { opsStore, startEngine, RECEIVERS, type MobileDriverAction, type OpsState } from '../mock/engine';
 import { createApiRuntime } from './runtime';
+import { registryStore } from '../mock/registry';
+import { conversationsStore } from '../mock/conversations';
+export { respondDemoRequest, sendDemoMessage, type DemoDriverMessage, type DemoDriverRequest } from '../mock/conversations';
+export { DEMO_OPERATOR_EMAIL, registerDemoDriver, registerDemoOperator, registrationFormatIssue, registrationIssue, type DemoDriver, type DemoOperator, type RegistrationIssue } from '../mock/registry';
 
 type Mode = 'api' | 'demo';
-const source = createStore<{ mode: Mode }>(() => ({ mode: API_BASE_URL ? 'api' : 'demo' }));
+/** Sempre inicia na Demo. Com `VITE_API_BASE_URL`, a API fica disponível por escolha explícita (Conectar à API). */
+const source = createStore<{ mode: Mode }>(() => ({ mode: 'demo' }));
 let runtime: ReturnType<typeof createApiRuntime> | undefined;
 let client: ApiClient | undefined;
 let configurationError: string | null = null;
@@ -54,3 +59,8 @@ export const confirmUnload = (tripId: string) => apiRuntime().confirmUnload(trip
 export function applyMobileDemoAction(tripId: string, action: MobileDriverAction, value?: string | number) {
   if (source.getState().mode === 'demo') opsStore.getState().mobileAction(tripId, action, value);
 }
+/** Cadastros locais da Demo (motoristas e operadores do CCO); nunca usados no modo API. */
+export const useDemoRegistry = () => useStore(registryStore);
+export const demoOperatorByEmail = (email: string) => registryStore.getState().operators.find((operator) => operator.email === email.trim().toLowerCase());
+/** Chamados e mensagens da Demo (página Solicitações e mensagens); nunca usados no modo API. */
+export const useDemoConversations = () => useStore(conversationsStore);

@@ -275,7 +275,7 @@ export function createOpsStore(options: EngineOptions = {}) {
           const nextTrip = { ...trip, phase: 'driving' as const, progress: 0, position: interpolateRoute(route, 0)!, notifiedBeforeArrival: false };
           set({
             trips: state.trips.map((candidate) => candidate.id === tripId ? nextTrip : candidate),
-            feed: [event(nextTrip, 'PickupConfirmed', now, { capacityTons: nextTrip.capacityTons, source: 'mobile_demo' }, 'driver'), ...state.feed].slice(0, SIMULATION.feedLimit),
+            feed: [event(nextTrip, 'PickupConfirmed', now, { capacityTons: nextTrip.capacityTons, source: 'mobile_demo' }, 'driver'), ...state.feed.filter((item) => item.tripId !== tripId || item.type !== 'PickupConfirmed')].slice(0, SIMULATION.feedLimit),
           });
           return;
         }

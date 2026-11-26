@@ -6,6 +6,8 @@ import {
   type BackendDriverRequest,
   type BackendDriverMessage,
   type BackendDriver,
+  type BackendLiveKitConfig,
+  type BackendLiveKitToken,
   type BackendEvent,
   type BackendFile,
   type BackendMetrics,
@@ -178,6 +180,13 @@ const isSnapshot: Guard<BackendSnapshot> = (value): value is BackendSnapshot => 
 
 const isDriver: Guard<BackendDriver> = (value): value is BackendDriver => shape(value, {
   id: positiveId, empresa_id: positiveId, nome: text, telefone_e164: nullable(text), email: nullable(text),
+});
+
+const isLiveKitConfig: Guard<BackendLiveKitConfig> = (value): value is BackendLiveKitConfig => shape(value, {
+  configurado: (item) => typeof item === 'boolean', url: nullable(text), agente: nullable(text),
+});
+const isLiveKitToken: Guard<BackendLiveKitToken> = (value): value is BackendLiveKitToken => shape(value, {
+  url: text, token: text, sala: text, identidade: text,
 });
 
 const count: Check = (value) => integer(value) && (value as number) >= 0;
@@ -458,6 +467,24 @@ export class ApiClient {
     return this.request('GET', '/motoristas', (value): value is BackendDriver[] => array(isDriver)(value), signal);
   }
 
+  /** Cria o cadastro operacional e, com e-mail, o perfil `driver` na mesma transação. 409 = e-mail já usado. */
+  createDriver(input: { nome: string; email: string; telefone_e164?: string | null }, signal?: AbortSignal) {
+    const nome = input.nome.trim();
+    const email = input.email.trim();
+    const phone = input.telefone_e164?.trim() || null;
+    if (!nome || !email || (phone !== null && !/^\+[1-9]\d{7,14}$/.test(phone))) throw new ApiError('invalid_input');
+    return this.request('POST', '/motoristas', isDriver, signal, { nome, email, telefone_e164: phone });
+  }
+
+  /** Cria um perfil `cco` (operador da central). 409 = e-mail já usado por outro perfil ou motorista. */
+  createOperator(input: { nome: string; email: string }, signal?: AbortSignal) {
+    const nome = input.nome.trim();
+    const email = input.email.trim();
+    if (!nome || !email) throw new ApiError('invalid_input');
+    return this.request('POST', '/usuarios', (value): value is BackendUserProfile => isUserProfile(value) && (value as BackendUserProfile).role === 'cco',
+      signal, { nome, email });
+  }
+
   listProfiles(role?: BackendUserProfile['role'], signal?: AbortSignal) {
     if (!optional(oneOf('cco', 'driver'))(role)) throw new ApiError('invalid_input');
     const query = role === undefined ? '' : `?role=${role}`;
@@ -496,6 +523,17 @@ export class ApiClient {
   createRequest(routeId: ApiId, pergunta: string, signal?: AbortSignal) {
     if (!text(pergunta)) throw new ApiError('invalid_input');
     return this.request('POST', `/rotas/${encodedId(routeId)}/solicitacoes`, isRequest, signal, { pergunta });
+  }
+
+  /** Estado do LiveKit no backend (porta de entrada do teste de voz ao vivo). */
+  getLiveKitConfig(signal?: AbortSignal) {
+    return this.request('GET', '/livekit/config', isLiveKitConfig, signal);
+  }
+
+  /** Token curto para entrar numa sala do LiveKit; a chave secreta fica no backend. */
+  createLiveKitToken(sala?: string, signal?: AbortSignal) {
+    if (sala !== undefined && !/^[A-Za-z0-9_-]{1,64}$/.test(sala)) throw new ApiError('invalid_input');
+    return this.request('POST', '/livekit/token', isLiveKitToken, signal, sala === undefined ? {} : { sala });
   }
 
   authSso(email?: string, signal?: AbortSignal) {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { routeInput, assignmentIssue, registeredDrivers, dispatchRows, dispatchCounts, routeDispatchState, routeFileIssue, draftProgress, worstCaseReceiverCalls, ROUTE_FILE_MAX_BYTES, emptyDraft } from '../.cache/tests/features/dispatch/model.js';
+import { routeInput, assignmentIssue, registeredDrivers, dispatchRows, dispatchCounts, DISPATCH_FILTERS, demoDispatchRows, demoRegisteredDrivers, routeDispatchState, routeFileIssue, draftProgress, worstCaseReceiverCalls, ROUTE_FILE_MAX_BYTES, emptyDraft } from '../.cache/tests/features/dispatch/model.js';
 
 const draft = {
   origin: ' CD Jundiaí ', originLat: '-23,1857', originLng: '-46.8978',
@@ -87,7 +87,28 @@ test('lista de dispatch: uma linha por motorista e por rota sem motorista, com c
     ['route-api-route-3', 'unassigned'],
     ['driver-9', 'available'],
   ]);
-  assert.deepEqual(dispatchCounts(rows), { all: 4, editable: 2, onRoute: 1, atReceiver: 0, available: 1 });
+  assert.deepEqual(rows.map((row) => row.status), ['em_transito', 'planejada', 'publicada', 'available']);
+  assert.deepEqual(dispatchCounts(rows, DISPATCH_FILTERS), {
+    all: 4, editable: 2, publicada: 1, planejada: 1, na_origem: 0, em_transito: 1, aproximando: 0, no_destino: 0, available: 1,
+  });
+});
+
+test('lista de dispatch na Demo: fase simulada vira status de rota, com os mesmos cards da API', () => {
+  const drivers = demoRegisteredDrivers([
+    { id: 1, name: 'Motorista A', email: 'motorista.a@demo.test', phone: null, companyId: 1 },
+    { id: 2, name: 'Motorista B', email: 'motorista.b@demo.test', phone: null, companyId: 1 },
+    { id: 9, name: 'Nova', email: 'nova@demo.test', phone: '+5511999999999', companyId: 1 },
+  ]);
+  assert.equal(drivers[2].driver.telefone_e164, '+5511999999999');
+  const trips = [
+    { id: 'trip-1', driver: 'Motorista A', phase: 'waiting', source: 'mock' },
+    { id: 'trip-2', driver: 'Motorista B', phase: 'approaching', source: 'mock' },
+  ];
+  const rows = demoDispatchRows(drivers, trips);
+  assert.deepEqual(rows.map((row) => [row.driver.profile.name, row.status]), [['Motorista B', 'aproximando'], ['Motorista A', 'no_destino'], ['Nova', 'available']]);
+  assert.deepEqual(dispatchCounts(rows, DISPATCH_FILTERS), {
+    all: 3, editable: 0, publicada: 0, planejada: 0, na_origem: 0, em_transito: 0, aproximando: 1, no_destino: 1, available: 1,
+  });
 });
 
 test('cadastro: arquivos seguem os tipos e o limite do backend', () => {

@@ -4,13 +4,14 @@ import { receiverById, useConnection, useOps } from '../../../services/operation
 import { clock } from '../../../utils/format';
 import { describeEvent } from '../eventLabels';
 import { eventCategory, type TimelineCategory } from '../model';
+import './trips.css';
 
 const FILTERS = ['all', 'stops', 'agent', 'cco', 'receiver'] as const;
 type Filter = (typeof FILTERS)[number];
 type Item = { key: string; sort: number; time: string; category: TimelineCategory; title: string; body?: string | null; transcript?: { who: string; text: string }[] };
 
-/** Linha do tempo da viagem: eventos e ligações do agente, com filtro por quem agiu. */
-export function TripTimeline({ tripId }: { tripId: string }) {
+/** Linha do tempo da viagem: eventos e ligações do agente, com filtro por quem agiu. `compact`: coluna lateral do dashboard, com rolagem própria. */
+export function TripTimeline({ tripId, compact = false }: { tripId: string; compact?: boolean }) {
   const { t, i18n } = useTranslation();
   const connection = useConnection();
   const isApi = connection.mode === 'api';
@@ -55,7 +56,7 @@ export function TripTimeline({ tripId }: { tripId: string }) {
   const visible = items.filter((item) => filter === 'all' || item.category === filter);
 
   return (
-    <section className="trv-card" aria-labelledby="trv-timeline-title">
+    <section className="trv-card trv-timeline-card" data-compact={compact || undefined} aria-labelledby="trv-timeline-title">
       <header className="trv-card-heading">
         <h2 id="trv-timeline-title">{t('tripView.timeline.title')}</h2>
         <div className="trv-chips" role="group" aria-label={t('tripView.timeline.title')}>

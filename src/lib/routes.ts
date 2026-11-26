@@ -5,6 +5,7 @@ export const APP_ROUTES = {
   dashboard: DASHBOARD_BASE,
   dispatch: `${DASHBOARD_BASE}/dispatch`,
   dispatchNew: `${DASHBOARD_BASE}/dispatch/new`,
+  dispatchRegister: (kind: 'driver' | 'operator') => `${DASHBOARD_BASE}/dispatch/register/${kind}`,
   metrics: `${DASHBOARD_BASE}/metrics`,
   mobileDemo: `${DASHBOARD_BASE}/mobile-demo`,
   operator: `${DASHBOARD_BASE}/operator`,

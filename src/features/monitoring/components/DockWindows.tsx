@@ -11,9 +11,11 @@ const span = DAY_END - DAY_START;
 const position = (minute: number) => `${Math.min(100, Math.max(0, ((minute - DAY_START) / span) * 100))}%`;
 
 /** Agenda de docas do dia por recebedor, com a linha do "agora". */
-export function DockWindows({ onSelect }: { onSelect: (tripId: string) => void }) {
+export function DockWindows({ onSelect, onlyTripId }: { onSelect: (tripId: string) => void; onlyTripId?: string }) {
   const { t, i18n } = useTranslation();
-  const { trips, calls, simMinutes } = useOps();
+  const { trips: allTrips, calls: allCalls, simMinutes } = useOps();
+  const trips = onlyTripId ? allTrips.filter((trip) => trip.id === onlyTripId) : allTrips;
+  const calls = onlyTripId ? allCalls.filter((call) => call.tripId === onlyTripId) : allCalls;
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);

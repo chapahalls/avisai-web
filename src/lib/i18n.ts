@@ -9,6 +9,7 @@ import { monitoringPt, monitoringEn } from '../assets/locales/monitoring';
 import { analyticsPt, analyticsEn } from '../assets/locales/analytics';
 import { tripViewPt, tripViewEn } from '../assets/locales/tripView';
 import { mobileWebPt, mobileWebEn } from '../assets/locales/mobile-web';
+import { driverAppPt, driverAppEn } from '../assets/locales/driver-app';
 
 /** Idioma salvo pelo visitante; sem escolha, o padrão é pt-BR. */
 const LANGUAGE_KEY = 'rodar.language';
@@ -22,7 +23,7 @@ const savedLanguage = (() => {
 })();
 
 void i18n.use(initReactI18next).init({
-  resources: { 'pt-BR': { translation: { ...ptBR, dispatch: dispatchPt, backendMetrics: backendMetricsPt, home: homePt, monitoring: monitoringPt, analytics: analyticsPt, tripView: tripViewPt, mobileWeb: mobileWebPt } }, en: { translation: { ...en, dispatch: dispatchEn, backendMetrics: backendMetricsEn, home: homeEn, monitoring: monitoringEn, analytics: analyticsEn, tripView: tripViewEn, mobileWeb: mobileWebEn } } },
+  resources: { 'pt-BR': { translation: { ...ptBR, dispatch: dispatchPt, backendMetrics: backendMetricsPt, home: homePt, monitoring: monitoringPt, analytics: analyticsPt, tripView: tripViewPt, mobileWeb: mobileWebPt, driverApp: driverAppPt } }, en: { translation: { ...en, dispatch: dispatchEn, backendMetrics: backendMetricsEn, home: homeEn, monitoring: monitoringEn, analytics: analyticsEn, tripView: tripViewEn, mobileWeb: mobileWebEn, driverApp: driverAppEn } } },
   lng: savedLanguage ?? 'pt-BR',
   supportedLngs: ['pt-BR', 'en'],
   fallbackLng: 'pt-BR',

@@ -66,6 +66,7 @@
 .cco-logout:hover { background: var(--color-ink-800); color: var(--color-ink-50); }
 .cco-logout > span { display: none; }
 .cco-main { width: 100%; min-width: 0; flex: 1; padding: 20px; }
+.cco-main-dashboard { container: monitoring / inline-size; }
 .cco-main > :not(.cco-dashboard) { margin-bottom: 20px; }
 .cco-dashboard { display: grid; gap: 18px; }
 .cco-page-heading, .cco-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -101,9 +102,10 @@
 }
 
 @media (min-width: 1101px) {
+  .cco-topbar-actions { flex-shrink: 0; }
   .cco-shell-dashboard { display: flex; height: 100dvh; min-height: 0; flex-direction: column; overflow: hidden; }
   .cco-shell-dashboard > .cco-topbar { flex: 0 0 auto; }
-  .cco-shell-dashboard > .cco-main-dashboard { display: flex; min-height: 0; overflow: hidden; }
+  .cco-shell-dashboard > .cco-main-dashboard { display: flex; min-height: 0; overflow: auto; }
   .cco-main-dashboard > .mon { flex: 1; }
 }
 

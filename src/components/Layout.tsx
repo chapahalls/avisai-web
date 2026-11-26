@@ -19,7 +19,7 @@ const links = [
   { to: APP_ROUTES.mobileDemo, key: 'nav.mobileDemo', icon: 'mobile' },
 ] as const;
 
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
+const initials = (name: string) => name.split(/\s+/).map((part) => part.replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
 
 export function Layout() {
   const { t, i18n } = useTranslation();
@@ -107,7 +107,7 @@ export function Layout() {
           <button type="button" onClick={logout} className="cco-logout" title={t('auth.logout')} aria-label={t('auth.logout')}><Icon name="logout" className="h-4 w-4" /><span>{t('auth.logout')}</span></button>
         </div>
       </header>
-      <main id="main-content" tabIndex={-1} className={`cco-main${isDashboard ? ' cco-main-dashboard' : ''}`}>{!isDashboard && <ConnectionBanner />}<Outlet /></main>
+      <main id="main-content" tabIndex={-1} className={`cco-main${isDashboard ? ' cco-main-dashboard' : ''}`}>{!isDashboard && <ConnectionBanner quietWhenHealthy={location.pathname.startsWith(APP_ROUTES.dispatch) || location.pathname === APP_ROUTES.mobileDemo || location.pathname.startsWith(`${APP_ROUTES.dashboard}/trips/`)} />}<Outlet /></main>
     </div>
   );
 }

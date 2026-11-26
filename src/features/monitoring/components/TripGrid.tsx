@@ -10,10 +10,12 @@ type Filter = (typeof FILTERS)[number];
 const PAGE_SIZE = 8;
 
 /** Grade de viagens com filtros e busca; clicar seleciona o veículo no painel. */
-export function TripGrid({ selectedTripId, onSelect }: { selectedTripId: string | null; onSelect: (tripId: string) => void }) {
+export function TripGrid({ selectedTripId, onSelect, onlyTripId }: { selectedTripId: string | null; onSelect: (tripId: string) => void; onlyTripId?: string }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
-  const { trips, tasks, simMinutes } = useOps();
+  const { trips: allTrips, tasks: allTasks, simMinutes } = useOps();
+  const trips = onlyTripId ? allTrips.filter((trip) => trip.id === onlyTripId) : allTrips;
+  const tasks = onlyTripId ? allTasks.filter((task) => task.tripId === onlyTripId) : allTasks;
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);

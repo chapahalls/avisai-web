@@ -56,8 +56,8 @@ interface MapResources {
 }
 
 const demoRoutePoints = DEMO_RECEIVERS.flatMap((receiver) => getMockRoadRoute(receiver.id).points);
-function fleetPoints(trips: Trip[], receivers: ReturnType<typeof useReceivers>, mode: ReturnType<typeof useMode>) {
-  return mode === 'demo' ? demoRoutePoints : [
+function fleetPoints(trips: Trip[], receivers: ReturnType<typeof useReceivers>, mode: ReturnType<typeof useMode>, scoped = false) {
+  return mode === 'demo' && !scoped ? demoRoutePoints : [
     ...trips.flatMap((trip) => getTripRoute(trip).points),
     ...trips.map((trip) => trip.origin), ...receivers.map((receiver) => receiver.position),
     ...trips.filter((trip) => trip.positionKnown !== false).map((trip) => trip.position),
@@ -74,16 +74,18 @@ function fitRouteBounds(map: GoogleMap, points: readonly LatLng[]) {
 // Arte vetorial própria: o rótulo mantém a orientação; somente o veículo gira na via.
 const truckSvg = '<svg viewBox="0 0 24 36" fill="none" aria-hidden="true"><path d="m12 1 5 5H7l5-5Z" fill="currentColor"/><rect x="4" y="10" width="16" height="23" rx="3" fill="currentColor"/><rect x="6" y="7" width="12" height="11" rx="3" fill="currentColor"/><path d="M8 11h8M8 21h8M8 26h8" stroke="var(--color-ink-950)" stroke-width="2"/><path d="M3 13v6M21 13v6M3 28v5M21 28v5" stroke="var(--color-ink-50)" stroke-width="2" stroke-linecap="round"/></svg>';
 
-function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
-  trips: Trip[]; selected?: Trip; onSelect: (vehicleId: string) => void; following: boolean; fitRequest: number;
+function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
+  trips: Trip[]; selected?: Trip; onSelect: (vehicleId: string) => void; following: boolean; fitRequest: number; tripId?: string;
 }) {
   const { t, i18n } = useTranslation();
   const theme = useTheme((state) => state.theme);
-  const allTrips = useOps((state) => state.trips);
+  const fleetTrips = useOps((state) => state.trips);
+  const allTrips = tripId ? fleetTrips.filter((trip) => trip.id === tripId) : fleetTrips;
   const mode = useMode();
-  const receivers = useReceivers();
-  const allRoutePoints = fleetPoints(allTrips, receivers, mode);
-  const routeSignature = mode === 'api' ? allTrips.map((trip) => `${trip.id}:${JSON.stringify(trip.routePoints)}`).join('|') : 'demo';
+  const allReceivers = useReceivers();
+  const receivers = tripId ? allReceivers.filter((receiver) => allTrips.some((trip) => trip.receiverId === receiver.id)) : allReceivers;
+  const allRoutePoints = fleetPoints(allTrips, receivers, mode, Boolean(tripId));
+  const routeSignature = mode === 'api' || tripId ? allTrips.map((trip) => `${trip.id}:${JSON.stringify(trip.routePoints)}`).join('|') : 'demo';
   const running = useOps((state) => state.running);
   const container = useRef<HTMLDivElement>(null);
   const resources = useRef<MapResources | undefined>(undefined);
@@ -310,7 +312,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
   const covered = status !== 'ready';
   return (
     <div className="tracking-map-stage">
-      {covered && <LocalRouteMap trips={trips} selected={selected} onSelect={onSelect} />}
+      {covered && <LocalRouteMap trips={trips} receivers={receivers} selected={selected} onSelect={onSelect} scoped={Boolean(tripId)} />}
       <div ref={container} className="tracking-google-map" role="region" aria-label={t(mode === 'api' ? 'api.trackingSubtitle' : 'fleet.mapDescription')} inert={covered} aria-hidden={covered} />
       <div className="tracking-map-label"><span className="tracking-live-dot" /><span>{t(mode === 'api' ? 'api.region' : 'tracking.region')}</span><span className="tracking-map-source">{status === 'ready' ? 'Google Maps' : t('tracking.localMap')}</span></div>
       {covered && (
@@ -324,11 +326,10 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
   );
 }
 
-function LocalRouteMap({ trips, selected, onSelect }: { trips: Trip[]; selected?: Trip; onSelect: (vehicleId: string) => void }) {
+function LocalRouteMap({ trips, receivers, selected, onSelect, scoped }: { trips: Trip[]; receivers: ReturnType<typeof useReceivers>; selected?: Trip; onSelect: (vehicleId: string) => void; scoped: boolean }) {
   const { t } = useTranslation();
   const mode = useMode();
-  const receivers = useReceivers();
-  const allRoutePoints = fleetPoints(trips, receivers, mode);
+  const allRoutePoints = fleetPoints(trips, receivers, mode, scoped);
   const minLng = Math.min(...allRoutePoints.map((point) => point.lng)) - 0.015;
   const maxLng = Math.max(...allRoutePoints.map((point) => point.lng)) + 0.015;
   const minLat = Math.min(...allRoutePoints.map((point) => point.lat)) - 0.02;
@@ -428,7 +429,7 @@ export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
       <div className="tracking-workspace-header">
         <div className="flex min-w-0 items-center gap-3"><Icon name="truck" className="h-5 w-5 text-brand-500" /><div><h2>{t(tripId ? 'fleet.routeTitle' : embedded ? 'monitoring.map.title' : 'tracking.title')}</h2><p>{t(mode === 'api' ? 'api.trackingSubtitle' : 'tracking.subtitle')}</p></div></div>
         <div className="tracking-tools">
-          <button type="button" onClick={() => { setFilter('all'); setQuery(''); setFollowing(false); setFitRequest((value) => value + 1); }} className="tracking-tool-button"><span aria-hidden="true">⌖</span>{t('tracking.fitFleet')}</button>
+          <button type="button" onClick={() => { setFilter('all'); setQuery(''); setFollowing(false); setFitRequest((value) => value + 1); }} className="tracking-tool-button"><span aria-hidden="true">⌖</span>{t(tripId ? 'tracking.fitRoute' : 'tracking.fitFleet')}</button>
           <button type="button" disabled={!selected || selected.positionKnown === false} aria-pressed={following && !!selected} onClick={() => setFollowing((value) => !value)} className="tracking-tool-button"><span aria-hidden="true">◎</span>{t('tracking.follow')}</button>
         </div>
       </div>
@@ -453,7 +454,7 @@ export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
           <p className="tracking-list-footer">{t('tracking.fleetHint')}</p>
         </aside>}
         <div className="tracking-map-column">
-          <RoadMap trips={visibleTrips} selected={selected} onSelect={selectTruck} following={following && !!selected} fitRequest={fitRequest} />
+          <RoadMap trips={visibleTrips} selected={selected} onSelect={selectTruck} following={following && !!selected} fitRequest={fitRequest} tripId={tripId} />
           {(!embedded || selected) && <div className="tracking-route-strip">
             <div><span>{selected?.plate ?? t('tracking.entireFleet')}</span><strong>{selected?.backend ? `${selected.backend.originName} → ${selected.backend.destinationName}` : selected ? t('tracking.routeDirection', { city: cities[selected.receiverId] }) : t(mode === 'api' ? 'api.region' : 'tracking.region')}</strong></div>
             <div><span>{t('tracking.distanceLeft')}</span><strong>{typeof distance === 'number' ? t('tracking.km', { value: distance.toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) }) : '—'}</strong></div>

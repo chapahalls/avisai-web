@@ -11,6 +11,7 @@ const MetricsPage = lazy(() => import('../pages/MetricsPage').then((m) => ({ def
 const TripPage = lazy(() => import('../pages/TripPage').then((m) => ({ default: m.TripPage })));
 const DispatchPage = lazy(() => import('../pages/DispatchPage').then((m) => ({ default: m.DispatchPage })));
 const DispatchNewPage = lazy(() => import('../pages/DispatchNewPage').then((m) => ({ default: m.DispatchNewPage })));
+const DispatchRegisterPage = lazy(() => import('../pages/DispatchRegisterPage').then((m) => ({ default: m.DispatchRegisterPage })));
 const OperatorPage = lazy(() => import('../pages/OperatorPage').then((m) => ({ default: m.OperatorPage })));
 const MobileDemoAppPage = lazy(() => import('../pages/MobileDemoAppPage').then((m) => ({ default: m.MobileDemoAppPage })));
 const MobileWebDemoPage = lazy(() => import('../pages/MobileWebDemoPage').then((m) => ({ default: m.MobileWebDemoPage })));
@@ -54,6 +55,7 @@ export function AppRouter() {
             <Route path="calls" element={<Navigate to={`${APP_ROUTES.metrics}?tab=calls`} replace />} />
             <Route path="dispatch" element={<Page><DispatchPage /></Page>} />
             <Route path="dispatch/new" element={<Page><DispatchNewPage /></Page>} />
+            <Route path="dispatch/register/:kind" element={<Page><DispatchRegisterPage /></Page>} />
             <Route path="operator" element={<Page><OperatorPage /></Page>} />
             <Route path="mobile-demo" element={<Page><MobileDemoAppPage /></Page>} />
             <Route path="trips/:id" element={<Page><TripPage /></Page>} />

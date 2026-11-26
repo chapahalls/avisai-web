@@ -1,4 +1,5 @@
 import type { BackendDriver, BackendNewRoute, BackendUserProfile } from '../../services/api/types.js';
+import type { DemoDriver } from '../../services/mock/registry.js';
 import type { Trip } from '../../types/ops.js';
 
 export interface RouteDraft {
@@ -36,6 +37,14 @@ export function registeredDrivers(profiles: BackendUserProfile[], drivers: Backe
   }
   return result.sort((left, right) => left.profile.name.localeCompare(right.profile.name, 'pt-BR')
     || left.profile.email.localeCompare(right.profile.email, 'pt-BR'));
+}
+
+/** Demo: o cadastro local ganha a mesma forma do par perfil + motorista da API. */
+export function demoRegisteredDrivers(drivers: DemoDriver[]): RegisteredDriver[] {
+  return drivers.map((driver) => ({
+    profile: { id: `demo-driver-${driver.id}`, email: driver.email, role: 'driver' as const, name: driver.name, driverId: driver.id, tripId: null },
+    driver: { id: driver.id, empresa_id: driver.companyId, nome: driver.name, telefone_e164: driver.phone, email: driver.email },
+  }));
 }
 
 export function routeInput(draft: RouteDraft, driverId: number): BackendNewRoute {
@@ -79,41 +88,64 @@ export function routeDispatchState(trip: Trip): Exclude<DispatchState, 'availabl
   return 'onRoute';
 }
 
+/** Status de rota exibido e filtrável: o da API ou, na Demo, a fase simulada traduzida para o mesmo vocabulário. */
+export type RouteStatusKey = 'publicada' | 'planejada' | 'na_origem' | 'em_transito' | 'aproximando' | 'no_destino';
+export type RowStatus = RouteStatusKey | 'available';
+export const API_ROUTE_STATUSES: RouteStatusKey[] = ['publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando', 'no_destino'];
+const DEMO_PHASE_STATUS: Record<Trip['phase'], RouteStatusKey | null> = { driving: 'em_transito', approaching: 'aproximando', waiting: 'no_destino', unloaded: null };
+
 export interface DispatchRow {
   key: string;
   state: DispatchState;
+  status: RowStatus;
   driver?: RegisteredDriver;
   trip?: Trip;
 }
 
 const stateOrder: Record<DispatchState, number> = { onRoute: 0, atReceiver: 1, editable: 2, unassigned: 3, available: 4 };
 
+const apiStatus = (trip: Trip): RowStatus => (API_ROUTE_STATUSES as string[]).includes(trip.backend?.status ?? '') ? trip.backend!.status as RouteStatusKey : 'available';
+
 /** Uma linha por motorista cadastrado (com a viagem ativa, se houver) e uma por rota sem motorista. */
 export function dispatchRows(drivers: RegisteredDriver[], trips: Trip[]): DispatchRow[] {
   const apiTrips = trips.filter((trip) => trip.source === 'api' && routeDispatchState(trip) !== null);
   const rows: DispatchRow[] = drivers.map((driver) => {
     const trip = apiTrips.find((item) => item.backend?.driverId === driver.driver.id);
-    return { key: `driver-${driver.driver.id}`, driver, trip, state: trip ? routeDispatchState(trip)! : 'available' };
+    return { key: `driver-${driver.driver.id}`, driver, trip, state: trip ? routeDispatchState(trip)! : 'available', status: trip ? apiStatus(trip) : 'available' };
   });
   apiTrips.filter((trip) => routeDispatchState(trip) === 'unassigned').forEach((trip) => {
-    rows.push({ key: `route-${trip.id}`, trip, state: 'unassigned' });
+    rows.push({ key: `route-${trip.id}`, trip, state: 'unassigned', status: apiStatus(trip) });
   });
   return rows.sort((a, b) => stateOrder[a.state] - stateOrder[b.state]
     || (a.driver?.profile.name ?? '').localeCompare(b.driver?.profile.name ?? '', 'pt-BR'));
 }
 
-export type DispatchFilter = 'all' | 'editable' | 'onRoute' | 'atReceiver' | 'available';
+/** Demo: a viagem simulada do motorista (pelo nome) define a situação; descarregada = disponível. */
+export function demoDispatchRows(drivers: RegisteredDriver[], trips: Trip[]): DispatchRow[] {
+  const rows: DispatchRow[] = drivers.map((driver) => {
+    const trip = trips.find((item) => item.source !== 'api' && item.driver === driver.profile.name && item.phase !== 'unloaded');
+    const state: DispatchState = !trip ? 'available' : trip.phase === 'waiting' ? 'atReceiver' : 'onRoute';
+    return { key: `driver-${driver.driver.id}`, driver, trip, state, status: trip ? DEMO_PHASE_STATUS[trip.phase] ?? 'available' : 'available' };
+  });
+  return rows.sort((a, b) => stateOrder[a.state] - stateOrder[b.state]
+    || (a.driver?.profile.name ?? '').localeCompare(b.driver?.profile.name ?? '', 'pt-BR'));
+}
+
+/** Cards de filtro, iguais na Demo e na API: todos, rota editável, um por status de rota e disponível. */
+export type DispatchFilter = 'all' | 'editable' | RowStatus;
+export const DISPATCH_FILTERS: DispatchFilter[] = ['all', 'editable', ...API_ROUTE_STATUSES, 'available'];
 
 export function matchesDispatchFilter(row: DispatchRow, filter: DispatchFilter) {
   if (filter === 'all') return true;
   if (filter === 'editable') return row.state === 'editable' || row.state === 'unassigned';
-  return row.state === filter;
+  return row.status === filter;
 }
 
-export function dispatchCounts(rows: DispatchRow[]): Record<DispatchFilter, number> {
-  const filters: DispatchFilter[] = ['all', 'editable', 'onRoute', 'atReceiver', 'available'];
-  return Object.fromEntries(filters.map((filter) => [filter, rows.filter((row) => matchesDispatchFilter(row, filter)).length])) as Record<DispatchFilter, number>;
+export function dispatchCounts(rows: DispatchRow[], filters: DispatchFilter[]): Partial<Record<DispatchFilter, number>> {
+  return Object.fromEntries(filters.map((filter) => [filter, rows.filter((row) => matchesDispatchFilter(row, filter)).length]));
 }
+
+export const DISPATCH_PAGE_SIZE = 15;
 
 /* -------------------------------------------------------------- cadastro (mockup 04) */
 

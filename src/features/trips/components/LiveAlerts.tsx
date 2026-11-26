@@ -44,7 +44,7 @@ function playCriticalTone() {
   }
 }
 
-export function LiveAlerts({ onAlertSelect }: { onAlertSelect?: (tripId: string) => void }) {
+export function LiveAlerts({ onAlertSelect, onlyTripId }: { onAlertSelect?: (tripId: string) => void; onlyTripId?: string }) {
   const { t } = useTranslation();
   const feed = useOps((state) => state.feed);
   const known = useRef(new Set<string>());
@@ -62,6 +62,7 @@ export function LiveAlerts({ onAlertSelect }: { onAlertSelect?: (tripId: string)
     const alertToasts = incoming.flatMap((event) => {
       const rawType = typeof event.payload.tipo === 'string' ? event.payload.tipo : null;
       const priority = priorityFrom(event.payload.prioridade);
+      if (onlyTripId && event.tripId !== onlyTripId) return [];
       if (!rawType && event.payload.backendType !== 'escalada_supervisor') return [];
       const title = rawType
         ? t(`alerts.types.${rawType}`, { defaultValue: rawType })
@@ -80,7 +81,7 @@ export function LiveAlerts({ onAlertSelect }: { onAlertSelect?: (tripId: string)
       setToasts((current) => current.filter((toast) => !alertToasts.some((created) => created.id === toast.id)));
     }, 12_000);
     return () => window.clearTimeout(timer);
-  }, [feed, t]);
+  }, [feed, t, onlyTripId]);
 
   if (!toasts.length) return null;
   return (

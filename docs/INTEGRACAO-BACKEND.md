@@ -10,11 +10,21 @@ Os contratos abaixo foram conferidos no código de `rodar-backend/backend/app/ap
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Preencha a variável na `.env` local e reinicie o Vite. A URL aponta para a raiz do backend: não acrescentar `/api` à URL base; somente alguns endpoints usam esse prefixo. A variável vazia seleciona Demo. Não registre credenciais ou valores de chaves no Git.
+Preencha a variável na `.env` local e reinicie o Vite. A URL aponta para a raiz do backend: não acrescentar `/api` à URL base; somente alguns endpoints usam esse prefixo. O painel sempre inicia na Demo, inclusive após sair; com a variável preenchida, **Conectar à API** (login ou barra superior) é a escolha explícita do modo ao vivo. Vazia, só a Demo fica disponível. Não registre credenciais ou valores de chaves no Git.
 
-Com URL configurada, o painel inicia em carregamento e busca o estado da API. Uma falha mostra erro e a ação **Tentar novamente**; não inicia a simulação automaticamente. **Usar demo** é uma escolha explícita do operador. Enquanto o SSE reconecta, o último estado recebido deve ser identificado como desatualizado, sem inventar novos eventos ou avançar o GPS.
+Ao conectar à API, o painel entra em carregamento e busca o estado do backend. Uma falha mostra erro e a ação **Tentar novamente**; não inicia a simulação automaticamente. **Usar demo** é uma escolha explícita do operador. Enquanto o SSE reconecta, o último estado recebido deve ser identificado como desatualizado, sem inventar novos eventos ou avançar o GPS.
 
 O backend aceita CORS só das origens em `CORS_ORIGENS`. `/auth/sso` é um login sem senha que devolve um JWT assinado; com `AUTH_OBRIGATORIA=true` (padrão), toda escrita exige esse token, as ações da central exigem o papel `cco` e o motorista só age na própria rota. O endpoint de LLM tem configuração própria de segredo, que não pertence ao frontend. Antes de produção ainda faltam login de verdade, 2FA para a central, leituras protegidas e separação por empresa.
+
+## Tour mobile e voz LiveKit
+
+Em `/dashboard/mobile-demo`, o tour da Demo integrada percorre 18 etapas: acesso, conversa para retirada, aproximação, chegada, fila, escalonamento, ação do CCO e descarga. O monitoramento embutido mostra somente a viagem do tour, sem modificar os demais dados da Demo. As ações atualizam a simulação local do painel, não as rotas da API. O tour pausa a simulação e ajusta temporariamente a resposta automática do CCO; ao terminar ou ser fechado, restaura esses controles. Reexecutá-lo reinicia a viagem demonstrada.
+
+O botão de conexão ao lado do seletor de visualização é uma integração opcional separada do modo API do painel. Com `VITE_API_BASE_URL` configurada, consulta `GET /livekit/config`, público, que retorna `configurado`, `url` e `agente`, sem chave ou segredo. Ao conectar, um cliente independente faz `POST /auth/sso` sem e-mail e usa o JWT obtido em `POST /livekit/token` com corpo `{}`; o backend retorna URL, sala, identidade e token temporário (60 minutos por padrão). Com autenticação obrigatória, esse endpoint exige login. O navegador conecta pelo `livekit-client`, solicita o microfone, reproduz áudio remoto e apresenta transcrições recebidas. Os POSTs não são repetidos automaticamente.
+
+No backend, configure `LIVEKIT_URL`, `LIVEKIT_API_KEY` e `LIVEKIT_API_SECRET`; `LIVEKIT_AGENT_NAME` é opcional e solicita o despacho do agente nomeado. Uma sala conectada não comprova que exista um agente disponível: o botão distingue a espera da presença de um participante do tipo agente. As credenciais permanecem no backend; o frontend recebe apenas o token. O usuário precisa liberar o microfone no navegador. O botão informa indisponibilidade, configuração ausente ou erro de autenticação, token, conexão e microfone.
+
+Use uma origem permitida em `CORS_ORIGENS` (no ambiente local informado, `http://localhost:5173`; as portas 5174 e 5175 não estão liberadas). A configuração estar ativa não garante microfone nem agente em execução. Configurar a voz ao vivo não transforma o tour nem a operação da Demo em dados reais.
 
 ## APIs integradas no painel
 
@@ -37,6 +47,8 @@ Os caminhos de frontend indicam as features consumidoras. IDs nas URLs são os I
 | Perfis de demonstração | Login e modelo mobile | `GET /usuarios`, alias `GET /api/users` | API, cadastro persistido | Filtro opcional `role=cco` ou `role=driver`. Retorna ID estável, nome, e-mail, papel, motorista e viagem atual; sem token. |
 | Login de demonstração | `src/features/auth` | `POST /auth/sso` | API com identidade MOCK | JSON `{"email":"..."}` de um perfil cadastrado; 404 para desconhecido. Token fake, papel, nome, `driverId` e `tripId`. Não é autorização real. |
 | Usuários motoristas cadastrados | `src/features/dispatch` | `GET /usuarios?role=driver`, `GET /motoristas` | API, leitura | O painel cruza o perfil persistido com `driverId` e o cadastro operacional. Motorista sem perfil correspondente não entra na seleção. |
+| Cadastrar motorista | `src/features/dispatch`, página em etapas `/dashboard/dispatch/register/driver` | `POST /motoristas` | API, ação do operador (papel `cco`) | JSON `{"nome","email","telefone_e164"}`; o painel exige e-mail para que o perfil `driver` seja criado na mesma transação e o motorista entre na lista. 409 = e-mail já cadastrado. Sem repetição automática; ao voltar ao despacho, a lista é recarregada. |
+| Cadastrar operador do CCO | `src/features/dispatch`, página em etapas `/dashboard/dispatch/register/operator` | `POST /usuarios` | API, ação do operador (papel `cco`) | JSON `{"nome","email"}`; devolve o perfil `cco` no formato de `GET /usuarios`, que passa a aparecer no login. 409 = e-mail já usado por perfil ou motorista. Sem repetição automática; ao voltar ao despacho, a lista de operadores é recarregada. Na Demo, o mesmo formulário grava no cadastro local. |
 | Publicar rota | `src/features/dispatch` | `POST /rotas` | API, ação do CCO | Origem, destino, recebedor, carga positiva, placa/NF/janela e `motorista_id` de um usuário motorista já cadastrado; caminho linear gerado no backend. |
 | Atribuir motorista | `src/features/dispatch` | `POST /rotas/{rota_id}/atribuir` | API, ação do CCO | JSON `{"motorista_id":1}` somente para item da seleção de usuário persistido; publica `rota_atribuida`. IDs numéricos do backend. |
 | NF-e/CT-e da viagem | `src/features/trips` | `GET /api/documents?tripId={id}` | API com conteúdo MOCK | Metadados `mock:true`, `fileUri:null`; não são arquivos fiscais enviados pelo CCO. |
@@ -97,7 +109,6 @@ Upload/download persiste conteúdo real, mas não registra autor autenticado nem
 | Enviar GPS | — | `POST /rotas/{rota_id}/posicao` | Disponível, não exposta | Pertence ao celular/simulador do backend; o painel não gera posições. |
 | Chegada manual | — | `POST /rotas/{rota_id}/chegada` | Disponível, não exposta | Atalho do backend; o painel acompanha os estados publicados. |
 | Reset de rota | — | `POST /rotas/{rota_id}/reset` | Disponível, não exposta | Remove dados operacionais relacionados; nenhum controle da demo chama esse endpoint. |
-| Cadastrar motorista operacional | — | `POST /motoristas` | Disponível, não exposta | A programação do CCO usa apenas usuários motoristas já cadastrados e vinculados; criação/provisionamento fica fora desta tela. |
 | Iniciar ligação ao recebedor | — | `POST /rotas/{rota_id}/ligar-recebedor` | Disponível, não exposta | Pode acionar serviços externos do backend; o painel apenas lê resultados. |
 | Detalhe da ligação e cliente do recebedor | — | `GET /ligacoes/{ligacao_id}`, `GET /ligacoes/atual/recebedor` | Disponíveis, não expostas | Não usados pelo CCO; respostas podem conter dados de sessão para o cliente de voz. |
 | Iniciar chamada do agente | — | `POST /cco/rotas/{rota_id}/ligar` | Disponível sem botão dedicado | A mesma cascata é invocada pela ferramenta `ligar` do LLM e quando a mensagem encontra motorista offline. |
@@ -122,8 +133,8 @@ Upload/download persiste conteúdo real, mas não registra autor autenticado nem
 
 ## Critérios de validação
 
-1. URL vazia inicia a Demo e mantém seus resultados reproduzíveis.
-2. URL configurada carrega a operação da API, sem somar caminhões ou eventos da demo. Backend indisponível mostra erro, retry e entrada explícita na Demo.
+1. O painel inicia na Demo, com ou sem URL, e mantém seus resultados reproduzíveis.
+2. Ao conectar à API, a operação vem do backend, sem somar caminhões ou eventos da demo. Backend indisponível mostra erro, retry e entrada explícita na Demo.
 3. Estado sem GPS não ganha coordenadas inferidas; trajeto linear do seed permanece identificado como fornecido pela API.
 4. Tasks, chamadas, eventos e estadias atualizam pelo SSE; uma queda identifica dados desatualizados e a reconexão refaz as leituras.
 5. **Assumir** e **Confirmar descarga** enviam somente os POSTs documentados e apresentam a resposta/erro do servidor.

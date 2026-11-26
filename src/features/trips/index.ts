@@ -4,3 +4,4 @@ export { DriverMessages } from './components/DriverMessages';
 export { LiveAlerts } from './components/LiveAlerts';
 export { TripDetails } from './components/TripDetails';
 export { TripDossier } from './components/TripDossier';
+export { TripTimeline } from './components/TripTimeline';

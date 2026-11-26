@@ -25,7 +25,7 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
       <div className="trv-card trv-gone">
         <h1>{t(connection.mode === 'api' ? connection.status === 'connecting' ? 'api.connection.loading' : 'api.trip.unavailable' : 'trip.gone')}</h1>
         <p>{t(connection.mode === 'api' ? 'api.trip.unavailableHint' : 'trip.goneHint')}</p>
-        <Link className="trv-button" data-variant="primary" to={APP_ROUTES.dashboard}>{t('trip.back')}</Link>
+        <Link className="trv-button" data-variant="primary" to={APP_ROUTES.dispatch}>{t('tripView.back')}</Link>
       </div>
     );
   }
@@ -53,8 +53,9 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
   return (
     <div className="trv">
       <header className="trv-header">
-        <div>
-          <Link to={APP_ROUTES.dashboard} className="trv-back">← {t('tripView.back')}</Link>
+        {/* Voltar, motorista, placa e status na mesma linha. */}
+        <div className="trv-title">
+          <Link to={APP_ROUTES.dispatch} className="trv-back">← {t('tripView.back')}</Link>
           <h1>{driverName} <span className="trv-plate">{trip.plate}</span> <span className="trv-pill" data-tone={tone}>{waitMin !== undefined && trip.phase === 'waiting' ? t('tripView.statusWaiting', { status, time: hhmm(waitMin, locale) }) : status}</span></h1>
         </div>
         {isApi && trip.phase === 'waiting' && <div className="trv-actions">

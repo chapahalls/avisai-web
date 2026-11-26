@@ -8,11 +8,13 @@ import { hhmm } from '../../../utils/format';
 import { deriveAlerts } from '../model';
 
 /** Fila de alertas por severidade; "Assumir" reconhece a Task (Demo ou API). */
-export function AlertQueue({ expanded, onToggle, selectedTripId, onSelect }: { expanded: boolean; onToggle: () => void; selectedTripId: string | null; onSelect: (tripId: string) => void }) {
+export function AlertQueue({ expanded, onToggle, selectedTripId, onSelect, onlyTripId }: { expanded: boolean; onToggle: () => void; selectedTripId: string | null; onSelect: (tripId: string) => void; onlyTripId?: string }) {
   const { t, i18n } = useTranslation();
   const connection = useConnection();
   const isApi = connection.mode === 'api';
-  const { trips, tasks, simMinutes, acknowledge, tripMeta } = useOps();
+  const { trips: allTrips, tasks: allTasks, simMinutes, acknowledge, tripMeta } = useOps();
+  const trips = onlyTripId ? allTrips.filter((trip) => trip.id === onlyTripId) : allTrips;
+  const tasks = onlyTripId ? allTasks.filter((task) => task.tripId === onlyTripId) : allTasks;
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const alerts = deriveAlerts({ trips, tasks, simMinutes });
   const critical = alerts.filter((alert) => alert.severity === 'critical').length;

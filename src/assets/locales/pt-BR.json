@@ -31,7 +31,6 @@
   },
   "mobileDemo": {
     "title": "Demo do app mobile",
-    "description": "Acompanhe as ações do motorista no monitoramento da frota em tempo real.",
     "viewLabel": "Layout da demonstração",
     "views": {
       "split": "Lado a lado",
@@ -53,19 +52,25 @@
       "doneBody": "As ações do motorista e do CCO ficaram registradas na demonstração. Você pode continuar explorando o app e o dashboard.",
       "close": "Fechar tutorial",
       "steps": {
-        "login": { "title": "Acesso do motorista", "body": "O app abre com um acesso simulado, sem pedir senha. O tour entra no perfil para começar a operação." },
-        "start": { "title": "Início da viagem", "body": "O motorista confirma que iniciou a rota. Esse registro atualiza o andamento da viagem no dashboard." },
-        "approach": { "title": "Aproximação do destino", "body": "Ao se aproximar, o app registra a etapa e tenta avisar o recebedor antes da chegada." },
-        "arrival": { "title": "Chegada registrada", "body": "A confirmação cria a Task de acompanhamento e inicia a contagem do tempo de espera." },
-        "queue": { "title": "Fila de descarga", "body": "Esta área mostra a espera no pátio, o prazo combinado e as atualizações para o motorista." },
-        "push": { "title": "Aviso no app", "body": "A primeira atualização aparece como push para informar o motorista sobre a Task criada." },
+        "login": { "title": "Acesso do motorista", "body": "O app abre com um acesso simulado, sem senha. O tour entra com o motorista da viagem e o AvisAI já cumprimenta no balão." },
+        "orb": { "title": "AvisAI, o copiloto de voz", "body": "A bola verde é o AvisAI. Ela flutua sobre qualquer tela e pode ser arrastada. O tour toca nela para falar." },
+        "sayStart": { "title": "Conversa: início da viagem", "body": "O motorista diz “Peguei a carga, caminhão ok”. O AvisAI ouve, confirma a retirada e inicia a viagem." },
+        "reply": { "title": "Resposta do agente", "body": "A resposta aparece no balão ao lado da bola e é falada no celular. A viagem já aparece no dashboard." },
+        "approach": { "title": "Aproximação do destino", "body": "A 8 km, o AvisAI avisa o recebedor e conta ao motorista a doca confirmada." },
+        "cabin": { "title": "Conversa em movimento", "body": "Com o caminhão andando, o motorista fala sem tocar na tela. O tour abre o AvisAI de novo." },
+        "openCabin": { "title": "Tela cheia", "body": "A conversa em tela cheia mostra a esfera grande e a última fala, para ler de relance." },
+        "sayArrive": { "title": "Conversa: chegada", "body": "Ele diz “Cheguei no recebedor”. O AvisAI faz o check-in, cria a Task no CCO e começa a contar a espera." },
+        "closeCabin": { "title": "De volta ao início", "body": "Ao fechar a conversa, a bola volta a flutuar sobre o app." },
+        "queue": { "title": "Fila de descarga", "body": "Aqui ficam a doca prevista, o tempo parado, a franquia de 5 h e a estadia acumulada." },
+        "push": { "title": "Escalonamento ao CCO", "body": "Os avisos ao CCO avançam em etapas: push imediato, painel e ligação." },
         "panel": { "title": "Acompanhamento no painel", "body": "Se a espera continua, a operação registra uma atualização no painel para o CCO acompanhar." },
-        "call": { "title": "Contato por telefone", "body": "Sem resolução, o fluxo registra uma tentativa de contato e mantém o histórico ligado à viagem." },
-        "escalation": { "title": "Task escalada", "body": "Ao atingir o limite de espera, a Task é escalada e aparece como pendência para o CCO no dashboard." },
-        "acknowledge": { "title": "Ação do CCO", "body": "O tour assume a Task no dashboard. Essa ação real da demo sincroniza o reconhecimento com o app." },
-        "acknowledgeLocal": { "title": "Reconhecimento da Task", "body": "O tour registra o reconhecimento da Task nesta demonstração e atualiza a linha do tempo do app." },
-        "home": { "title": "Resumo da viagem", "body": "Na tela inicial, o motorista acompanha a rota, o status e a linha do tempo dos eventos registrados." },
-        "unload": { "title": "Descarga concluída", "body": "A confirmação encerra a espera e registra a entrega no histórico e nos indicadores da demonstração." }
+        "call": { "title": "Contato por telefone", "body": "Sem resolução, o fluxo registra uma tentativa de ligação ligada à viagem." },
+        "escalation": { "title": "Task escalada", "body": "Passada uma hora, a Task é escalada e o AvisAI avisa o motorista por voz." },
+        "acknowledge": { "title": "Ação do CCO", "body": "O tour assume a Task no dashboard. O AvisAI conta ao motorista que o CCO assumiu o caso." },
+        "acknowledgeLocal": { "title": "CCO assume a Task", "body": "O tour registra que o CCO assumiu. O AvisAI conta ao motorista no balão." },
+        "home": { "title": "Resumo da viagem", "body": "No início, o motorista vê a rota, o status e a jornada de eventos registrados." },
+        "orbUnload": { "title": "Descarga por voz", "body": "Terminada a descarga, o motorista chama o AvisAI de novo." },
+        "sayUnload": { "title": "Conversa: descarga", "body": "Ele diz “Descarreguei”. O AvisAI encerra a estadia, avisa o CCO e a entrega entra nos indicadores." }
       }
     }
   },
@@ -153,6 +158,12 @@
     "replying": "Enviando…",
     "loadError": "Não foi possível carregar os chamados.",
     "replyError": "Não foi possível enviar a resposta.",
+    "message": "Mensagem ao motorista",
+    "demo": {
+      "flatTire": { "subject": "Pneu furado", "description": "O motorista relata pneu furado e pede orientação para seguir até o borracheiro mais próximo." },
+      "gateClosed": { "subject": "Portaria fechada", "description": "O recebedor ainda não abriu a portaria. O motorista pergunta se pode aguardar no pátio externo." },
+      "traffic": { "subject": "Trânsito parado", "description": "Acidente à frente. O agente ainda está coletando a localização para sugerir um desvio." }
+    },
     "status": {
       "coletando": "coletando dados",
       "aguardando_cco": "aguardando resposta",
@@ -212,6 +223,7 @@
     "sending": "Enviando…",
     "connectionRequired": "A conexão com a API precisa estar ativa para enviar a mensagem.",
     "response": "Resposta do motorista",
+    "demoReply": "Entendido, CCO. Sigo conforme orientado.",
     "status": {
       "enviada": "enviada",
       "falada": "falada ao motorista",
@@ -493,6 +505,7 @@
     "mockGps": "GPS simulado",
     "selectTruck": "Selecionar caminhão {{plate}}: {{phase}}",
     "fitFleet": "Ver toda a frota",
+    "fitRoute": "Ver toda a rota",
     "follow": "Seguir caminhão",
     "fleetList": "Frota em operação",
     "vehicleCount": "{{count}} veículos",

@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { apiConfigured, retryConnection, setMode, useConnection, useOps } from '../services/operations';
 
-export function ConnectionBanner() {
+/** `quietWhenHealthy`: some quando a API está conectada e atualizada (ou na Demo); falha, carga e reconexão continuam visíveis. */
+export function ConnectionBanner({ quietWhenHealthy = false }: { quietWhenHealthy?: boolean } = {}) {
   const { t, i18n } = useTranslation();
   const state = useConnection();
   const count = useOps((data) => data.trips.length);
+  if (quietWhenHealthy && (state.mode === 'demo' || (state.status === 'connected' && !state.error && state.lastSyncedAt))) return null;
   if (state.mode === 'demo') {
     return apiConfigured ? (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-input border border-ink-700 bg-ink-900 px-4 py-3 text-xs">

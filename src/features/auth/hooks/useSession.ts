@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getApiClient } from '../../../services/operations';
+import { DEMO_OPERATOR_EMAIL, demoOperatorByEmail, getApiClient, setMode } from '../../../services/operations';
 
 interface Session {
   name: string;
@@ -20,10 +20,14 @@ export const useSession = create<{ session: Session | null; login: (email?: stri
       return;
     }
     await new Promise((r) => setTimeout(r, 600));
-    set({ session: { name: 'Operador CCO', role: 'Torre de controle' } });
+    // Demo: o operador vem do cadastro local (inclui os cadastrados no despacho).
+    const operator = demoOperatorByEmail(email) ?? demoOperatorByEmail(DEMO_OPERATOR_EMAIL);
+    set({ session: { name: operator?.name ?? 'Operador CCO', role: 'Torre de controle' } });
   },
   logout: () => {
     getApiClient()?.setAccessToken(null);
     set({ session: null });
+    // Cada entrada começa na Demo; a API continua a um clique no login.
+    setMode('demo');
   },
 }));

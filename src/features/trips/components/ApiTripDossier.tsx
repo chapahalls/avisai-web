@@ -90,7 +90,7 @@ export function ApiTripDossier({ trip, compact, showCommercialValues = true, moc
         {activeTab === 'communications' && <>
           <p className="text-xs leading-relaxed text-ink-300">{t('api.dossier.communicationsNotice')}</p>
           {trip.backendId && <RouteRequests key={trip.backendId} routeId={trip.backendId} />}
-          {trip.backendId && <DriverMessages routeId={trip.backendId} />}
+          {trip.backendId && <DriverMessages tripId={trip.id} routeId={trip.backendId} />}
           <EventFeed tripId={trip.id} limit={50} />
           <CallLogList tripId={trip.id} />
         </>}

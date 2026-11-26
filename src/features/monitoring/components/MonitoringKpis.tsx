@@ -4,10 +4,12 @@ import { useOps } from '../../../services/operations';
 import { countOperation, deriveAlerts } from '../model';
 
 /** Indicadores operacionais principais do monitoramento. */
-export function MonitoringKpis() {
+export function MonitoringKpis({ onlyTripId }: { onlyTripId?: string } = {}) {
   const { t, i18n } = useTranslation();
-  const trips = useOps((state) => state.trips);
-  const tasks = useOps((state) => state.tasks);
+  const allTrips = useOps((state) => state.trips);
+  const allTasks = useOps((state) => state.tasks);
+  const trips = onlyTripId ? allTrips.filter((trip) => trip.id === onlyTripId) : allTrips;
+  const tasks = onlyTripId ? allTasks.filter((task) => task.tripId === onlyTripId) : allTasks;
   const simMinutes = useOps((state) => state.simMinutes);
   const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const counts = countOperation(trips, simMinutes);

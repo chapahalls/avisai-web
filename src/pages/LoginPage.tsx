@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSession } from '../features/auth';
 import { RodarLogo } from '../components/RodarLogo';
 import { LoginGlobe } from '../features/home';
-import { apiConfigured, getApiClient, setMode, useMode } from '../services/operations';
+import { apiConfigured, DEMO_OPERATOR_EMAIL, getApiClient, setMode, useDemoRegistry, useMode } from '../services/operations';
 import type { BackendUserProfile } from '../services/api/types';
 
 export function LoginPage() {
@@ -13,6 +13,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('cco@avisai.test');
   const [error, setError] = useState(false);
   const mode = useMode();
+  const demoOperators = useDemoRegistry().operators;
   const [profiles, setProfiles] = useState<BackendUserProfile[]>([]);
   const [profilesStatus, setProfilesStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [reload, setReload] = useState(0);
@@ -35,6 +36,11 @@ export function LoginPage() {
     }).catch(() => { if (active) setProfilesStatus('error'); });
     return () => { active = false; controller.abort(); };
   }, [mode, reload]);
+  // Demo: lista os operadores do cadastro local; mantém a escolha se ela ainda existir.
+  useEffect(() => {
+    if (mode === 'api') return;
+    setEmail((previous) => demoOperators.some((operator) => operator.email === previous) ? previous : DEMO_OPERATOR_EMAIL);
+  }, [mode, demoOperators]);
   const canLogin = mode !== 'api' || profilesStatus === 'ready' && profiles.some((profile) => profile.email === email);
   return (
     <div className="grid min-h-screen bg-night-950 bg-[radial-gradient(ellipse_at_20%_0%,_var(--color-ink-800),_var(--color-night-950)_60%)] lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]">
@@ -72,6 +78,14 @@ export function LoginPage() {
             <p>{t('dispatch.login.profilesFailed')}</p>
             <button type="button" onClick={() => setReload((value) => value + 1)} className="mt-2 underline">{t('dispatch.refresh')}</button>
           </div>}
+        </div>}
+        {mode !== 'api' && demoOperators.length > 1 && <div className="mb-4">
+          <label className="block text-xs text-ink-300">{t('dispatch.login.demoProfile')}
+            <select value={email} disabled={loading} onChange={(event) => { setEmail(event.target.value); setError(false); }}
+              className="mt-2 w-full rounded-input border border-ink-700 bg-ink-950 px-3 py-3 text-sm text-ink-50">
+              {demoOperators.map((operator) => <option key={operator.id} value={operator.email}>{operator.name} · {operator.email}</option>)}
+            </select>
+          </label>
         </div>}
         {error && <p role="alert" className="mb-3 text-sm text-alert-500">{t('dispatch.login.failed')}</p>}
         <button type="submit"

@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 rmSync(new URL('../.cache/tests', import.meta.url), { recursive: true, force: true });
 for (const args of [
   ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.test.json'],
-  ['--test', 'tests/domain.test.mjs', 'tests/api-client.test.mjs', 'tests/operations.test.mjs', 'tests/dispatch.test.mjs', 'tests/home.test.mjs', 'tests/monitoring.test.mjs', 'tests/analytics.test.mjs', 'tests/trip-view.test.mjs', 'docs/examples/mobile-client.test.mjs'],
+  ['--test', 'tests/domain.test.mjs', 'tests/api-client.test.mjs', 'tests/operations.test.mjs', 'tests/dispatch.test.mjs', 'tests/home.test.mjs', 'tests/monitoring.test.mjs', 'tests/analytics.test.mjs', 'tests/trip-view.test.mjs', 'tests/demo-conversations.test.mjs', 'tests/live-voice.test.mjs', 'docs/examples/mobile-client.test.mjs'],
 ]) {
   const result = spawnSync(process.execPath, args, { cwd: root, stdio: 'inherit' });
   if (result.error) throw result.error;

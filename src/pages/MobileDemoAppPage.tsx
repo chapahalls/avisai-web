@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DashboardPage } from './DashboardPage';
 import { MobileWebDemoPage } from './MobileWebDemoPage';
+import { LiveVoiceButton } from '../features/driver-app';
 import { useConnection, useMode, useOps } from '../services/operations';
 import { APP_ROUTES } from '../lib/routes';
 import './mobile-demo-app.css';
 
-type WorkspaceView = 'split' | 'mobile' | 'dashboard';
+type WorkspaceView = 'split' | 'mobile';
 
 export function MobileDemoAppPage() {
   const { t } = useTranslation();
@@ -25,29 +26,27 @@ export function MobileDemoAppPage() {
 
   return (
     <section className="mobile-demo-app-page" aria-labelledby="mobile-demo-title">
-      <header className="mobile-demo-heading">
-        <div>
-          <h1 id="mobile-demo-title">{t('mobileDemo.title')}</h1>
-          <p>{t('mobileDemo.description')}</p>
-        </div>
-        {mode === 'demo' && <div className="mobile-demo-view-switch" role="group" aria-label={t('mobileDemo.viewLabel')}>
-          {(['split', 'mobile', 'dashboard'] as const).map((option) => (
-            <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}>
-              {t(`mobileDemo.views.${option}`)}
-            </button>
-          ))}
-        </div>}
-      </header>
+      <h1 id="mobile-demo-title" className="sr-only">{t('mobileDemo.title')}</h1>
 
       {mode === 'api' ? <>
         <p className="mobile-demo-api-note" role="note">{t('mobileDemo.apiNotice')}</p>
         <MobileWebDemoPage />
       </> : <div className="mobile-demo-workspace" data-view={view}>
         <section className="mobile-demo-dashboard-pane" aria-label={t('mobileDemo.dashboardPane')} hidden={view === 'mobile'}>
-          <DashboardPage initialTripId={tripId} />
+          <DashboardPage initialTripId={tripId} onlyTripId={tripId} />
         </section>
-        <section className="mobile-demo-phone-pane" aria-label={t('mobileDemo.mobilePane')} hidden={view === 'dashboard'}>
-          <MobileWebDemoPage embedded integrated />
+        <section className="mobile-demo-phone-pane" aria-label={t('mobileDemo.mobilePane')}>
+          <div className="mobile-demo-controls">
+            <div className="mobile-demo-view-switch" role="group" aria-label={t('mobileDemo.viewLabel')}>
+              {(['split', 'mobile'] as const).map((option) => (
+                <button key={option} type="button" aria-pressed={view === option} onClick={() => setView(option)}>
+                  {t(`mobileDemo.views.${option}`)}
+                </button>
+              ))}
+            </div>
+            <LiveVoiceButton />
+          </div>
+          <MobileWebDemoPage embedded integrated dashboardVisible={view === 'split'} />
         </section>
       </div>}
     </section>

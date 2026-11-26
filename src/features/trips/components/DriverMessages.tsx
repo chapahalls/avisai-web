@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getApiClient, useConnection } from '../../../services/operations';
+import { getApiClient, sendDemoMessage, useConnection, useDemoConversations } from '../../../services/operations';
 import { useSession } from '../../auth';
 import type { BackendDriverMessage } from '../../../services/api/types';
 
 type DriverMessagesProps = {
-  routeId: number;
+  /** Viagem do painel: na Demo, as mensagens são locais e indexadas por ela. */
+  tripId: string;
+  /** Rota do backend; obrigatória no modo API. */
+  routeId?: number;
   driverName?: string;
   highlighted?: boolean;
   onDismissHighlight?: () => void;
@@ -18,12 +21,17 @@ const statusClass = {
   offline: 'border-alert-500/50 text-alert-500',
 } as const;
 
-export function DriverMessages({ routeId, driverName, highlighted = false, onDismissHighlight }: DriverMessagesProps) {
+/** Linha comum aos dois modos: API (`/rotas/{id}/mensagens`) ou mensagens locais da Demo. */
+type MessageRow = { id: number; sender: string; text: string; status: BackendDriverMessage['status']; reply: string | null };
+
+export function DriverMessages({ tripId, routeId, driverName, highlighted = false, onDismissHighlight }: DriverMessagesProps) {
   const { t } = useTranslation();
   const connection = useConnection();
+  const isApi = connection.mode === 'api';
+  const demoMessages = useDemoConversations().messages;
   const session = useSession((state) => state.session);
   const client = getApiClient();
-  const [rows, setRows] = useState<BackendDriverMessage[]>([]);
+  const [apiRows, setRows] = useState<BackendDriverMessage[]>([]);
   const [open, setOpen] = useState(false);
   const [remetente, setRemetente] = useState(session?.name ?? '');
   const [texto, setTexto] = useState('');
@@ -43,7 +51,7 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
     return () => window.cancelAnimationFrame(frame);
   }, [highlighted, routeId]);
   useEffect(() => {
-    if (!client || connection.mode !== 'api') return;
+    if (!client || connection.mode !== 'api' || routeId === undefined) return;
     const current = ++generation.current;
     let disposed = false;
     const refresh = async () => {
@@ -59,10 +67,23 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
     return () => { disposed = true; window.clearInterval(timer); };
   }, [client, connection.mode, routeId, t]);
 
-  if (connection.mode !== 'api') return null;
+  if (isApi && routeId === undefined) return null;
+  const rows: MessageRow[] = isApi
+    ? apiRows.map((row) => ({ id: row.id, sender: row.remetente, text: row.texto, status: row.status, reply: row.resposta }))
+    : demoMessages.filter((row) => row.tripId === tripId)
+      .map((row) => ({ id: row.id, sender: row.sender, text: row.text, status: row.status, reply: row.replyKey ? t(row.replyKey) : null }));
+  // Demo não depende de conexão; na API, enviar exige o stream conectado.
+  const canSend = !isApi || connection.status === 'connected';
 
   const send = async () => {
-    if (!client || connection.status !== 'connected' || pending || !remetente.trim() || !texto.trim()) return;
+    if (!canSend || pending || !remetente.trim() || !texto.trim()) return;
+    if (!isApi) {
+      sendDemoMessage(tripId, remetente, texto);
+      setTexto('');
+      setOpen(false);
+      return;
+    }
+    if (!client || routeId === undefined) return;
     setPending(true);
     setError(null);
     try {
@@ -91,7 +112,7 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
       </label>
       <div className="flex flex-wrap justify-end gap-3">
         {!highlighted && <button type="button" onClick={() => setOpen(false)} className="rounded-input border border-ink-700 px-4 py-2 text-sm font-semibold">{t('driverMessages.cancel')}</button>}
-        <button type="submit" disabled={connection.status !== 'connected' || pending || !remetente.trim() || !texto.trim()} aria-busy={pending}
+        <button type="submit" disabled={!canSend || pending || !remetente.trim() || !texto.trim()} aria-busy={pending}
           className="rounded-input bg-brand-500 text-on-accent px-4 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
           {t(pending ? 'driverMessages.sending' : 'driverMessages.send')}
         </button>
@@ -108,25 +129,25 @@ export function DriverMessages({ routeId, driverName, highlighted = false, onDis
         </div>
         <div className="flex items-center gap-2">
           {highlighted && onDismissHighlight && <button type="button" onClick={onDismissHighlight} className="rounded-input border border-ink-700 px-3 py-2 text-sm font-semibold hover:bg-ink-800">{t('driverMessages.dismiss')}</button>}
-          {!highlighted && <button type="button" onClick={() => setOpen(true)} disabled={connection.status !== 'connected'}
+          {!highlighted && <button type="button" onClick={() => setOpen(true)} disabled={!canSend}
             className="rounded-input bg-brand-500 text-on-accent px-3 py-2 text-sm font-semibold hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
             {t('driverMessages.open')}
           </button>}
         </div>
       </div>
       {error && <p role="alert" className="rounded-input border border-alert-500/40 bg-alert-500/10 p-3 text-sm text-alert-500">{error}</p>}
-      {highlighted && connection.status !== 'connected' && <p role="status" className="rounded-input border border-wait-500/40 bg-wait-500/10 p-3 text-sm text-wait-500">{t('driverMessages.connectionRequired')}</p>}
+      {highlighted && !canSend && <p role="status" className="rounded-input border border-wait-500/40 bg-wait-500/10 p-3 text-sm text-wait-500">{t('driverMessages.connectionRequired')}</p>}
       {highlighted && messageForm(true)}
       <ol className="space-y-2">
         {rows.length === 0 && <li className="rounded-input border border-ink-700 bg-ink-950/35 p-3 text-sm text-ink-300">{t('driverMessages.empty')}</li>}
         {rows.map((message) => (
           <li key={message.id} className="rounded-input border border-ink-700 bg-ink-950/35 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <strong className="text-sm">{message.remetente}</strong>
+              <strong className="text-sm">{message.sender}</strong>
               <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${statusClass[message.status]}`}>{t(`driverMessages.status.${message.status}`)}</span>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-ink-100">{message.texto}</p>
-            {message.resposta && <p className="mt-2 border-t border-ink-700 pt-2 text-sm text-ink-300"><strong className="text-ink-100">{t('driverMessages.response')}:</strong> {message.resposta}</p>}
+            <p className="mt-2 whitespace-pre-wrap text-sm text-ink-100">{message.text}</p>
+            {message.reply && <p className="mt-2 border-t border-ink-700 pt-2 text-sm text-ink-300"><strong className="text-ink-100">{t('driverMessages.response')}:</strong> {message.reply}</p>}
           </li>
         ))}
       </ol>

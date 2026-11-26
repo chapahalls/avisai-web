@@ -23,6 +23,23 @@ const tripById = (store, tripId) => state(store).trips.find((trip) => trip.id ==
 const taskByTrip = (store, tripId) => state(store).tasks.find((task) => task.tripId === tripId);
 const eventsFor = (store, tripId, type) => state(store).feed.filter((event) => event.tripId === tripId && event.type === type);
 
+test('retirada da demo mobile substitui o evento inicial sem duplicar a viagem', () => {
+  const store = createOpsStore({ startDate });
+  const [trip, otherTrip] = state(store).trips;
+  assert.equal(eventsFor(store, trip.id, 'PickupConfirmed').length, 1);
+
+  state(store).mobileAction(trip.id, 'start');
+  state(store).mobileAction(trip.id, 'start');
+  assert.equal(tripById(store, trip.id).progress, 0);
+  assert.equal(eventsFor(store, trip.id, 'PickupConfirmed').length, 1);
+  assert.equal(eventsFor(store, trip.id, 'PickupConfirmed')[0].payload.source, 'mobile_demo');
+  assert.equal(eventsFor(store, otherTrip.id, 'PickupConfirmed').length, 1);
+
+  state(store).mobileAction(trip.id, 'reset');
+  state(store).mobileAction(trip.id, 'start');
+  assert.equal(eventsFor(store, trip.id, 'PickupConfirmed').length, 1);
+});
+
 /** Uma chegada controlada; demais veículos permanecem descarregados durante o cenário. */
 function arrivedFixture(responsiveness = 0) {
   const store = createOpsStore({ startDate, operatorResponsiveness: responsiveness });
