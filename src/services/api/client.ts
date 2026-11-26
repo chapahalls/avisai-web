@@ -97,7 +97,6 @@ const isRoute: Guard<BackendRoute> = (value): value is BackendRoute => shape(val
   rastreador_lng: optional(nullable(longitude)), rastreador_em: optional(nullable(timestamp)),
   ultima_posicao_em: nullable(timestamp), eta_min: nullable(numeric), distancia_m: nullable(numeric),
   motorista_nome: nullable(text), canal_motorista: text,
-  uid_motorista: positiveId, uid_cco: positiveId, uid_agente: positiveId,
 }) && record(value) && (value.trajeto === undefined || array((point) => Array.isArray(point) && point.length === 2 && latitude(point[0]) && longitude(point[1]))(value.trajeto));
 
 const isTask: Guard<BackendTask> = (value): value is BackendTask => shape(value, {

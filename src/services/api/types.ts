@@ -45,9 +45,6 @@ export interface BackendRoute {
   distancia_m: number | null;
   motorista_nome: string | null;
   canal_motorista: string;
-  uid_motorista: number;
-  uid_cco: number;
-  uid_agente: number;
 }
 
 export interface BackendTask {
