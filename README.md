@@ -28,12 +28,24 @@
 |---|---|
 | **Trilha** | Logística & automação |
 | **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
+| **Demo no ar** | [rodarglobal.github.io/rodar-web](https://rodarglobal.github.io/rodar-web/): site e painel do CCO no modo Demo (clique em **Entrar com SSO**) · [app do motorista no navegador](https://rodarglobal.github.io/rodar-mobile/) |
 | **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [tour do app do motorista (1 min)](https://github.com/rodarglobal/rodar-mobile/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) (este) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) |
-| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 524 testes automatizados: 299 no backend, 127 no web, 98 no mobile |
+| **Qualidade** | CI em cada repositório com lint e testes (e typecheck nos fronts) · 535 testes automatizados: 299 no backend, 127 no web, 109 no mobile |
 | **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
 | **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado) |
-<!-- Demo publicada e vídeo de 3 min do Hack Brasil: incluir as duas linhas aqui antes de 30/11. -->
+| **Glossário** | **CCO**: a central de operações da transportadora · **recebedor**: quem descarrega (CD, atacado, loja) · **doca**: o portão de descarga · **estadia**: o valor que a lei manda pagar pelo caminhão parado além de 5 h (a **franquia**; Lei 11.442) · **geocerca**: o raio em volta do destino que marca a chegada · **Task**: o pedido que o CCO precisa responder |
+<!-- Vídeo de 3 min do Hack Brasil: incluir a linha aqui antes de 30/11. -->
+
+## Por que importa
+
+- **11h40 parado num CD.** Na Grande SP, a descarga levou 5h09 em média em 2025, a maior em 10 anos, e 11h40 nos centros de distribuição ([IER 2025, IPTC/SETCESP](https://setcesp.org.br/noticias/a-demora-que-compromete-a-eficiencia-2/), 175 recebedores).
+- **9 em cada 10 não recebem pela espera.** 91% dos caminhoneiros autônomos que esperam mais de 5 h não recebem a estadia, embora a lei a garanta ([CNTA 2025](https://mundologistica.com.br/noticias/caminhoneiros-autonomos-aceitam-frete-abaixo-do-piso-por-necessidade), 2.002 autônomos; amostra não probabilística).
+- **Ninguém registra o tempo parado.** Sem hora de chegada provada, não há o que cobrar. E a central acompanha a frota por telefone, caminhão por caminhão.
+
+**Quanto vale, por entrega:** uma carreta de 30 t que espera 11h40 num CD tem 7 h além da franquia: 7 h × 30 t × R$ 2,50 ([valor da ANTT](https://mundologistica.com.br/noticias/antt-reajusta-estadia-tempo-adicional-carga-descarga)) = **R$ 525 de estadia**. Numa frota de 50 carretas com uma entrega assim por semana, são cerca de **R$ 113 mil por mês** de estadia devida que hoje não é cobrada por falta de prova (estimativa nossa, com as premissas acima).
+
+**O que o RODAR muda:** o recebedor sabe da chegada antes e prepara a doca; cada hora parada vira um registro com horário do servidor; a estadia devida aparece em R$ no painel; e o CCO só é chamado nas exceções, numa fila ordenada por severidade.
 
 ## Para que serve
 
@@ -291,6 +303,8 @@ ceil(max(0, espera_em_min / 60 − 5)) × toneladas × R$ 2,50
 ```
 
 ## Arquitetura do front-end
+
+### Dependências
 
 React, Vite, TypeScript strict, Tailwind CSS v4, React Router, zustand, Recharts, i18next (pt-BR e en), three.js na home e no login, `agora-rtc-sdk-ng` e `lenis`. Os testes usam `node:test`, sem biblioteca adicional.
 
