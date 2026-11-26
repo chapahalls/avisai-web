@@ -6,6 +6,7 @@ import { DriverMessages, LiveAlerts, TripTimeline } from '../features/trips';
 import { AlertQueue, deriveAlerts, DockWindows, MonitoringKpis, TripGrid, VehiclePanel } from '../features/monitoring';
 import { useMode, useOps } from '../services/operations';
 import { Icon } from '../components/Icon';
+import { isTripClosed } from '../types/ops';
 import '../features/monitoring/monitoring.css';
 
 const pageNames = ['map', 'trips', 'requests'] as const;
@@ -40,7 +41,7 @@ export function DashboardPage({ initialTripId, onlyTripId }: { initialTripId?: s
     if (selectedTripId && trips.some((trip) => trip.id === selectedTripId)) return;
     if (selectionDismissed) return;
     const firstAlert = deriveAlerts({ trips, tasks, simMinutes })[0]?.tripId;
-    const nextTripId = firstAlert ?? trips.find((trip) => trip.phase !== 'unloaded')?.id ?? trips[0]?.id ?? null;
+    const nextTripId = firstAlert ?? trips.find((trip) => !isTripClosed(trip.phase))?.id ?? trips[0]?.id ?? null;
     if (nextTripId !== selectedTripId) setSelectedTripId(nextTripId);
   }, [selectedTripId, selectionDismissed, trips, tasks, simMinutes]);
 

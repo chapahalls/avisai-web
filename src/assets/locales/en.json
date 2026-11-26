@@ -52,25 +52,82 @@
       "doneBody": "Driver and control center actions are recorded in the demo. You can keep exploring the app and dashboard.",
       "close": "Close tutorial",
       "steps": {
-        "login": { "title": "Driver sign in", "body": "The app opens with a simulated sign in and no password. The tour signs in as the trip's driver and AvisAI greets them in the bubble." },
-        "orb": { "title": "AvisAI, the voice copilot", "body": "The green orb is AvisAI. It floats over every screen and can be dragged. The tour taps it to talk." },
-        "sayStart": { "title": "Conversation: trip start", "body": "The driver says “Got the load, truck ok”. AvisAI listens, confirms the pickup and starts the trip." },
-        "reply": { "title": "Agent reply", "body": "The reply shows in the bubble next to the orb and is spoken on the phone. The trip already shows on the dashboard." },
-        "approach": { "title": "Approaching the destination", "body": "At 8 km, AvisAI notifies the receiver and tells the driver the confirmed dock." },
-        "cabin": { "title": "Talking while driving", "body": "With the truck moving, the driver talks without touching the screen. The tour opens AvisAI again." },
-        "openCabin": { "title": "Full screen", "body": "The full-screen conversation shows the large orb and the last line, readable at a glance." },
-        "sayArrive": { "title": "Conversation: arrival", "body": "He says “I arrived at the receiver”. AvisAI checks in, creates the CCO Task and starts counting the wait." },
-        "closeCabin": { "title": "Back home", "body": "Closing the conversation brings the orb back to float over the app." },
-        "queue": { "title": "Unloading queue", "body": "Here are the expected dock, time stopped, the 5 h free time and accrued detention." },
-        "push": { "title": "Escalation to the CCO", "body": "Notices to the CCO move in steps: immediate push, panel and call." },
-        "panel": { "title": "Control panel update", "body": "If the wait continues, the operation records a panel update for the control center to follow." },
-        "call": { "title": "Phone contact", "body": "If it remains unresolved, the workflow records a call attempt linked to the trip." },
-        "escalation": { "title": "Task escalated", "body": "After one hour, the Task is escalated and AvisAI tells the driver by voice." },
-        "acknowledge": { "title": "Control center action", "body": "The tour takes the Task on the dashboard. AvisAI tells the driver the CCO took over." },
-        "acknowledgeLocal": { "title": "CCO takes the Task", "body": "The tour records that the CCO took over. AvisAI tells the driver in the bubble." },
-        "home": { "title": "Trip summary", "body": "On the home screen, the driver sees the route, status and the journey of recorded events." },
-        "orbUnload": { "title": "Unloading by voice", "body": "With unloading done, the driver calls AvisAI again." },
-        "sayUnload": { "title": "Conversation: unloading", "body": "He says “I unloaded”. AvisAI closes the detention, notifies the CCO and the delivery joins the metrics." }
+        "login": {
+          "title": "Driver sign in",
+          "body": "The app opens with a simulated sign in and no password. The tour signs in as the trip's driver and AvisAI greets them in the bubble."
+        },
+        "orb": {
+          "title": "AvisAI, the voice copilot",
+          "body": "The green orb is AvisAI. It floats over every screen and can be dragged. The tour taps it to talk."
+        },
+        "sayStart": {
+          "title": "Conversation: trip start",
+          "body": "The driver says “Got the load, truck ok”. AvisAI listens, confirms the pickup and starts the trip."
+        },
+        "reply": {
+          "title": "Agent reply",
+          "body": "The reply shows in the bubble next to the orb and is spoken on the phone. The trip already shows on the dashboard."
+        },
+        "approach": {
+          "title": "Approaching the destination",
+          "body": "At 8 km, AvisAI notifies the receiver and tells the driver the confirmed dock."
+        },
+        "cabin": {
+          "title": "Talking while driving",
+          "body": "With the truck moving, the driver talks without touching the screen. The tour opens AvisAI again."
+        },
+        "openCabin": {
+          "title": "Full screen",
+          "body": "The full-screen conversation shows the large orb and the last line, readable at a glance."
+        },
+        "sayArrive": {
+          "title": "Conversation: arrival",
+          "body": "He says “I arrived at the receiver”. AvisAI checks in, creates the CCO Task and starts counting the wait."
+        },
+        "closeCabin": {
+          "title": "Back home",
+          "body": "Closing the conversation brings the orb back to float over the app."
+        },
+        "queue": {
+          "title": "Unloading queue",
+          "body": "Here are the expected dock, time stopped, the 5 h free time and accrued detention."
+        },
+        "push": {
+          "title": "Escalation to the CCO",
+          "body": "Notices to the CCO move in steps: immediate push, panel and call."
+        },
+        "panel": {
+          "title": "Control panel update",
+          "body": "If the wait continues, the operation records a panel update for the control center to follow."
+        },
+        "call": {
+          "title": "Phone contact",
+          "body": "If it remains unresolved, the workflow records a call attempt linked to the trip."
+        },
+        "escalation": {
+          "title": "Task escalated",
+          "body": "After one hour, the Task is escalated and AvisAI tells the driver by voice."
+        },
+        "acknowledge": {
+          "title": "Control center action",
+          "body": "The tour takes the Task on the dashboard. AvisAI tells the driver the CCO took over."
+        },
+        "acknowledgeLocal": {
+          "title": "CCO takes the Task",
+          "body": "The tour records that the CCO took over. AvisAI tells the driver in the bubble."
+        },
+        "home": {
+          "title": "Trip summary",
+          "body": "On the home screen, the driver sees the route, status and the journey of recorded events."
+        },
+        "orbUnload": {
+          "title": "Unloading by voice",
+          "body": "With unloading done, the driver calls AvisAI again."
+        },
+        "sayUnload": {
+          "title": "Conversation: unloading",
+          "body": "He says “I unloaded”. AvisAI closes the detention, notifies the CCO and the delivery joins the metrics."
+        }
       }
     }
   },
@@ -160,9 +217,18 @@
     "replyError": "Could not send the reply.",
     "message": "Message the driver",
     "demo": {
-      "flatTire": { "subject": "Flat tire", "description": "The driver reports a flat tire and asks for guidance to reach the nearest tire shop." },
-      "gateClosed": { "subject": "Gate closed", "description": "The receiver has not opened the gate yet. The driver asks whether to wait in the outer yard." },
-      "traffic": { "subject": "Traffic stopped", "description": "Accident ahead. The agent is still collecting the location to suggest a detour." }
+      "flatTire": {
+        "subject": "Flat tire",
+        "description": "The driver reports a flat tire and asks for guidance to reach the nearest tire shop."
+      },
+      "gateClosed": {
+        "subject": "Gate closed",
+        "description": "The receiver has not opened the gate yet. The driver asks whether to wait in the outer yard."
+      },
+      "traffic": {
+        "subject": "Traffic stopped",
+        "description": "Accident ahead. The agent is still collecting the location to suggest a detour."
+      }
     },
     "status": {
       "coletando": "collecting details",
@@ -258,7 +324,8 @@
     "routeTitle": "Trip route",
     "maps": {
       "retry": "Try again"
-    }
+    },
+    "cancelled": "cancelled"
   },
   "feed": {
     "title": "Agent events",
@@ -328,7 +395,8 @@
     "driving": "on the road",
     "approaching": "approaching",
     "waiting": "waiting to unload",
-    "unloaded": "unloaded"
+    "unloaded": "unloaded",
+    "cancelled": "cancelled"
   },
   "demo": {
     "title": "Demo controls (simulation)",
@@ -355,7 +423,8 @@
     "TaskAcknowledged": "Control center took it",
     "UnloadConfirmed": "Unloading confirmed",
     "DriverMessageSent": "Driver message sent",
-    "DocumentQuestionAnswered": "Document question"
+    "DocumentQuestionAnswered": "Document question",
+    "TripCancelled": "Trip cancelled"
   },
   "dashboard": {
     "title": "Live operations",
@@ -576,7 +645,8 @@
       "no_destino": "at destination",
       "descarregada": "unloaded",
       "publicada": "awaiting driver",
-      "na_origem": "at origin"
+      "na_origem": "at origin",
+      "cancelada": "cancelled"
     },
     "events": {
       "sessao_iniciada": "Session started",
@@ -611,7 +681,8 @@
       "resposta_central": "Answer to control center",
       "divergencia_gps": "GPS source mismatch",
       "evento_app": "App event",
-      "pergunta_documento": "Document query"
+      "pergunta_documento": "Document query",
+      "rota_cancelada": "Trip cancelled"
     },
     "actions": {
       "failed": "The backend did not confirm the action.",

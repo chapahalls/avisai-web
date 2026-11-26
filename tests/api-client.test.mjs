@@ -726,3 +726,60 @@ test('token do SSO vai como Bearer em toda chamada e sai no logout', async () =>
     undefined,
   ]);
 });
+
+test('cancelar envia motivo e operador, aceita a rota cancelada e não repete após 409', async () => {
+  const cancelled = { ...route, status: 'cancelada', cancelada_em: at, cancelada_por: 'CCO', cancelamento_motivo: 'Pedido cancelado',
+    origem_endereco: '', destino_endereco: '', origem_geo: {}, destino_geo: { fonte: 'manual' } };
+  const requests = [];
+  let status = 200;
+  const api = new ApiClient('/backend', {
+    fetch: async (url, options) => {
+      requests.push({ url, options });
+      return status === 200 ? jsonResponse(cancelled) : new Response('{"detail":"conflito"}', { status });
+    },
+  });
+  assert.deepEqual(await api.cancelRoute(1, '  Pedido cancelado '), cancelled);
+  assert.equal(requests[0].url, '/backend/rotas/1/cancelar');
+  assert.equal(requests[0].options.method, 'POST');
+  assert.deepEqual(JSON.parse(requests[0].options.body), { motivo: 'Pedido cancelado', por: 'CCO' });
+  status = 409;
+  await assert.rejects(api.cancelRoute(1, 'segunda vez'), isApiError('http_error', 409));
+  assert.equal(requests.length, 2);
+  for (const reason of ['', 'ok', 'x'.repeat(501)]) assert.throws(() => api.cancelRoute(1, reason), isApiError('invalid_input'));
+  assert.throws(() => api.cancelRoute('../1', 'motivo válido'), isApiError('invalid_id'));
+  assert.equal(requests.length, 2);
+});
+
+test('geocodificação consulta o backend, valida candidatos e expõe 503/502 sem inventar resultado', async () => {
+  const found = { provedor: 'nominatim', atribuicao: '© OpenStreetMap contributors',
+    resultados: [{ id: 'W202', endereco: 'Avenida do Atacado, Sorocaba', lat: -23.5015, lng: -47.4526, tipo: 'road' }] };
+  const requests = [];
+  let reply = () => jsonResponse(found);
+  const api = new ApiClient('/backend', { fetch: async (url, options) => { requests.push({ url, options }); return reply(); } });
+  assert.deepEqual(await api.geocode('  Avenida   do Atacado '), found);
+  assert.equal(requests[0].url, '/backend/geocodificacao?q=Avenida+do+Atacado');
+  assert.equal(requests[0].options.method, 'GET');
+  for (const code of [503, 502]) {
+    reply = () => new Response('{}', { status: code });
+    await assert.rejects(api.geocode('Sorocaba'), isApiError('http_error', code));
+  }
+  reply = () => jsonResponse({ ...found, resultados: [{ ...found.resultados[0], lat: 123 }] });
+  await assert.rejects(api.geocode('Sorocaba'), isApiError('invalid_response'));
+  assert.throws(() => api.geocode('ab'), isApiError('invalid_input'));
+});
+
+test('publicação aceita ponto com endereço e vínculo; geocodificação sem lugar é rejeitada antes da rede', () => {
+  let requests = 0;
+  const api = new ApiClient('/backend', { fetch: async () => { requests += 1; return jsonResponse(route); } });
+  const base = {
+    destino: { nome: 'Destino', lat: -22, lng: -46 },
+    recebedor: { empresa: 'Empresa', nome: 'Recebedor', telefone_e164: '+5511999999999' }, carga_t: 28, motorista_id: 8,
+  };
+  void api.publishRoute({ ...base, origem: { nome: 'CD', lat: -23, lng: -47, endereco: 'Rua A, 1',
+    geo: { fonte: 'geocodificacao', provedor: 'nominatim', id: 'N1', endereco: 'Rua A, 1, Jundiaí' } } });
+  void api.publishRoute({ ...base, origem: { nome: 'CD', lat: -23, lng: -47, geo: { fonte: 'manual' } } });
+  for (const geo of [{ fonte: 'geocodificacao' }, { fonte: 'geocodificacao', provedor: 'nominatim' }, { fonte: 'gps' }, {}]) {
+    assert.throws(() => api.publishRoute({ ...base, origem: { nome: 'CD', lat: -23, lng: -47, geo } }), isApiError('invalid_input'));
+  }
+  assert.equal(requests, 2);
+});

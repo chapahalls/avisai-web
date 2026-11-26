@@ -9,6 +9,7 @@ import {
   type BackendLiveKitConfig,
   type BackendLiveKitToken,
   type BackendEvent,
+  type BackendGeocodeResponse,
   type BackendFile,
   type BackendMetrics,
   type BackendNewRoute,
@@ -84,7 +85,9 @@ const nullable = (check: Check): Check => (value) => value === null || check(val
 const optional = (check: Check): Check => (value) => value === undefined || check(value);
 const array = (check: Check): Check => (value) => Array.isArray(value) && value.every(check);
 const oneOf = (...values: string[]): Check => (value) => typeof value === 'string' && values.includes(value);
-const routeStatus = oneOf('publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando', 'no_destino', 'descarregada');
+const routeStatus = oneOf('publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando', 'no_destino', 'descarregada', 'cancelada');
+const geoLink: Check = (value) => record(value) && (Object.keys(value).length === 0 || (oneOf('geocodificacao', 'manual')(value.fonte)
+  && optional(text)(value.provedor) && optional(text)(value.id) && optional(text)(value.endereco)));
 const shape = (value: unknown, fields: Record<string, Check>) => record(value) && Object.entries(fields).every(([key, check]) => check(value[key]));
 
 const isRoute: Guard<BackendRoute> = (value): value is BackendRoute => shape(value, {
@@ -99,6 +102,9 @@ const isRoute: Guard<BackendRoute> = (value): value is BackendRoute => shape(val
   rastreador_lng: optional(nullable(longitude)), rastreador_em: optional(nullable(timestamp)),
   ultima_posicao_em: nullable(timestamp), eta_min: nullable(numeric), distancia_m: nullable(numeric),
   motorista_nome: nullable(text), canal_motorista: text,
+  origem_endereco: optional(text), destino_endereco: optional(text),
+  origem_geo: optional(nullable(geoLink)), destino_geo: optional(nullable(geoLink)),
+  cancelada_em: optional(nullable(timestamp)), cancelada_por: optional(nullable(text)), cancelamento_motivo: optional(nullable(text)),
 }) && record(value) && (value.trajeto === undefined || array((point) => Array.isArray(point) && point.length === 2 && latitude(point[0]) && longitude(point[1]))(value.trajeto));
 
 const isTask: Guard<BackendTask> = (value): value is BackendTask => shape(value, {
@@ -246,7 +252,13 @@ const isFile: Guard<BackendFile> = (value): value is BackendFile => shape(value,
 });
 
 const e164: Check = (value) => text(value) && /^\+[1-9]\d{7,14}$/.test(value as string);
-const point: Check = (value) => shape(value, { nome: text, lat: latitude, lng: longitude });
+const point: Check = (value) => shape(value, { nome: text, lat: latitude, lng: longitude, endereco: optional(text) })
+  && record(value) && (value.geo === undefined || (geoLink(value.geo) && record(value.geo) && value.geo.fonte !== undefined
+    && (value.geo.fonte === 'manual' || (text(value.geo.provedor) && text(value.geo.id)))));
+const isGeocodeResponse: Check = (value) => shape(value, {
+  provedor: text, atribuicao: text,
+  resultados: array((item) => shape(item, { id: text, endereco: text, lat: latitude, lng: longitude, tipo: optional(nullable(text)) })),
+});
 const newRoute: Check = (value) => shape(value, {
   origem: point, destino: point,
   recebedor: (receiver) => shape(receiver, { empresa: text, nome: text, telefone_e164: e164 }),
@@ -495,6 +507,21 @@ export class ApiClient {
   publishRoute(input: BackendNewRoute, signal?: AbortSignal) {
     if (!newRoute(input)) throw new ApiError('invalid_input');
     return this.request('POST', '/rotas', isRoute, signal, input);
+  }
+
+  /** Encerra a viagem sem descarga. 409 quando já chegou ao destino, foi descarregada ou cancelada. Sem nova tentativa automática. */
+  cancelRoute(routeId: ApiId, motivo: string, por = 'CCO', signal?: AbortSignal) {
+    const reason = motivo.trim();
+    if (reason.length < 3 || reason.length > 500) throw new ApiError('invalid_input');
+    return this.request('POST', `/rotas/${encodedId(routeId)}/cancelar`, isRoute, signal, { motivo: reason, por });
+  }
+
+  /** Candidatos para o endereço digitado. 503 = geocodificação não configurada; 502 = provedor falhou. */
+  geocode(query: string, signal?: AbortSignal) {
+    const q = query.trim().replace(/\s+/g, ' ');
+    if (q.length < 3 || q.length > 300) throw new ApiError('invalid_input');
+    return this.request('GET', `/geocodificacao?${new URLSearchParams({ q })}`,
+      (value): value is BackendGeocodeResponse => isGeocodeResponse(value), signal);
   }
 
   assignRoute(routeId: ApiId, driverId: ApiId, signal?: AbortSignal) {

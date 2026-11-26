@@ -1,17 +1,58 @@
-import type { BackendDriver, BackendNewRoute, BackendUserProfile } from '../../services/api/types.js';
+import type { BackendDriver, BackendNewRoute, BackendNewRoutePoint, BackendUserProfile } from '../../services/api/types.js';
 import type { DemoDriver } from '../../services/mock/registry.js';
-import type { Trip } from '../../types/ops.js';
+import { isTripClosed, type Trip } from '../../types/ops.js';
+
+/** Coordenada sem fonte ainda não foi localizada; geocodificação exige o lugar escolhido no provedor. */
+export type CoordinateSource = '' | 'geocodificacao' | 'manual';
+export type StopSide = 'origin' | 'destination';
 
 export interface RouteDraft {
-  origin: string; originLat: string; originLng: string;
-  destination: string; destinationLat: string; destinationLng: string;
+  origin: string; originAddress: string; originLat: string; originLng: string;
+  originSource: CoordinateSource; originGeoProvider: string; originGeoId: string; originGeoLabel: string;
+  destination: string; destinationAddress: string; destinationLat: string; destinationLng: string;
+  destinationSource: CoordinateSource; destinationGeoProvider: string; destinationGeoId: string; destinationGeoLabel: string;
   plate: string; invoice: string; cargo: string; tons: string; window: string;
   receiverCompany: string; receiverName: string; receiverPhone: string;
 }
+const emptyStop = (side: StopSide) => ({
+  [side]: '', [`${side}Address`]: '', [`${side}Lat`]: '', [`${side}Lng`]: '', [`${side}Source`]: '',
+  [`${side}GeoProvider`]: '', [`${side}GeoId`]: '', [`${side}GeoLabel`]: '',
+});
 export const emptyDraft: RouteDraft = {
-  origin: '', originLat: '', originLng: '', destination: '', destinationLat: '', destinationLng: '',
+  ...emptyStop('origin'), ...emptyStop('destination'),
   plate: '', invoice: '', cargo: '', tons: '', window: '', receiverCompany: '', receiverName: '', receiverPhone: '',
-};
+} as RouteDraft;
+
+/** Campos de um lado da rota, para o componente de busca não conhecer as chaves do rascunho. */
+export const stopKeys = (side: StopSide) => ({
+  name: side, address: `${side}Address`, lat: `${side}Lat`, lng: `${side}Lng`, source: `${side}Source`,
+  provider: `${side}GeoProvider`, placeId: `${side}GeoId`, label: `${side}GeoLabel`,
+} as const satisfies Record<string, keyof RouteDraft>);
+
+/** Resultado escolhido na busca: grava coordenada e vínculo juntos. */
+export function linkGeocodeResult(side: StopSide, provider: string, result: { id: string; endereco: string; lat: number; lng: number }): Partial<RouteDraft> {
+  const k = stopKeys(side);
+  return { [k.lat]: String(result.lat), [k.lng]: String(result.lng), [k.source]: 'geocodificacao',
+    [k.provider]: provider, [k.placeId]: result.id, [k.label]: result.endereco };
+}
+
+/** Mudar o endereço desfaz o vínculo: a coordenada antiga não corresponde mais ao texto. */
+export function changeStopAddress(draft: RouteDraft, side: StopSide, address: string): Partial<RouteDraft> {
+  const k = stopKeys(side);
+  if (draft[k.source] !== 'geocodificacao') return { [k.address]: address };
+  return { [k.address]: address, [k.lat]: '', [k.lng]: '', [k.source]: '', [k.provider]: '', [k.placeId]: '', [k.label]: '' };
+}
+
+/** Rascunho salvo antes da geocodificação: coordenadas preenchidas contam como digitadas. */
+export function restoreDraft(saved: Partial<RouteDraft>): RouteDraft {
+  const draft = { ...emptyDraft, ...saved };
+  for (const side of ['origin', 'destination'] as const) {
+    const k = stopKeys(side);
+    if (!saved[k.source] && draft[k.lat].trim() && draft[k.lng].trim()) draft[k.source] = 'manual';
+    if (!(['', 'geocodificacao', 'manual'] as string[]).includes(draft[k.source])) draft[k.source] = '';
+  }
+  return draft;
+}
 const coordinate = (value: string, limit: number) => {
   if (!value.trim()) throw new Error('coordinates');
   const number = Number(value.replace(',', '.'));
@@ -47,6 +88,22 @@ export function demoRegisteredDrivers(drivers: DemoDriver[]): RegisteredDriver[]
   }));
 }
 
+/** Todo ponto sai com latitude e longitude; geocodificado, também com o lugar escolhido no provedor. */
+function stopInput(draft: RouteDraft, side: StopSide): BackendNewRoutePoint {
+  const k = stopKeys(side);
+  const source = draft[k.source];
+  if (source === '') throw new Error('location');
+  if (source === 'geocodificacao' && (!draft[k.provider].trim() || !draft[k.placeId].trim())) throw new Error('location');
+  const address = draft[k.address].trim();
+  return {
+    nome: draft[k.name].trim(), lat: coordinate(draft[k.lat], 90), lng: coordinate(draft[k.lng], 180),
+    ...(address ? { endereco: address } : {}),
+    geo: source === 'manual' ? { fonte: 'manual' }
+      : { fonte: 'geocodificacao', provedor: draft[k.provider].trim(), id: draft[k.placeId].trim(),
+        ...(draft[k.label].trim() ? { endereco: draft[k.label].trim() } : {}) },
+  };
+}
+
 export function routeInput(draft: RouteDraft, driverId: number): BackendNewRoute {
   const required = ['origin', 'destination', 'plate', 'cargo', 'receiverCompany', 'receiverName'] as const;
   if (required.some((key) => !draft[key].trim())) throw new Error('required');
@@ -54,19 +111,29 @@ export function routeInput(draft: RouteDraft, driverId: number): BackendNewRoute
   const tons = Number(draft.tons.replace(',', '.'));
   if (!Number.isFinite(tons) || tons <= 0) throw new Error('weight');
   if (!Number.isSafeInteger(driverId) || driverId <= 0) throw new Error('driver');
+  const origem = stopInput(draft, 'origin');
+  const destino = stopInput(draft, 'destination');
   return {
-    origem: { nome: draft.origin.trim(), lat: coordinate(draft.originLat, 90), lng: coordinate(draft.originLng, 180) },
-    destino: { nome: draft.destination.trim(), lat: coordinate(draft.destinationLat, 90), lng: coordinate(draft.destinationLng, 180) },
+    origem, destino,
     recebedor: { empresa: draft.receiverCompany.trim(), nome: draft.receiverName.trim(), telefone_e164: draft.receiverPhone.trim() },
     placa: draft.plate.trim().toUpperCase(), nota_fiscal: draft.invoice.trim(), carga_descricao: draft.cargo.trim(),
     carga_t: tons, janela_descarga: draft.window.trim(), empresa_id: 1, motorista_id: driverId,
   };
 }
+/** Mesmo critério do backend: no destino a estadia já corre e a viagem termina pela descarga. */
+const CANCELLABLE_STATUSES = new Set(['publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando']);
+export const canCancelTrip = (trip: Trip) => trip.source === 'api' && CANCELLABLE_STATUSES.has(trip.backend?.status ?? '');
+export const CANCEL_REASON_MIN = 3;
+export const CANCEL_REASON_MAX = 500;
+
+/** Viagens encerradas no backend: não aparecem no despacho nem aceitam atribuição. */
+const CLOSED_STATUSES = new Set(['descarregada', 'cancelada']);
+
 /** Evita atribuições incompatíveis comuns; a validação definitiva continua no servidor. */
 export function assignmentIssue(trip: Trip, driver: BackendDriver, trips: Trip[]): 'closed' | 'company' | 'busy' | null {
-  if (trip.backend?.status === 'descarregada') return 'closed';
+  if (trip.backend?.status && CLOSED_STATUSES.has(trip.backend.status)) return 'closed';
   if (trip.backend?.companyId !== driver.empresa_id) return 'company';
-  if (trips.some((other) => other.backendId !== trip.backendId && other.backend?.driverId === driver.id && other.backend.status !== 'descarregada')) return 'busy';
+  if (trips.some((other) => other.backendId !== trip.backendId && other.backend?.driverId === driver.id && !CLOSED_STATUSES.has(other.backend.status))) return 'busy';
   return null;
 }
 
@@ -81,7 +148,7 @@ const AT_RECEIVER_STATUSES = new Set(['no_destino']);
 
 export function routeDispatchState(trip: Trip): Exclude<DispatchState, 'available'> | null {
   const status = trip.backend?.status;
-  if (!status || status === 'descarregada') return null;
+  if (!status || CLOSED_STATUSES.has(status)) return null;
   if (trip.backend?.driverId === null || trip.backend?.driverId === undefined) return 'unassigned';
   if (EDITABLE_STATUSES.has(status)) return 'editable';
   if (AT_RECEIVER_STATUSES.has(status)) return 'atReceiver';
@@ -92,7 +159,7 @@ export function routeDispatchState(trip: Trip): Exclude<DispatchState, 'availabl
 export type RouteStatusKey = 'publicada' | 'planejada' | 'na_origem' | 'em_transito' | 'aproximando' | 'no_destino';
 export type RowStatus = RouteStatusKey | 'available';
 export const API_ROUTE_STATUSES: RouteStatusKey[] = ['publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando', 'no_destino'];
-const DEMO_PHASE_STATUS: Record<Trip['phase'], RouteStatusKey | null> = { driving: 'em_transito', approaching: 'aproximando', waiting: 'no_destino', unloaded: null };
+const DEMO_PHASE_STATUS: Record<Trip['phase'], RouteStatusKey | null> = { driving: 'em_transito', approaching: 'aproximando', waiting: 'no_destino', unloaded: null, cancelled: null };
 
 export interface DispatchRow {
   key: string;
@@ -123,7 +190,7 @@ export function dispatchRows(drivers: RegisteredDriver[], trips: Trip[]): Dispat
 /** Demo: a viagem simulada do motorista (pelo nome) define a situação; descarregada = disponível. */
 export function demoDispatchRows(drivers: RegisteredDriver[], trips: Trip[]): DispatchRow[] {
   const rows: DispatchRow[] = drivers.map((driver) => {
-    const trip = trips.find((item) => item.source !== 'api' && item.driver === driver.profile.name && item.phase !== 'unloaded');
+    const trip = trips.find((item) => item.source !== 'api' && item.driver === driver.profile.name && !isTripClosed(item.phase));
     const state: DispatchState = !trip ? 'available' : trip.phase === 'waiting' ? 'atReceiver' : 'onRoute';
     return { key: `driver-${driver.driver.id}`, driver, trip, state, status: trip ? DEMO_PHASE_STATUS[trip.phase] ?? 'available' : 'available' };
   });

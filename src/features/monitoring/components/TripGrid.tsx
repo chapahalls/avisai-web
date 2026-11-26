@@ -57,7 +57,7 @@ export function TripGrid({ selectedTripId, onSelect, onlyTripId }: { selectedTri
               const wait = waitMinutes(trip, simMinutes);
               const eta = etaMinutes(trip);
               const signal = signalAgeMinutes(trip, Date.now());
-              const timing = trip.phase === 'unloaded' ? t('monitoring.grid.unloaded')
+              const timing = trip.phase === 'cancelled' ? t('monitoring.grid.cancelled') : trip.phase === 'unloaded' ? t('monitoring.grid.unloaded')
                 : trip.phase === 'waiting' ? wait === null ? '—' : t('monitoring.grid.waiting', { time: hhmm(wait, locale) })
                   : eta === null ? '—' : clock(simMinutes + eta);
               const selected = trip.id === selectedTripId;

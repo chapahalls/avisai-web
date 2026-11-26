@@ -1,6 +1,7 @@
 /** Contrato de eventos. Igual ao do repositório web (rodar-web/src/types/events.ts). */
 export type EventType =
   | 'RouteAssigned'
+  | 'TripCancelled'
   | 'PickupConfirmed'
   | 'ReportSubmitted'
   | 'ReportFieldMissing'

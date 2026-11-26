@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { BUSINESS } from '../../../lib/config';
 import { getApiClient, refreshOperations } from '../../../services/operations';
 import { routeKey } from '../../../services/operations/adapter';
-import { draftProgress, emptyDraft, routeFileIssue, routeInput, worstCaseReceiverCalls, type RouteDraft } from '../model';
+import { draftProgress, emptyDraft, restoreDraft, routeFileIssue, routeInput, worstCaseReceiverCalls, type RouteDraft } from '../model';
+import { AddressLookup } from './AddressLookup';
 import { useDispatchDrivers } from '../hooks/useDispatchDrivers';
 
 const DRAFT_KEY = 'rodar.dispatch.draft';
@@ -18,7 +19,7 @@ const readDraft = (): { draft: RouteDraft; driverId: string } | null => {
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { draft?: Partial<RouteDraft>; driverId?: string };
-    return { draft: { ...emptyDraft, ...parsed.draft }, driverId: parsed.driverId ?? '' };
+    return { draft: restoreDraft(parsed.draft ?? {}), driverId: parsed.driverId ?? '' };
   } catch { return null; }
 };
 const clearDraft = () => { try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* sem armazenamento */ } };
@@ -51,6 +52,7 @@ export function RouteCreateForm({ initialDriverId = '', onPublished }: { initial
   const progress = draftProgress(draft, selected ? selected.driver.id : null);
   const disabled = pending !== null;
   const update = (key: keyof RouteDraft, value: string) => { setDraft((current) => ({ ...current, [key]: value })); setDraftSaved(false); };
+  const patch = (changes: Partial<RouteDraft>) => { setDraft((current) => ({ ...current, ...changes })); setDraftSaved(false); };
 
   const addFiles = (list: FileList | null) => {
     if (!list) return;
@@ -104,13 +106,13 @@ export function RouteCreateForm({ initialDriverId = '', onPublished }: { initial
     if (mounted.current) onPublished({ tripKey: routeKey(routeId), failedFiles });
   };
 
-  const input = (key: keyof RouteDraft, options: { coordinate?: boolean; optional?: boolean; wide?: boolean } = {}) => (
+  const input = (key: keyof RouteDraft, options: { optional?: boolean; wide?: boolean } = {}) => (
     <label className={`dsn-field${options.wide ? ' dsn-wide' : ''}`}>
       <span>{t(`dispatch.fields.${key}`)}</span>
       <input name={key} value={draft[key]} onChange={(event) => update(key, event.target.value)} disabled={disabled}
-        required={!options.optional} inputMode={options.coordinate || key === 'tons' ? 'decimal' : key === 'receiverPhone' ? 'tel' : undefined}
-        maxLength={options.coordinate || key === 'tons' ? 25 : key === 'cargo' ? 2000 : 255}
-        placeholder={options.coordinate ? key.endsWith('Lat') ? '-23.5505' : '-46.6333' : key === 'receiverPhone' ? '+5511999999999' : undefined} />
+        required={!options.optional} inputMode={key === 'tons' ? 'decimal' : key === 'receiverPhone' ? 'tel' : undefined}
+        maxLength={key === 'tons' ? 25 : key === 'cargo' ? 2000 : 255}
+        placeholder={key === 'receiverPhone' ? '+5511999999999' : undefined} />
     </label>
   );
 
@@ -177,8 +179,7 @@ export function RouteCreateForm({ initialDriverId = '', onPublished }: { initial
             <div className="dsn-grid">
               <p className="dsn-stop-title dsn-wide">{t('dispatch.create.origin')}</p>
               {input('origin', { wide: true })}
-              {input('originLat', { coordinate: true })}
-              {input('originLng', { coordinate: true })}
+              <AddressLookup side="origin" draft={draft} disabled={disabled} onChange={patch} />
             </div>
           </div>
           <div className="dsn-stop" data-kind="delivery">
@@ -186,8 +187,7 @@ export function RouteCreateForm({ initialDriverId = '', onPublished }: { initial
             <div className="dsn-grid">
               <p className="dsn-stop-title dsn-wide">{t('dispatch.create.delivery')}</p>
               {input('destination', { wide: true })}
-              {input('destinationLat', { coordinate: true })}
-              {input('destinationLng', { coordinate: true })}
+              <AddressLookup side="destination" draft={draft} disabled={disabled} onChange={patch} />
               {input('receiverCompany')}
               {input('receiverName')}
               {input('receiverPhone')}

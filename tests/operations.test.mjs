@@ -544,3 +544,42 @@ test('stop aborta requests, fecha stream e ignora callbacks ou respostas tardias
     assert.deepEqual(runtime.store.getState().history, []);
   } finally { runtime.stop(); }
 });
+
+test('rota cancelada vira viagem encerrada com motivo do backend e evento TripCancelled', () => {
+  const cancelled = { ...route, status: 'cancelada', cancelada_em: '2026-11-22T12:00:00Z', cancelada_por: 'CCO', cancelamento_motivo: 'Pedido cancelado' };
+  const data = projectSnapshot({
+    ...sample(), rotas: [cancelled], tasks: [], estadias: [],
+    eventos: [{ id: 9, tipo: 'rota_cancelada', rota_id: 1, timestamp: '2026-11-22T12:00:00Z', mensagem: 'Rota 1 cancelada por CCO: Pedido cancelado',
+      dados: { motivo: 'Pedido cancelado', por: 'CCO', status_anterior: 'em_transito' } }],
+  }, new Map(), now);
+  assert.equal(data.trips[0].phase, 'cancelled');
+  assert.deepEqual(data.trips[0].backend.cancellation, { at: '2026-11-22T12:00:00Z', by: 'CCO', reason: 'Pedido cancelado' });
+  const feed = data.feed.find((item) => item.type === 'TripCancelled');
+  assert.ok(feed);
+  assert.equal(feed.source, 'cco');
+});
+
+test('cancelamento REST prevalece sobre posição SSE antiga e não reabre a viagem', async () => {
+  const testCase = fixture();
+  const { runtime } = testCase;
+  const pending = deferred();
+  const cancelled = { ...sample(), rotas: [{ ...route, status: 'cancelada', cancelamento_motivo: 'Pedido cancelado', cancelada_por: 'CCO', cancelada_em: at }],
+    tasks: [], estadias: [] };
+  try {
+    const source = await testCase.boot();
+    testCase.current = cancelled;
+    testCase.overrides.set('GET /cco/estado', () => pending.promise);
+    const refresh = runtime.refresh();
+    source.emit('posicao', { rota_id: 1, lat: -22.9, lng: -47.06, distancia_m: 10, eta_min: 0, status: 'aproximando' });
+    pending.resolve(json(cancelled));
+    await refresh;
+    assert.equal(runtime.store.getState().trips[0].phase, 'cancelled');
+    source.emit('posicao', { rota_id: 1, lat: -22.91, lng: -47.07, distancia_m: 5, eta_min: 0, status: 'no_destino' });
+    const trip = runtime.store.getState().trips[0];
+    assert.equal(trip.phase, 'cancelled');
+    assert.equal(trip.backend.cancellation.reason, 'Pedido cancelado');
+  } finally {
+    pending.resolve(json(cancelled));
+    runtime.stop();
+  }
+});

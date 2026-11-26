@@ -9,7 +9,7 @@ export const tripViewPt = {
     vehicle: 'Veículo', vehicleValue: '{{plate}} · {{tons}} t',
     receiver: 'Recebedor', contact: 'Contato no recebedor', notified: 'Recebedor avisado antes',
     position: 'Posição', positionLive: 'GPS simulado · ao vivo', positionAge: '{{source}} · há {{time}}', positionMissing: 'sem posição',
-    wait: 'Espera no recebedor', stay: 'Estadia',
+    wait: 'Espera no recebedor', stay: 'Estadia', cancellation: 'Cancelamento',
     yes: 'Sim', no: 'Não',
   },
   history: {
@@ -66,7 +66,7 @@ export const tripViewEn: typeof tripViewPt = {
     vehicle: 'Vehicle', vehicleValue: '{{plate}} · {{tons}} t',
     receiver: 'Receiver', contact: 'Receiver contact', notified: 'Receiver notified ahead',
     position: 'Position', positionLive: 'Simulated GPS · live', positionAge: '{{source}} · {{time}} ago', positionMissing: 'no position',
-    wait: 'Wait at receiver', stay: 'Detention',
+    wait: 'Wait at receiver', stay: 'Detention', cancellation: 'Cancellation',
     yes: 'Yes', no: 'No',
   },
   history: {

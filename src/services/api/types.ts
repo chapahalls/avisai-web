@@ -1,5 +1,16 @@
 /** DTOs do backend RODAR. Valores monetários e estados continuam sob autoridade do servidor. */
-export type BackendRouteStatus = 'publicada' | 'planejada' | 'na_origem' | 'em_transito' | 'aproximando' | 'no_destino' | 'descarregada';
+export type BackendRouteStatus = 'publicada' | 'planejada' | 'na_origem' | 'em_transito' | 'aproximando' | 'no_destino' | 'descarregada' | 'cancelada';
+
+/** De onde veio a coordenada: resultado escolhido na geocodificação ou digitada pelo CCO. */
+export interface BackendGeoLink {
+  fonte: 'geocodificacao' | 'manual';
+  provedor?: string;
+  id?: string;
+  endereco?: string;
+}
+
+export interface BackendGeocodeResult { id: string; endereco: string; lat: number; lng: number; tipo: string | null }
+export interface BackendGeocodeResponse { provedor: string; atribuicao: string; resultados: BackendGeocodeResult[] }
 export type BackendTaskStatus = 'pendente' | 'confirmada' | 'escalada_recebedor' | 'concluida';
 export type BackendCallStatus = 'chamando' | 'em_andamento' | 'respondida' | 'nao_atendida' | 'falhou';
 export type BackendTaskChannel = 'push' | 'painel' | 'ligacao';
@@ -45,6 +56,14 @@ export interface BackendRoute {
   distancia_m: number | null;
   motorista_nome: string | null;
   canal_motorista: string;
+  /** Endereço digitado e vínculo da coordenada; ausentes em backends anteriores. */
+  origem_endereco?: string;
+  destino_endereco?: string;
+  origem_geo?: BackendGeoLink | Record<string, never> | null;
+  destino_geo?: BackendGeoLink | Record<string, never> | null;
+  cancelada_em?: string | null;
+  cancelada_por?: string | null;
+  cancelamento_motivo?: string | null;
 }
 
 export interface BackendTask {
@@ -251,9 +270,11 @@ export interface BackendDriver {
   email: string | null;
 }
 
+export interface BackendNewRoutePoint { nome: string; lat: number; lng: number; endereco?: string; geo?: BackendGeoLink }
+
 export interface BackendNewRoute {
-  origem: { nome: string; lat: number; lng: number };
-  destino: { nome: string; lat: number; lng: number };
+  origem: BackendNewRoutePoint;
+  destino: BackendNewRoutePoint;
   recebedor: { empresa: string; nome: string; telefone_e164: string };
   carga_t: number;
   carga_descricao?: string;

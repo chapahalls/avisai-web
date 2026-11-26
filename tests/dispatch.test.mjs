@@ -1,16 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { routeInput, assignmentIssue, registeredDrivers, dispatchRows, dispatchCounts, DISPATCH_FILTERS, demoDispatchRows, demoRegisteredDrivers, routeDispatchState, routeFileIssue, draftProgress, worstCaseReceiverCalls, ROUTE_FILE_MAX_BYTES, emptyDraft } from '../.cache/tests/features/dispatch/model.js';
+import { routeInput, assignmentIssue, registeredDrivers, dispatchRows, dispatchCounts, DISPATCH_FILTERS, demoDispatchRows, demoRegisteredDrivers, routeDispatchState, routeFileIssue, draftProgress, worstCaseReceiverCalls, ROUTE_FILE_MAX_BYTES, emptyDraft, linkGeocodeResult, changeStopAddress, restoreDraft, canCancelTrip } from '../.cache/tests/features/dispatch/model.js';
 
 const draft = {
-  origin: ' CD Jundiaí ', originLat: '-23,1857', originLng: '-46.8978',
-  destination: 'Campinas', destinationLat: '-22.9056', destinationLng: '-47.0608',
+  ...emptyDraft,
+  origin: ' CD Jundiaí ', originLat: '-23,1857', originLng: '-46.8978', originSource: 'manual',
+  destination: 'Campinas', destinationLat: '-22.9056', destinationLng: '-47.0608', destinationSource: 'manual',
   plate: ' cco1a23 ', invoice: '000.123', cargo: 'Produtos embalados', tons: '28,5', window: '14h–16h',
   receiverCompany: 'Recebedor', receiverName: 'Contato', receiverPhone: '+5511999999999',
 };
 test('publicação mantém coordenadas e carga e exige motorista cadastrado', () => {
   const input = routeInput(draft, 8);
-  assert.deepEqual(input.origem, { nome: 'CD Jundiaí', lat: -23.1857, lng: -46.8978 });
+  assert.deepEqual(input.origem, { nome: 'CD Jundiaí', lat: -23.1857, lng: -46.8978, geo: { fonte: 'manual' } });
   assert.equal(input.carga_t, 28.5);
   assert.equal(input.placa, 'CCO1A23');
   assert.equal(input.motorista_id, 8);
@@ -126,4 +127,59 @@ test('cadastro: etapas ficam prontas com a mesma validação da publicação', (
   assert.equal(draftProgress({ ...draft, receiverPhone: '119' }, 8).ready, false);
   assert.equal(worstCaseReceiverCalls(1, 3), 3);
   assert.equal(worstCaseReceiverCalls(2, 3), 6);
+});
+
+const place = { id: 'W202', endereco: 'Avenida do Atacado, 2000, Sorocaba, SP', lat: -23.5015, lng: -47.4526, tipo: 'road' };
+
+test('resultado escolhido vincula coordenada e lugar; publicação envia endereço e vínculo', () => {
+  const linked = { ...draft, destinationAddress: ' Av. do Atacado, 2000 ', ...linkGeocodeResult('destination', 'nominatim', place) };
+  const input = routeInput(linked, 8);
+  assert.deepEqual(input.destino, {
+    nome: 'Campinas', lat: -23.5015, lng: -47.4526, endereco: 'Av. do Atacado, 2000',
+    geo: { fonte: 'geocodificacao', provedor: 'nominatim', id: 'W202', endereco: 'Avenida do Atacado, 2000, Sorocaba, SP' },
+  });
+  assert.equal(input.origem.geo.fonte, 'manual');
+});
+
+test('sem localizar não publica: endereço sem coordenada, vínculo sem lugar ou coordenada vazia', () => {
+  for (const change of [
+    { originSource: '' },
+    { originSource: 'geocodificacao', originGeoProvider: 'nominatim', originGeoId: '' },
+    { originSource: 'geocodificacao', originGeoProvider: '', originGeoId: 'N1' },
+    { destinationSource: 'manual', destinationLat: '' },
+  ]) assert.throws(() => routeInput({ ...draft, ...change }, 8), /location|coordinates/);
+  assert.throws(() => routeInput({ ...draft, originSource: '' }, 8), /location/);
+  assert.equal(draftProgress({ ...draft, destinationSource: '' }, 8).ready, false);
+});
+
+test('editar o endereço desfaz o vínculo geocodificado, mas preserva coordenada manual', () => {
+  const linked = { ...draft, ...linkGeocodeResult('origin', 'nominatim', place) };
+  const changed = { ...linked, ...changeStopAddress(linked, 'origin', 'Outro endereço') };
+  assert.equal(changed.originSource, '');
+  assert.equal(changed.originLat, '');
+  assert.equal(changed.originGeoId, '');
+  assert.equal(changed.originAddress, 'Outro endereço');
+  const manual = { ...draft, ...changeStopAddress(draft, 'origin', 'Rua A') };
+  assert.equal(manual.originSource, 'manual');
+  assert.equal(manual.originLat, '-23,1857');
+});
+
+test('rascunho antigo com coordenadas volta como manual; sem coordenadas, precisa localizar', () => {
+  const old = restoreDraft({ origin: 'CD', originLat: '-23.1', originLng: '-46.8', destination: 'Loja' });
+  assert.equal(old.originSource, 'manual');
+  assert.equal(old.destinationSource, '');
+  assert.equal(old.destinationAddress, '');
+  assert.equal(restoreDraft({ originSource: 'inventado' }).originSource, '');
+});
+
+test('cancelada é viagem encerrada: some do despacho, bloqueia atribuição e não pode ser cancelada de novo', () => {
+  const trip = (status) => ({ id: 'api-route-5', source: 'api', backendId: 5, phase: status === 'cancelada' ? 'cancelled' : 'driving',
+    backend: { status, driverId: 9, companyId: 1 } });
+  const driver = { id: 7, empresa_id: 1, nome: 'D', telefone_e164: null, email: null };
+  assert.equal(routeDispatchState(trip('cancelada')), null);
+  assert.equal(assignmentIssue(trip('cancelada'), driver, []), 'closed');
+  assert.equal(assignmentIssue(trip('planejada'), { ...driver, id: 9 }, [{ ...trip('cancelada'), backendId: 6 }]), null);
+  for (const status of ['publicada', 'planejada', 'na_origem', 'em_transito', 'aproximando']) assert.equal(canCancelTrip(trip(status)), true, status);
+  for (const status of ['no_destino', 'descarregada', 'cancelada']) assert.equal(canCancelTrip(trip(status)), false, status);
+  assert.equal(canCancelTrip({ ...trip('planejada'), source: 'mock' }), false);
 });

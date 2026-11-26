@@ -27,7 +27,7 @@ type MapStatus = 'key_missing' | 'loading' | 'ready' | 'map_error';
 type FleetFilter = 'all' | 'alerts' | 'waiting' | 'driving';
 const filters: FleetFilter[] = ['all', 'driving', 'waiting', 'alerts'];
 const cities: Record<string, string> = { r1: 'Campinas', r2: 'Sumaré', r3: 'Americana', r4: 'Valinhos', r5: 'Campinas' };
-const phaseColor = { driving: 'var(--color-brand-500)', approaching: 'var(--color-brand-500)', waiting: 'var(--color-wait-500)', unloaded: 'var(--color-ok-500)' } as const;
+const phaseColor = { driving: 'var(--color-brand-500)', approaching: 'var(--color-brand-500)', waiting: 'var(--color-wait-500)', unloaded: 'var(--color-ok-500)', cancelled: 'var(--color-ink-300)' } as const;
 
 interface TruckMarker {
   marker: GoogleMarker;

@@ -1,5 +1,5 @@
 import { BUSINESS, SIMULATION } from '../../lib/config.js';
-import type { CallLog, Task, Trip } from '../../types/ops.js';
+import { isTripClosed, type CallLog, type Task, type Trip } from '../../types/ops.js';
 
 /**
  * Regras do painel de monitoramento (mockup 02-monitoramento). Tudo é derivado
@@ -58,7 +58,7 @@ export function deriveAlerts(
     });
   });
   trips.forEach((trip) => {
-    if (trip.phase === 'unloaded') return;
+    if (isTripClosed(trip.phase)) return;
     const wait = trip.phase === 'waiting' ? waitMinutes(trip, simMinutes) : null;
     if (wait !== null && wait > franchise) {
       alerts.push({ id: `stay-${trip.id}`, tripId: trip.id, kind: 'overFranchise', severity: 'high', sinceMin: wait - franchise, waitMin: wait });
@@ -85,7 +85,7 @@ export interface OperationCounts {
 
 export function countOperation(trips: Trip[], simMinutes: number): OperationCounts {
   const franchise = BUSINESS.franchiseHours * 60;
-  const active = trips.filter((trip) => trip.phase !== 'unloaded');
+  const active = trips.filter((trip) => !isTripClosed(trip.phase));
   const waiting = active.filter((trip) => trip.phase === 'waiting');
   return {
     active: active.length,
@@ -98,6 +98,7 @@ export function countOperation(trips: Trip[], simMinutes: number): OperationCoun
 
 /** Minutos restantes até o recebedor; `null` sem fonte. */
 export function etaMinutes(trip: Trip): number | null {
+  if (trip.phase === 'cancelled') return null;
   if (trip.phase === 'waiting' || trip.phase === 'unloaded') return 0;
   if (trip.source === 'api') return trip.etaMin ?? null;
   return Math.ceil((trip.routeKm * (1 - trip.progress)) / SIMULATION.speedKmh * 60);

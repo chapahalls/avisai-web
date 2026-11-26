@@ -1,6 +1,9 @@
 import type { LatLng } from './geo.js';
 
-export type TripPhase = 'driving' | 'approaching' | 'waiting' | 'unloaded';
+export type TripPhase = 'driving' | 'approaching' | 'waiting' | 'unloaded' | 'cancelled';
+
+/** Viagem encerrada: descarregada ou cancelada pela central. Não entra em frota ativa, fila ou atribuição. */
+export const isTripClosed = (phase: TripPhase) => phase === 'unloaded' || phase === 'cancelled';
 
 export interface Receiver {
   id: string;
@@ -49,6 +52,8 @@ export interface Trip {
     status: string;
     driverId: number | null;
     companyId: number;
+    /** Presente quando o backend cancelou a viagem; valores como recebidos. */
+    cancellation?: { at: string | null; by: string | null; reason: string | null };
   };
   stay?: { waitMin: number; valueBRL: number; franchiseHours: number; capacityTons: number };
 }

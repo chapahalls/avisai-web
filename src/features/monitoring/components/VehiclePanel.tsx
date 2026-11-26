@@ -31,7 +31,8 @@ export function VehiclePanel({ tripId, onClose }: { tripId: string | null; onClo
   // API: estadia vem do backend; Demo: regra local de src/utils/stay.ts.
   const stay = trip.source === 'api' ? trip.stay?.valueBRL ?? null : wait === null ? null : stayValue(wait, trip.capacityTons);
   const call = latestCall(calls, trip.id);
-  const etaText = trip.phase === 'unloaded'
+  const etaText = trip.phase === 'cancelled' ? t('monitoring.grid.cancelled')
+    : trip.phase === 'unloaded'
     ? t('monitoring.grid.unloaded')
     : trip.phase === 'waiting'
       ? wait === null ? '—' : t('monitoring.grid.waiting', { time: hhmm(wait, locale) })

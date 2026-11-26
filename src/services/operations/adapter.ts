@@ -20,7 +20,7 @@ function baseline(now: Date) {
 }
 
 const phase: Record<string, Trip['phase']> = {
-  publicada: 'driving', planejada: 'driving', na_origem: 'driving', em_transito: 'driving', aproximando: 'approaching', no_destino: 'waiting', descarregada: 'unloaded',
+  publicada: 'driving', planejada: 'driving', na_origem: 'driving', em_transito: 'driving', aproximando: 'approaching', no_destino: 'waiting', descarregada: 'unloaded', cancelada: 'cancelled',
 };
 const taskStatus: Record<string, Task['status']> = {
   pendente: 'open', confirmada: 'acknowledged', escalada_recebedor: 'escalated', concluida: 'closed',
@@ -32,7 +32,7 @@ const eventType: Record<string, EventType> = {
   fallback_plano_b: 'ReceiverCallResult', ligacao_nao_atendida: 'ReceiverCallResult', resposta_recebedor: 'ReceiverCallResult',
   ocorrencia: 'OccurrenceCreated', descarga: 'UnloadConfirmed', fala_motorista: 'ReportSubmitted',
   fala_recebedor: 'ReceiverCallResult', fala_agente: 'ReportSubmitted',
-  rota_publicada: 'RouteAssigned', rota_atribuida: 'RouteAssigned', arquivo_adicionado: 'ReportSubmitted',
+  rota_publicada: 'RouteAssigned', rota_atribuida: 'RouteAssigned', rota_cancelada: 'TripCancelled', arquivo_adicionado: 'ReportSubmitted',
   retirada: 'PickupConfirmed', relatorio: 'ReportSubmitted', campo_faltante: 'ReportFieldMissing',
   task_criada: 'TaskCreated', aviso_recebedor: 'ReceiverNotified', nao_recebe_hoje: 'ReceiverCallResult',
   resposta_central: 'ReportSubmitted',
@@ -57,7 +57,7 @@ const eventSource: Record<string, DomainEvent['source']> = {
   task_confirmada: 'cco', descarga: 'cco', fala_motorista: 'driver', chegada_confirmada_voz: 'driver',
   fala_recebedor: 'agent', fala_agente: 'agent', resposta_recebedor: 'agent', ligacao_recebedor: 'agent',
   ligacao_falhou: 'agent', ligacao_nao_atendida: 'agent', fallback_plano_b: 'agent',
-  rota_publicada: 'cco', rota_atribuida: 'cco', arquivo_adicionado: 'cco',
+  rota_publicada: 'cco', rota_atribuida: 'cco', rota_cancelada: 'cco', arquivo_adicionado: 'cco',
   retirada: 'driver', relatorio: 'driver', resposta_central: 'driver', pedido_central: 'cco',
   campo_faltante: 'agent', aviso_recebedor: 'agent', nao_recebe_hoje: 'agent', pergunta_documento: 'agent',
   alerta_motorista: 'driver', decisao_agente: 'agent',
@@ -160,7 +160,8 @@ export function projectSnapshot(snapshot: BackendSnapshot, details: ReadonlyMap<
       stay: stay ? { waitMin: stay.horas_paradas * 60, valueBRL: stay.valor, franchiseHours: stay.franquia_h, capacityTons: stay.capacidade_t } : undefined,
       backend: { invoiceNumber: route.nota_fiscal, cargoDescription: route.carga_descricao, cargoTons: route.carga_t,
         originName: route.origem_nome, destinationName: route.destino_nome, arrivalWindow: route.janela_descarga ?? '',
-        receiverContact: route.recebedor_nome, status: route.status, driverId: route.motorista_id, companyId: route.empresa_id },
+        receiverContact: route.recebedor_nome, status: route.status, driverId: route.motorista_id, companyId: route.empresa_id,
+        ...(route.status === 'cancelada' ? { cancellation: { at: route.cancelada_em ?? null, by: route.cancelada_por ?? null, reason: route.cancelamento_motivo ?? null } } : {}) },
     };
   });
   const metadata = Object.fromEntries(trips.map((trip) => [trip.id, { plate: trip.plate, driver: trip.driver, receiverId: trip.receiverId }]));

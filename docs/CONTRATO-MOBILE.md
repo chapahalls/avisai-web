@@ -89,7 +89,7 @@ position: { lat: number | null, lng: number | null,
 channel: string                 driverUid/agentUid: number
 ```
 
-Status atuais: `publicada`, `planejada`, `na_origem`, `em_transito`, `aproximando`, `no_destino`, `descarregada`.
+Status atuais: `publicada`, `planejada`, `na_origem`, `em_transito`, `aproximando`, `no_destino`, `descarregada`, `cancelada`. `cancelada` é final: a central encerrou a viagem antes do destino (`POST /rotas/{id}/cancelar`), com `cancelada_em`, `cancelada_por` e `cancelamento_motivo`. A rota cancelada não volta como rota atual, não aceita chegada nem descarga (409) e posições enviadas depois são ignoradas sem disparar geocerca.
 
 A consulta por motorista escolhe a rota não descarregada mais recente por data de atribuição e ID. Ela não retorna uma lista completa de viagens, sequência planejada ou histórico. Em 404, mostrar **Sem viagem atribuída**, continuar acompanhando o motorista e não usar a rota 1 como fallback.
 
@@ -101,9 +101,10 @@ A consulta por motorista escolhe a rota não descarregada mais recente por data 
 2. Abrir `/ws?motorista_id={driverId}` e consultar `/api/route?driverId={driverId}`. Na abertura/reconexão e periodicamente, repetir a consulta: não depender do `tripId` recebido no login. O exemplo faz reconciliação a cada 15 segundos.
 3. Com rota, validar `route.driverId === session.user.driverId`, guardar `tripId` e buscar os metadados MOCK em `/api/documents?tripId={tripId}` e os anexos reais em `/rotas/{tripId}/arquivos`.
 4. Acompanhar eventos da rota via WS ou, se o ambiente tiver cliente SSE, `/cco/stream?rota_id={Number(tripId)}`. Tratar `alerta_motorista`, `mensagem_motorista_*` e `decisao_agente` como eventos de timeline; `mensagem_id` preserva a thread.
-5. Ao receber `rota_atribuida`, refazer a consulta autoritativa da rota atual, documentos e anexos. Isso cobre atribuição nova e reatribuição de uma rota antes acompanhada. Atualizar a seleção e reabrir o acompanhamento por rota se seu ID mudar.
-6. Em descarga, reset ou reconexão, consultar novamente a rota atual. Antes de trocar perfil, fechar WS/SSE, cancelar leituras/downloads pendentes e limpar a viagem exibida. Cada sessão/leitura recebe uma geração: respostas e callbacks antigos são descartados mesmo se o transporte não respeitar o cancelamento.
-7. Durante uma desconexão, mostrar o último dado como desatualizado. Preservar valores financeiros e contadores do backend; não aplicar o relógio nem a fórmula da Demo do painel web.
+5. Ao receber `rota_cancelada` (em `/events`, `TripCancelled`), avisar o motorista com o motivo em `dados.motivo` e refazer a consulta da rota atual; o resultado esperado é 404 até uma nova atribuição.
+6. Ao receber `rota_atribuida`, refazer a consulta autoritativa da rota atual, documentos e anexos. Isso cobre atribuição nova e reatribuição de uma rota antes acompanhada. Atualizar a seleção e reabrir o acompanhamento por rota se seu ID mudar.
+7. Em descarga, reset ou reconexão, consultar novamente a rota atual. Antes de trocar perfil, fechar WS/SSE, cancelar leituras/downloads pendentes e limpar a viagem exibida. Cada sessão/leitura recebe uma geração: respostas e callbacks antigos são descartados mesmo se o transporte não respeitar o cancelamento.
+8. Durante uma desconexão, mostrar o último dado como desatualizado. Preservar valores financeiros e contadores do backend; não aplicar o relógio nem a fórmula da Demo do painel web.
 
 Exemplo independente: [mobile-client.ts](examples/mobile-client.ts). `MobileApi` oferece `listProfiles`, login MOCK com conferência do perfil, rota atual, documentos MOCK, anexos, download `Blob` e transportes WS/SSE. `MobileController` coordena a seleção, a sessão e a viagem; uma instância deve acompanhar o ciclo de vida da tela/app. A URL e um fornecedor opcional de token são configuráveis. Enviar `Authorization` não acrescenta autenticação ao backend atual, que não valida o token MOCK.
 

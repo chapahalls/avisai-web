@@ -6,6 +6,7 @@ import { APP_ROUTES } from '../../../lib/routes';
 import { confirmUnload, receiverById, useConnection } from '../../../services/operations';
 import { brl, hhmm } from '../../../utils/format';
 import { stayValue } from '../../../utils/stay';
+import { isTripClosed } from '../../../types/ops';
 import { useDriverHistory } from '../hooks/useDriverHistory';
 import { useTrip } from '../hooks/useTrip';
 import { TripDossier } from './TripDossier';
@@ -36,7 +37,7 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
   const waitMin = isApi ? trip.stay?.waitMin : trip.arrivedAtMin === undefined ? undefined : waited;
   const stay = isApi ? trip.stay?.valueBRL : waitMin === undefined ? undefined : stayValue(waitMin, trip.capacityTons);
   const pendingUnload = connection.pendingUnloadIds.includes(trip.id);
-  const tone = trip.phase === 'waiting' ? waitMin !== undefined && waitMin > BUSINESS.franchiseHours * 60 ? 'alert' : 'wait' : trip.phase === 'unloaded' ? 'muted' : 'ok';
+  const tone = trip.phase === 'waiting' ? waitMin !== undefined && waitMin > BUSINESS.franchiseHours * 60 ? 'alert' : 'wait' : isTripClosed(trip.phase) ? 'muted' : 'ok';
   const positionAge = trip.lastPositionAt ? (Date.now() - new Date(trip.lastPositionAt).getTime()) / 60_000 : null;
   const position = !isApi ? t('tripView.driver.positionLive')
     : trip.positionKnown === false || positionAge === null ? t('tripView.driver.positionMissing')
@@ -49,6 +50,8 @@ export function TripDetails({ tripId, route }: { tripId: string; route?: ReactNo
     [t('tripView.driver.position'), position],
     [t('tripView.driver.wait'), waitMin === undefined ? '—' : hhmm(waitMin, locale)],
     [t('tripView.driver.stay'), stay === undefined || stay === 0 ? '—' : brl(stay, locale)],
+    ...(trip.backend?.cancellation ? [[t('tripView.driver.cancellation'),
+      [trip.backend.cancellation.reason, trip.backend.cancellation.by].filter(Boolean).join(' · ') || '—'] as [string, string]] : []),
   ];
   return (
     <div className="trv">

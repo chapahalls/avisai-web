@@ -24,6 +24,7 @@ const CATEGORY: Partial<Record<EventType, TimelineCategory>> = {
   DriverAlert: 'agent',
   DriverOffline: 'agent',
   TaskCreated: 'cco',
+  TripCancelled: 'cco',
   TaskEscalated: 'cco',
   TaskAcknowledged: 'cco',
   DriverMessageSent: 'cco',

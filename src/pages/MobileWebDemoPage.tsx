@@ -9,6 +9,7 @@ import { AppIcon, AvisaiDock, CabinConversation, type OrbState, type Utterance }
 import { applyMobileDemoAction, useOps, useReceivers } from '../services/operations';
 import { connectLiveVoice, disconnectLiveVoice, toggleLiveMute, useLiveVoice } from '../services/livekit/liveVoice';
 import type { FeedEvent } from '../services/mock/engine';
+import type { TripPhase } from '../types/ops';
 import { SIMULATION } from '../lib/config';
 import { brl, clock } from '../utils/format';
 import { stayValue } from '../utils/stay';
@@ -101,8 +102,9 @@ function eventKey(event: FeedEvent): EventKey | null {
   }
 }
 
-function tripPhase(phase: 'driving' | 'approaching' | 'waiting' | 'unloaded'): Phase {
-  return phase;
+/** Viagem cancelada encerra o roteiro do app como se não houvesse viagem ativa. */
+function tripPhase(phase: TripPhase): Phase {
+  return phase === 'cancelled' ? 'idle' : phase;
 }
 
 export function MobileWebDemoPage({ embedded = false, integrated = false, guided = true, dashboardVisible = true }: { embedded?: boolean; integrated?: boolean; guided?: boolean; dashboardVisible?: boolean }) {

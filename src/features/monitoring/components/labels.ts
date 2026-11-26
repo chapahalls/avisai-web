@@ -16,4 +16,5 @@ export const phaseTone: Record<Trip['phase'], Tone> = {
   approaching: 'info',
   waiting: 'wait',
   unloaded: 'muted',
+  cancelled: 'muted',
 };

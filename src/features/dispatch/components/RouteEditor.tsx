@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { APP_ROUTES } from '../../../lib/routes';
+import { ApiError } from '../../../services/api/client';
 import { getApiClient, refreshOperations } from '../../../services/operations';
 import type { Trip } from '../../../types/ops';
-import { assignmentIssue, type DispatchRow, type RegisteredDriver } from '../model';
+import { assignmentIssue, CANCEL_REASON_MAX, CANCEL_REASON_MIN, canCancelTrip, type DispatchRow, type RegisteredDriver } from '../model';
 import { RouteFiles } from './RouteFiles';
 
 /**
@@ -30,7 +31,29 @@ export function RouteEditor({ row, drivers, trips, onClose, onSaved }: {
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => { setDriverId(currentDriverId === null ? '' : String(currentDriverId)); setError(null); }, [trip.id, currentDriverId]);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [cancelPending, setCancelPending] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  useEffect(() => { setCancelOpen(false); setReason(''); setCancelError(null); }, [trip.id]);
   const apiTrips = trips.filter((item) => item.source === 'api');
+  const reasonValid = reason.trim().length >= CANCEL_REASON_MIN && reason.trim().length <= CANCEL_REASON_MAX;
+
+  const cancelTrip = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!client || busy.current || !trip.backendId || !reasonValid || !canCancelTrip(trip)) return;
+    busy.current = true; setCancelPending(true); setCancelError(null);
+    try {
+      await client.cancelRoute(trip.backendId, reason);
+      await refreshOperations();
+      if (mounted.current) onSaved();
+    } catch (cause) {
+      // O servidor pode ter cancelado antes da falha; atualiza e não repete sozinho.
+      await refreshOperations();
+      const status = cause instanceof ApiError ? cause.status : undefined;
+      if (mounted.current) setCancelError(status === 409 ? 'cancelConflict' : 'cancelFailed');
+    } finally { busy.current = false; if (mounted.current) setCancelPending(false); }
+  };
   const changed = driverId !== '' && Number(driverId) !== currentDriverId;
 
   const save = async (event: FormEvent) => {
@@ -90,6 +113,27 @@ export function RouteEditor({ row, drivers, trips, onClose, onSaved }: {
           <button type="submit" className="dsp-button" data-variant="primary" disabled={pending || !changed} aria-busy={pending}>{t(pending ? 'dispatch.saving' : 'dispatch.list.editor.save')}</button>
         </div>
       </form>
+
+      {canCancelTrip(trip) && <section className="dsp-cancel" aria-labelledby="dsp-cancel-title">
+        <h3 id="dsp-cancel-title">{t('dispatch.cancelTrip.title')}</h3>
+        {!cancelOpen
+          ? <button type="button" className="dsp-button" data-variant="danger" onClick={() => setCancelOpen(true)} disabled={pending}>{t('dispatch.cancelTrip.open')}</button>
+          : <form onSubmit={(event) => void cancelTrip(event)}>
+              <p className="dsp-info">{t('dispatch.cancelTrip.warning')}</p>
+              <label>
+                <span>{t('dispatch.cancelTrip.reason')}</span>
+                <textarea value={reason} onChange={(event) => { setReason(event.target.value); setCancelError(null); }} disabled={cancelPending}
+                  required minLength={CANCEL_REASON_MIN} maxLength={CANCEL_REASON_MAX} rows={3} placeholder={t('dispatch.cancelTrip.placeholder')} />
+              </label>
+              {cancelError && <p role="alert" className="dsp-error">{t(`dispatch.errors.${cancelError}`)}</p>}
+              <div className="dsp-editor-actions">
+                <button type="button" className="dsp-button" onClick={() => { setCancelOpen(false); setReason(''); setCancelError(null); }} disabled={cancelPending}>{t('dispatch.cancelTrip.keep')}</button>
+                <button type="submit" className="dsp-button" data-variant="danger" disabled={cancelPending || !reasonValid} aria-busy={cancelPending}>
+                  {t(cancelPending ? 'dispatch.cancelTrip.cancelling' : 'dispatch.cancelTrip.confirm')}
+                </button>
+              </div>
+            </form>}
+      </section>}
 
       <Link className="dsp-link" to={APP_ROUTES.trip(trip.id)}>{t('dispatch.openRoute')} ↗</Link>
       {trip.backendId && <div className="dsp-editor-files"><RouteFiles key={trip.backendId} routeId={trip.backendId} editable /></div>}

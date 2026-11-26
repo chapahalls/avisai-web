@@ -14,6 +14,12 @@ export interface ConnectionState {
   pendingUnloadIds: string[];
 }
 export interface ApiOpsState extends OpsState { receivers: Receiver[] }
+/** Descarga e cancelamento são finais: uma resposta concorrente não reabre a viagem. */
+const TERMINAL_ROUTE_STATUSES = new Set<string>(['descarregada', 'cancelada']);
+const terminalRoute = (rest: BackendRoute | undefined, route: BackendRoute): BackendRoute =>
+  rest && TERMINAL_ROUTE_STATUSES.has(rest.status) && rest.status !== route.status
+    ? { ...route, status: rest.status, cancelada_em: rest.cancelada_em, cancelada_por: rest.cancelada_por, cancelamento_motivo: rest.cancelamento_motivo }
+    : route;
 const emptySnapshot = (): BackendSnapshot => ({ rotas: [], tasks: [], estadias: [], ligacoes: [], eventos: [], ocorrencias: [], chamados: [] });
 const upsert = <T extends { id: number }>(items: T[], item: T) => [item, ...items.filter((candidate) => candidate.id !== item.id)];
 const errorLabel = (error: unknown) => error instanceof ApiError ? error.message : 'api_invalid_response';
@@ -124,7 +130,7 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
         snapshot = {
           ...next,
           rotas: reconcile(next.rotas, before.rotas, live.rotas, (route) => route.id, true).map((route) =>
-            restRoutes.get(route.id)?.status === 'descarregada' ? { ...route, status: 'descarregada' } : route),
+            terminalRoute(restRoutes.get(route.id), route)),
           tasks: reconcile(tasks, before.tasks, live.tasks, (task) => task.id).map((task) =>
             laterTask(restTasks.get(task.id), task)),
           ligacoes: reconcile(calls, before.ligacoes, live.ligacoes, (call) => call.id),
@@ -191,7 +197,7 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
         ...route, rastreador_lat: data.lat, rastreador_lng: data.lng, rastreador_em: now().toISOString(),
       } : {
         ...route, ultima_lat: data.lat, ultima_lng: data.lng, distancia_m: data.distancia_m,
-        eta_min: data.eta_min, status: route.status === 'descarregada' ? route.status : data.status, ultima_posicao_em: now().toISOString(),
+        eta_min: data.eta_min, status: TERMINAL_ROUTE_STATUSES.has(route.status) ? route.status : data.status, ultima_posicao_em: now().toISOString(),
       } : route),
     };
     apply();
