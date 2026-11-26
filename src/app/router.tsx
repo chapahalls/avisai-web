@@ -41,7 +41,7 @@ function LegacyTripRedirect() {
 
 export function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Routes>
         <Route path="/home" element={<Page><HomePage /></Page>} />
         <Route path="/mobile-web" element={<Page><MobileWebDemoPage /></Page>} />
