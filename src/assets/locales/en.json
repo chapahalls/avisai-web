@@ -9,6 +9,11 @@
       "pt": "PT",
       "en": "EN"
     },
+    "themeLight": "Light theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
     "skipContent": "Skip to content",
     "localMock": "Local demo · fictional data"
   },
@@ -390,7 +395,27 @@
       "escalatedHint": "awaiting operator action"
     },
     "brand": "RODAR · CCO",
-    "brandSubtitle": "Operations control center"
+    "brandSubtitle": "Operations control center",
+    "mode": {
+      "demo": "Demo mode",
+      "demoLabel": "DEMO",
+      "live": "Live mode",
+      "liveLabel": "LIVE",
+      "menu": "Operation mode",
+      "useDemo": "Use demo",
+      "useLive": "Connect to live mode",
+      "liveUnavailable": "Live mode unavailable: configure the API URL.",
+      "retry": "Retry connection"
+    },
+    "access": {
+      "title": "Access and profiles",
+      "subtitle": "Hierarchical access flow",
+      "admin": "An administrator registers the user, corporate email, and access role.",
+      "invite": "The invitation is sent to the provided corporate email.",
+      "password": "The user opens the temporary link and sets their own password.",
+      "twoFactor": "Sign-in requires two-factor authentication (2FA) through Keycloak.",
+      "note": "Interface preview. Sending invitations and validating 2FA require identity-service integration."
+    }
   },
   "dossier": {
     "title": "Trip dossier",
@@ -429,14 +454,11 @@
       "dryGoods": "Dry groceries"
     },
     "communications": {
-      "summaryTitle": "Simulator status",
-      "summaries": {
-        "driving": "{{driver}} is en route to {{receiver}}.",
-        "approaching": "{{driver}} is approaching {{receiver}}. The approach notice is part of the simulated scenario.",
-        "waiting": "{{driver}} is waiting to unload at {{receiver}}. Arrival and incidents appear in the timeline.",
-        "unloaded": "{{driver}} has finished unloading at {{receiver}} in the simulator."
-      },
-      "hint": "Fictional reports and local simulator events. No message has been sent to the driver.",
+      "paginationLabel": "Communications pagination",
+      "range": "{{from}}–{{to}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{pages}}",
       "kinds": {
         "event": "Event",
         "message": "Fictional report"

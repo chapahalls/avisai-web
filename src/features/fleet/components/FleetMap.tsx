@@ -19,6 +19,7 @@ import type { Trip } from '../../../types/ops';
 import type { LatLng } from '../../../types/geo';
 import './FleetMap.css';
 import { APP_ROUTES } from '../../../lib/routes';
+import { useTheme } from '../../../lib/theme';
 
 const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? '';
 const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim() || 'DEMO_MAP_ID';
@@ -77,6 +78,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
   trips: Trip[]; selected?: Trip; onSelect: (vehicleId: string) => void; following: boolean; fitRequest: number;
 }) {
   const { t, i18n } = useTranslation();
+  const theme = useTheme((state) => state.theme);
   const allTrips = useOps((state) => state.trips);
   const mode = useMode();
   const receivers = useReceivers();
@@ -190,7 +192,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
     void loadTrackingMaps(apiKey, initialLanguage.current).then((api) => {
       if (cancelled || authFailed) return;
       const map = new api.Map(host, {
-        center: latest.current.allTrips[0]?.origin ?? MOCK_ROAD_ROUTES.r1.snappedOrigin, zoom: 10, mapId, colorScheme: 'DARK',
+        center: latest.current.allTrips[0]?.origin ?? MOCK_ROAD_ROUTES.r1.snappedOrigin, zoom: 10, mapId, colorScheme: theme === 'light' ? 'LIGHT' : 'DARK',
         mapTypeControl: false, streetViewControl: false, fullscreenControl: true,
         clickableIcons: false, gestureHandling: 'cooperative',
       });
@@ -294,7 +296,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest }: {
       if (resources.current === owned) resources.current = undefined;
       host.replaceChildren();
     };
-  }, [retry, mode, routeSignature]);
+  }, [retry, mode, routeSignature, theme]);
 
   useEffect(() => { updateTrucks(); }, [trips, allTrips, running, selected?.vehicleId, t]);
   useEffect(() => {
@@ -452,11 +454,11 @@ export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
         </aside>}
         <div className="tracking-map-column">
           <RoadMap trips={visibleTrips} selected={selected} onSelect={selectTruck} following={following && !!selected} fitRequest={fitRequest} />
-          <div className="tracking-route-strip">
+          {(!embedded || selected) && <div className="tracking-route-strip">
             <div><span>{selected?.plate ?? t('tracking.entireFleet')}</span><strong>{selected?.backend ? `${selected.backend.originName} → ${selected.backend.destinationName}` : selected ? t('tracking.routeDirection', { city: cities[selected.receiverId] }) : t(mode === 'api' ? 'api.region' : 'tracking.region')}</strong></div>
             <div><span>{t('tracking.distanceLeft')}</span><strong>{typeof distance === 'number' ? t('tracking.km', { value: distance.toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) }) : '—'}</strong></div>
             <div><span>{t(mode === 'api' ? 'api.arrivalEstimate' : 'tracking.arrivalEstimate')}</span><strong>{selected ? selected.phase === 'waiting' || selected.phase === 'unloaded' ? t('tracking.arrived') : typeof eta === 'number' ? clock(simMinutes + eta) : '—' : '—'}</strong></div>
-          </div>
+          </div>}
           <p className="tracking-attribution">{mode === 'api' ? <>{t('api.backendRoute')}{selected && !getTripRoute(selected).points.length && ` · ${t('api.noGeometry')}`}{selected?.positionKnown === false && ` · ${t('api.noPosition')}`}{selected?.positionSource && ` · ${t('api.positionSource', { source: t(`api.positionSources.${selected.positionSource}`) })}`}{selected?.lastPositionAt && ` · ${t('api.lastPosition', { time: new Intl.DateTimeFormat(i18n.resolvedLanguage, { timeStyle: 'medium' }).format(new Date(selected.lastPositionAt)) })}`}{selected?.lastPositionAt && Date.now() - new Date(selected.lastPositionAt).getTime() > 120_000 && ` · ${t('api.stalePosition')}`}</> : <>{t('tracking.routeData')} · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> / OSRM</>}</p>
         </div>
         {!tripId && !embedded && selected && <aside id={panelId} ref={panel} className="tracking-trip-panel" aria-label={t('tracking.selectedTruck', { plate: selected.plate })}>

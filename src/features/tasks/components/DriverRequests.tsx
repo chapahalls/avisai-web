@@ -105,7 +105,7 @@ export function DriverRequests() {
                   type="button"
                   onClick={() => void respond(row)}
                   disabled={pending !== null || !(drafts[row.id] ?? '').trim() || connection.status !== 'connected'}
-                  className="rounded-input bg-brand-500 px-3 py-2 text-sm font-semibold transition hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50"
+                  className="rounded-input bg-brand-500 text-on-accent px-3 py-2 text-sm font-semibold transition hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50"
                 >
                   {pending === row.id ? t('driverRequests.replying') : t('driverRequests.reply')}
                 </button>

@@ -54,7 +54,7 @@ export function TaskQueue() {
                 </div>
               </div>
               {(task.status === 'open' || task.status === 'escalated') && (
-                <button type="button" onClick={() => void acknowledge(task.id)} disabled={disabled} aria-busy={pending} className="shrink-0 rounded-input bg-brand-500 px-3 py-2 text-sm font-semibold transition hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">
+                <button type="button" onClick={() => void acknowledge(task.id)} disabled={disabled} aria-busy={pending} className="shrink-0 rounded-input bg-brand-500 text-on-accent px-3 py-2 text-sm font-semibold transition hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">
                   {t(pending ? 'api.actions.taking' : 'tasks.take')}
                 </button>
               )}
