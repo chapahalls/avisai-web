@@ -1,0 +1,30 @@
+name: Judge
+
+# A cada push na main, pede ao rodar-ideas para rodar o judge deste repo
+# (repos/<repo>/score.md) e depois o do projeto inteiro (STATUS.md).
+# Precisa do secret IDEAS_DISPATCH_TOKEN: token fine-grained com acesso só a
+# rodarglobal/rodar-ideas, permissão Contents: Read and write. Sem ele, o job só avisa.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar o judge no rodar-ideas
+        env:
+          TOKEN: ${{ secrets.IDEAS_DISPATCH_TOKEN }}
+          REPO: ${{ github.event.repository.name }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::sem o secret IDEAS_DISPATCH_TOKEN: o judge não foi disparado"; exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/rodarglobal/rodar-ideas/dispatches \
+            -d "{\"event_type\":\"judge\",\"client_payload\":{\"repo\":\"$REPO\",\"sha\":\"$SHA\",\"actor\":\"$ACTOR\"}}"
