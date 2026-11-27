@@ -12,8 +12,14 @@ export const LANDING_CALCULATOR = {
   workingDaysPerMonth: 22,
 } as const;
 
-/** Relógio simulado: 1 s real = 1 min. */
-export const SIM_MINUTES_PER_SECOND = 1;
+/** Relógio simulado na velocidade 1x: 2 s real = 1 min (eventos e veículos mais lentos que o 1 s = 1 min original). */
+export const SIM_MINUTES_PER_SECOND = 0.5;
+
+/** Multiplicadores de velocidade oferecidos no painel "Controles da demo (simulação)". */
+export const SIMULATION_SPEED_OPTIONS = [0.5, 1, 2] as const;
+
+/** Velocidade inicial da demo: um dos valores de SIMULATION_SPEED_OPTIONS. */
+export const DEFAULT_SIMULATION_SPEED: (typeof SIMULATION_SPEED_OPTIONS)[number] = 1;
 
 export const SIMULATION = {
   seed: 42,

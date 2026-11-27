@@ -87,7 +87,7 @@ O painel do mapa tem estados traduzidos para carregamento, chave ausente e falha
 
 O modo API apresenta carregamento inicial, erro e **Tentar novamente**, sem substituir a operação pela Demo. **Usar demo** exige escolha explícita. A conexão SSE interrompida identifica o estado como desatualizado; controles não fingem avanço de GPS, estadia ou eventos recebidos. Mensagens e ações usam pt-BR/en e continuam acessíveis por teclado.
 
-Na Demo, os controles abrem pelo botão **“Simulação”** no cabeçalho, por teclado ou clique. O painel tem borda tracejada e o título **“Controles da demo (simulação)”**; inclui pausar/continuar e chance de resposta do operador. Esses controles não alteram o backend.
+Na Demo, os controles abrem pelo botão **“Simulação”** no cabeçalho, por teclado ou clique. O painel tem borda tracejada e o título **“Controles da demo (simulação)”**; inclui pausar/continuar, velocidade da simulação (0.5x/1x/2x, afeta eventos e o deslocamento dos veículos no mapa) e chance de resposta do operador. Esses controles não alteram o backend.
 
 ## Traduções e formatos
 
