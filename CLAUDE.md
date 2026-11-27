@@ -14,3 +14,4 @@
 5. Textos sempre por i18n (`src/assets/locales`), pt-BR e en.
 6. Cores só pelos tokens (`src/index.css`, `docs/DESIGN.md`). Cor nunca comunica sozinha.
 7. Nada de chave ou dado pessoal real no git (E7).
+8. Depois de entregar, cortar ou decidir algo aqui, rode `/registrar` antes de encerrar: o status, as decisões e a nota deste repo ficam em `rodar-ideas/repos/rodar-web/`.
