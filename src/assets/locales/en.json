@@ -410,7 +410,9 @@
     "hint": "An operator response is simulated at each alert. Use 0% to observe escalation.",
     "operator": "Operator response",
     "running": "Simulation running",
-    "paused": "Paused"
+    "paused": "Paused",
+    "speed": "Simulation speed",
+    "speedOption": "{{v}}x"
   },
   "events": {
     "RouteAssigned": "Route received",

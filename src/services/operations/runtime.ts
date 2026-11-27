@@ -61,8 +61,8 @@ export function createApiRuntime(client: ApiClient, options: { now?: () => Date;
     status: 'closed', lastSyncedAt: null, error: null, actionError: null, pendingTaskIds: [], pendingUnloadIds: [],
   }));
   const store = createStore<ApiOpsState>(() => ({
-    ...projectSnapshot(snapshot, details, now()), running: false, operatorResponsiveness: 0,
-    historicalCalls: [], history: [], tick: () => {}, setResponsiveness: () => {}, toggle: () => {},
+    ...projectSnapshot(snapshot, details, now()), running: false, speed: 1, operatorResponsiveness: 0,
+    historicalCalls: [], history: [], tick: () => {}, setResponsiveness: () => {}, setSpeed: () => {}, toggle: () => {},
     acknowledge: (id) => { void confirmTask(id); },
     mobileAction: () => {},
   }));

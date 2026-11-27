@@ -410,7 +410,9 @@
     "hint": "A resposta do operador é simulada a cada aviso. Use 0% para acompanhar o escalonamento.",
     "operator": "Resposta do operador",
     "running": "Simulação ativa",
-    "paused": "Pausado"
+    "paused": "Pausado",
+    "speed": "Velocidade da simulação",
+    "speedOption": "{{v}}x"
   },
   "events": {
     "RouteAssigned": "Rota recebida",
