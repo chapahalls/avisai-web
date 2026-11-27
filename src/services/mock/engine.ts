@@ -13,6 +13,14 @@ export interface FeedEvent extends DomainEvent {
   simMin: number;
 }
 
+/** Mesma escala do backend (push → painel → ligação; normal → alta → crítica), para a Demo acompanhar a API. */
+const ESCALATION_LEVELS: Array<Pick<Task, 'channel' | 'priority'>> = [
+  { channel: 'push', priority: 'normal' },
+  { channel: 'painel', priority: 'alta' },
+  { channel: 'ligacao', priority: 'critica' },
+];
+const escalationLevel = (attempt: number) => ESCALATION_LEVELS[Math.min(attempt - 1, ESCALATION_LEVELS.length - 1)];
+
 export type MobileDriverAction = 'start' | 'approach' | 'arrive' | 'occurrence' | 'message' | 'acknowledge' | 'unload' | 'advance' | 'reset';
 
 export interface OpsState {
@@ -127,7 +135,7 @@ export function createOpsStore(options: EngineOptions = {}) {
             const waitMin = Math.round(receiver.typicalWaitMin * (next.notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + waitRandom[index]() * 0.8));
             next = { ...next, phase: 'waiting', arrivedAtMin: now, unloadAtMin: now + waitMin };
             feed.push(event(trip, 'ArrivalRegistered', now, { geofence: true, voiceCheckin: true }, 'driver'));
-            let task: Task = { id: id('task'), tripId: trip.id, createdAtMin: now, attempts: 1, status: 'open' };
+            let task: Task = { id: id('task'), tripId: trip.id, createdAtMin: now, attempts: 1, status: 'open', ...escalationLevel(1) };
             feed.push(event(trip, 'TaskCreated', now, { attempt: 1, channel: 'push' }, 'system'));
             task = autoAcknowledge(task, next, now, index, state.operatorResponsiveness, feed);
             tasks.push(task);
@@ -166,10 +174,10 @@ export function createOpsStore(options: EngineOptions = {}) {
               const attempt = task.attempts + 1;
               const channel = attempt === 2 ? 'panel' : 'call';
               feed.push(event(trip, 'TaskEscalated', now, { attempt, channel, status: 'open' }, 'system'));
-              const updated = autoAcknowledge({ ...task, attempts: attempt }, trip, now, index, state.operatorResponsiveness, feed);
+              const updated = autoAcknowledge({ ...task, attempts: attempt, ...escalationLevel(attempt) }, trip, now, index, state.operatorResponsiveness, feed);
               tasks = tasks.map((candidate) => candidate.id === task.id ? updated : candidate);
             } else if (task.attempts === BUSINESS.maxCcoAttempts && elapsed >= BUSINESS.maxCcoAttempts * BUSINESS.ccoAttemptIntervalMin) {
-              tasks = tasks.map((candidate) => candidate.id === task.id ? { ...candidate, status: 'escalated', escalatedAtMin: now } : candidate);
+              tasks = tasks.map((candidate) => candidate.id === task.id ? { ...candidate, status: 'escalated', escalatedAtMin: now, ...escalationLevel(task.attempts) } : candidate);
               feed.push(event(trip, 'TaskEscalated', now, { attempt: task.attempts, channel: 'call', status: 'escalated' }, 'system'));
               addCall(trip, 'escalation', now, index, calls, feed);
             }
@@ -315,7 +323,7 @@ export function createOpsStore(options: EngineOptions = {}) {
           const waitMin = Math.round(receiver.typicalWaitMin * (notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + waitRandom[index]() * 0.8));
           const arrivedTrip = { ...trip, progress, position: interpolateRoute(route, progress)!, phase: 'waiting' as const, notifiedBeforeArrival, arrivedAtMin: now, unloadAtMin: now + waitMin };
           feed.push(event(arrivedTrip, 'ArrivalRegistered', now, { geofence: true, voiceCheckin: true, source: 'mobile_demo' }, 'driver'));
-          let task: Task = { id: id('task'), tripId, createdAtMin: now, attempts: 1, status: 'open' };
+          let task: Task = { id: id('task'), tripId, createdAtMin: now, attempts: 1, status: 'open', ...escalationLevel(1) };
           feed.push(event(arrivedTrip, 'TaskCreated', now, { attempt: 1, channel: 'push' }, 'system'));
           task = autoAcknowledge(task, arrivedTrip, now, index, state.operatorResponsiveness, feed);
           reports[tripId] = mobileMetricRandom[index]() < 0.75;

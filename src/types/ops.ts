@@ -66,6 +66,9 @@ export interface TripMetadata {
 
 export type TaskStatus = 'open' | 'acknowledged' | 'escalated' | 'closed';
 
+export type TaskPriority = 'normal' | 'alta' | 'critica';
+export type TaskChannel = 'push' | 'painel' | 'ligacao';
+
 export interface Task {
   id: string;
   tripId: string;
@@ -76,6 +79,9 @@ export interface Task {
   closedAtMin?: number;
   /** Preserva a escalada mesmo se o operador assumir depois. */
   escalatedAtMin?: number;
+  /** Sobe a cada tentativa sem resposta (push → painel → ligação; normal → alta → crítica). */
+  priority?: TaskPriority;
+  channel?: TaskChannel;
 }
 
 export type CallResult = 'dock_confirmed' | 'next_day' | 'no_answer' | 'answered' | 'in_progress' | 'failed';
