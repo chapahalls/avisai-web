@@ -15,16 +15,28 @@ test('alertas: escalada é crítica e vem antes; espera acima da franquia vira a
     trip({ id: 't-route' }),
   ];
   const tasks = [
-    { id: 'k1', tripId: 't-route', createdAtMin: 100, attempts: 1, status: 'open' },
-    { id: 'k2', tripId: 't-wait', createdAtMin: 50, attempts: 3, status: 'escalated', escalatedAtMin: 200 },
+    // Tentativa 1 (push, prioridade normal): só vira alerta médio, ainda não escalou no painel.
+    { id: 'k1', tripId: 't-route', createdAtMin: 100, attempts: 1, status: 'open', priority: 'normal' },
+    { id: 'k2', tripId: 't-wait', createdAtMin: 50, attempts: 3, status: 'escalated', priority: 'critica', escalatedAtMin: 200 },
     { id: 'k3', tripId: 't-route', createdAtMin: 10, attempts: 1, status: 'closed' },
   ];
   const alerts = deriveAlerts({ trips, tasks, simMinutes: 6 * 60 });
-  // Mesma severidade: o alerta mais antigo vem primeiro (260 min > 60 min).
-  assert.deepEqual(alerts.map((alert) => alert.kind), ['escalated', 'noAnswer', 'overFranchise']);
+  // escalated (crítico) vem primeiro; estadia além da franquia (alto) vem antes de uma Task ainda só no push (médio).
+  assert.deepEqual(alerts.map((alert) => alert.kind), ['escalated', 'overFranchise', 'noAnswer']);
   assert.equal(alerts[0].severity, 'critical');
-  assert.equal(alerts[2].waitMin, 360);
-  assert.equal(alerts[2].sinceMin, 60, 'conta só o tempo além da franquia de 5h');
+  assert.equal(alerts[1].waitMin, 360);
+  assert.equal(alerts[1].sinceMin, 60, 'conta só o tempo além da franquia de 5h');
+  assert.equal(alerts[2].severity, 'medium');
+});
+
+test('alertas: Task em tentativa 2 (painel) soma como alerta alto', () => {
+  const trips = [trip({ id: 't-route' })];
+  const tasks = [
+    { id: 'k1', tripId: 't-route', createdAtMin: 0, attempts: 2, status: 'open', priority: 'alta' },
+  ];
+  const alerts = deriveAlerts({ trips, tasks, simMinutes: 60 });
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0].severity, 'high');
 });
 
 test('alertas da API: sem posição e sinal desatualizado; Demo não gera alerta de sinal', () => {

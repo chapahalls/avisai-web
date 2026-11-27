@@ -237,6 +237,10 @@
       "timeout": "timed out"
     }
   },
+  "push": {
+    "title": "Unanswered arrival",
+    "body": "Truck {{plate}} waiting at the receiver. Open the dashboard to take it."
+  },
   "alerts": {
     "live": "Real-time alerts",
     "received": "Alert received from the backend.",

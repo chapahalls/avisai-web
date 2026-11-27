@@ -99,6 +99,7 @@
 .mon-severity { padding: 2px 7px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 .mon-severity[data-severity='critical'] { background: color-mix(in srgb, var(--color-alert-500) 20%, transparent); color: var(--color-alert-500); }
 .mon-severity[data-severity='high'] { background: color-mix(in srgb, var(--color-wait-500) 18%, transparent); color: var(--color-wait-500); }
+.mon-severity[data-severity='medium'] { background: color-mix(in srgb, var(--color-ink-300) 18%, transparent); color: var(--color-ink-100); }
 .mon-since { margin-left: auto; color: var(--color-ink-300); font-family: var(--font-mono); font-size: 11px; }
 .mon-alert-title { font-size: 13px; font-weight: 600; line-height: 1.35; }
 .mon-alert-description { color: var(--color-ink-300); font-size: 12px; line-height: 1.45; }
