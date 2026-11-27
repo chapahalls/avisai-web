@@ -237,6 +237,10 @@
       "timeout": "sem resposta"
     }
   },
+  "push": {
+    "title": "Chegada sem resposta",
+    "body": "Caminhão {{plate}} parado no recebedor. Abra o painel para assumir."
+  },
   "alerts": {
     "live": "Alertas em tempo real",
     "received": "Alerta recebido do backend.",

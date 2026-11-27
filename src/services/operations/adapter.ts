@@ -169,6 +169,7 @@ export function projectSnapshot(snapshot: BackendSnapshot, details: ReadonlyMap<
     id: taskKey(task.id), tripId: routeKey(task.rota_id), attempts: task.tentativas, status: taskStatus[task.status],
     createdAtMin: atMinute(task.criada_em), acknowledgedAtMin: optionalMinute(task.confirmado_em),
     closedAtMin: optionalMinute(task.concluida_em), escalatedAtMin: task.status === 'escalada_recebedor' ? optionalMinute(task.ultima_notificacao) : undefined,
+    priority: task.prioridade, channel: task.canal_atual ?? undefined,
   }));
   const calls: CallLog[] = snapshot.ligacoes.map((call) => ({
     id: `api-call-${call.id}`, source: 'api', tripId: routeKey(call.rota_id), receiverId: `api-receiver-${call.rota_id}`,

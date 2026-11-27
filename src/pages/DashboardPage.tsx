@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DriverRequests } from '../features/tasks';
+import { DriverRequests, TaskPushNotifications } from '../features/tasks';
 import { FleetMap } from '../features/fleet';
 import { DriverMessages, LiveAlerts, TripTimeline } from '../features/trips';
 import { AlertQueue, deriveAlerts, DockWindows, MonitoringKpis, TripGrid, VehiclePanel } from '../features/monitoring';
@@ -110,6 +110,7 @@ export function DashboardPage({ initialTripId, onlyTripId }: { initialTripId?: s
         </div>
       </div>
       <LiveAlerts onlyTripId={onlyTripId} onAlertSelect={selectFromAlert} />
+      <TaskPushNotifications />
     </div>
   );
 }

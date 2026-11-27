@@ -47,12 +47,15 @@ export function deriveAlerts(
   const franchise = BUSINESS.franchiseHours * 60;
   tasks.forEach((task) => {
     if (task.status !== 'open' && task.status !== 'escalated') return;
+    // A severidade sobe com a prioridade do CCO (R4: push → painel → ligação), não só na escalada final ao recebedor.
+    const severity: AlertSeverity = task.status === 'escalated' || task.priority === 'critica' ? 'critical'
+      : task.priority === 'alta' ? 'high' : 'medium';
     alerts.push({
       id: `task-${task.id}`,
       tripId: task.tripId,
       taskId: task.id,
       kind: task.status === 'escalated' ? 'escalated' : 'noAnswer',
-      severity: task.status === 'escalated' ? 'critical' : 'high',
+      severity,
       sinceMin: Math.max(0, simMinutes - (task.escalatedAtMin ?? task.createdAtMin)),
       attempts: task.attempts,
     });
