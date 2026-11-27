@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SIMULATION_SPEED_OPTIONS } from '../lib/config';
 import { useOps } from '../services/operations';
 import { Icon } from './Icon';
 
@@ -6,6 +7,8 @@ export function DemoControls() {
   const { t } = useTranslation();
   const running = useOps((s) => s.running);
   const toggle = useOps((s) => s.toggle);
+  const speed = useOps((s) => s.speed);
+  const setSpeed = useOps((s) => s.setSpeed);
   const responsiveness = useOps((s) => s.operatorResponsiveness);
   const setResponsiveness = useOps((s) => s.setResponsiveness);
   return (
@@ -18,6 +21,22 @@ export function DemoControls() {
         <Icon name={running ? 'pause' : 'play'} className="h-4 w-4" />
         {running ? t('demo.pause') : t('demo.play')}
       </button>
+      <div className="text-sm">
+        <span className="text-ink-300">{t('demo.speed')}</span>
+        <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label={t('demo.speed')}>
+          {SIMULATION_SPEED_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={speed === option}
+              onClick={() => setSpeed(option)}
+              className="rounded-input border border-ink-700 bg-ink-800 px-2 py-1.5 text-xs font-medium transition hover:border-brand-500 aria-pressed:border-brand-500 aria-pressed:bg-brand-500 aria-pressed:text-ink-950"
+            >
+              {t('demo.speedOption', { v: option })}
+            </button>
+          ))}
+        </div>
+      </div>
       <label className="block text-sm">
         <span className="flex items-center justify-between gap-2">
           <span className="text-ink-300">{t('demo.operator')}</span>

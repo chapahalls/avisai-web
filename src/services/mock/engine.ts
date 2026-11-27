@@ -1,6 +1,6 @@
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
-import { BUSINESS, SIM_MINUTES_PER_SECOND, SIMULATION } from '../../lib/config.js';
+import { BUSINESS, DEFAULT_SIMULATION_SPEED, SIM_MINUTES_PER_SECOND, SIMULATION, SIMULATION_SPEED_OPTIONS } from '../../lib/config.js';
 import type { DomainEvent, EventType } from '../../types/events.js';
 import type { CallLog, Delivery, Task, Trip, TripMetadata } from '../../types/ops.js';
 import { interpolateRoute } from '../../utils/routePath.js';
@@ -18,6 +18,8 @@ export type MobileDriverAction = 'start' | 'approach' | 'arrive' | 'occurrence' 
 export interface OpsState {
   simMinutes: number;
   running: boolean;
+  /** Multiplicador sobre SIM_MINUTES_PER_SECOND; controla a velocidade de eventos e do deslocamento dos veículos. */
+  speed: number;
   operatorResponsiveness: number;
   trips: Trip[];
   tripMeta: Record<string, TripMetadata>;
@@ -30,6 +32,7 @@ export interface OpsState {
   acknowledge: (taskId: string) => void;
   mobileAction: (tripId: string, action: MobileDriverAction, value?: string | number) => void;
   setResponsiveness: (value: number) => void;
+  setSpeed: (value: number) => void;
   toggle: () => void;
 }
 
@@ -37,6 +40,7 @@ export interface EngineOptions {
   seed?: number;
   startDate?: Date;
   operatorResponsiveness?: number;
+  speed?: number;
 }
 
 /** Store independente permite testar o motor sem React, temporizadores ou rede. */
@@ -200,6 +204,7 @@ export function createOpsStore(options: EngineOptions = {}) {
 
     return {
       simMinutes: 0, running: true,
+      speed: options.speed ?? DEFAULT_SIMULATION_SPEED,
       operatorResponsiveness: options.operatorResponsiveness ?? SIMULATION.operatorResponsiveness,
       trips, tripMeta, tasks: [], calls: [], historicalCalls: historical.calls, history: historical.deliveries,
       feed: trips.flatMap((trip) => [
@@ -365,6 +370,7 @@ export function createOpsStore(options: EngineOptions = {}) {
         }
       },
       setResponsiveness: (value) => { if (Number.isFinite(value)) set({ operatorResponsiveness: Math.max(0, Math.min(1, value)) }); },
+      setSpeed: (value) => { if (SIMULATION_SPEED_OPTIONS.includes(value as (typeof SIMULATION_SPEED_OPTIONS)[number])) set({ speed: value }); },
       toggle: () => set((state) => ({ running: !state.running })),
     };
   });
@@ -380,7 +386,10 @@ export function useOps<T>(selector?: (state: OpsState) => T) {
 
 /** A limpeza do efeito mantém somente um timer ativo, inclusive em React StrictMode. */
 export function startEngine() {
-  const timer = setInterval(() => opsStore.getState().tick(SIM_MINUTES_PER_SECOND), 1000);
+  const timer = setInterval(() => {
+    const state = opsStore.getState();
+    state.tick(SIM_MINUTES_PER_SECOND * state.speed);
+  }, 1000);
   return () => clearInterval(timer);
 }
 
