@@ -13,10 +13,12 @@ type AlertToast = {
   plate: string;
 };
 
+// Fundo misturado com `ink-900` (opaco) em vez de cor com alfa: evita o toast ficar
+// transparente e deixar o conteúdo por trás (cabeçalho, badges) visível por dentro dele.
 const priorityClass = {
-  info: 'border-brand-500/70 bg-brand-500/15',
-  atencao: 'border-wait-500/70 bg-wait-500/15',
-  critico: 'border-alert-500/70 bg-alert-500/15',
+  info: 'border-brand-500/70 bg-[color-mix(in_srgb,var(--color-brand-500)_16%,var(--color-ink-900))]',
+  atencao: 'border-wait-500/70 bg-[color-mix(in_srgb,var(--color-wait-500)_16%,var(--color-ink-900))]',
+  critico: 'border-alert-500/70 bg-[color-mix(in_srgb,var(--color-alert-500)_16%,var(--color-ink-900))]',
 } as const;
 
 function priorityFrom(value: unknown): AlertToast['priority'] {
