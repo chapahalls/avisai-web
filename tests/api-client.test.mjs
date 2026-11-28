@@ -43,8 +43,8 @@ const driverMessage = {
 };
 const agentCall = {
   id: 15, rota_id: 1, destino: 'operador', motivo: 'Pneu furado na BR-381',
-  status: 'agora_tocando', twilio_sid: null, twilio_resultado: 'Twilio não configurado',
-  agora_canal: 'agent-call-15', sessao_id: 16, iniciada_em: at, atendida_em: null,
+  status: 'livekit_tocando', twilio_sid: null, twilio_resultado: 'Twilio não configurado',
+  livekit_room: 'rodar-operador-15', sessao_id: 16, iniciada_em: at, atendida_em: null,
   encerrada_em: null, erro: null,
 };
 const driver = { id: 8, empresa_id: 1, nome: 'Motorista fixture', telefone_e164: null, email: null };
@@ -161,7 +161,7 @@ test('REST usa endpoints e campos do backend, preservando 28 toneladas, doca tex
 
 test('mensagem ao motorista e fallback do agente preservam thread, status e chamadas RTC', async () => {
   const requests = [];
-  const operatorCall = { ...agentCall, app_id: 'agora-fixture', channel: 'agent-call-15', uid: 2001, token: 'token-fixture' };
+  const operatorCall = { ...agentCall, url: 'wss://fixture.livekit.cloud', room: 'rodar-operador-15', identity: 'operador-15', token: 'token-fixture' };
   const responses = [[driverMessage], driverMessage, [agentCall], { chamada: operatorCall }, { ...agentCall, status: 'atendida', atendida_em: at }];
   const api = new ApiClient('/backend', {
     fetch: async (url, options) => {

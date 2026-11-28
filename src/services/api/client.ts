@@ -161,8 +161,8 @@ const isDriverMessage: Guard<BackendDriverMessage> = (value): value is BackendDr
 
 const isAgentCall: Guard<BackendAgentCall> = (value): value is BackendAgentCall => shape(value, {
   id: positiveId, rota_id: positiveId, destino: oneOf('operador', 'supervisor', 'motorista'), motivo: text,
-  status: oneOf('iniciada', 'twilio_atendida', 'agora_tocando', 'atendida', 'sem_resposta', 'escalada', 'falhou'),
-  twilio_sid: nullable(text), twilio_resultado: nullable(text), agora_canal: nullable(text), sessao_id: nullable(positiveId),
+  status: oneOf('iniciada', 'twilio_atendida', 'livekit_tocando', 'atendida', 'sem_resposta', 'escalada', 'falhou'),
+  twilio_sid: nullable(text), twilio_resultado: nullable(text), livekit_room: nullable(text), sessao_id: nullable(positiveId),
   iniciada_em: timestamp, atendida_em: nullable(timestamp), encerrada_em: nullable(timestamp), erro: nullable(text),
 });
 
@@ -171,9 +171,9 @@ const isOperatorCallEnvelope: Guard<BackendOperatorCallEnvelope> = (value): valu
     chamada: (candidate) => candidate === null || (
       isAgentCall(candidate)
       && record(candidate)
-      && optional(text)(candidate.app_id)
-      && optional(text)(candidate.channel)
-      && optional(positiveId)(candidate.uid)
+      && optional(text)(candidate.url)
+      && optional(text)(candidate.room)
+      && optional(text)(candidate.identity)
       && optional(text)(candidate.token)
     ),
   });

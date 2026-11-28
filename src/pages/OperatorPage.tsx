@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import AgoraRTC, { type IAgoraRTCClient, type IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
+import { Room, RoomEvent, Track, type RemoteTrack } from 'livekit-client';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
@@ -16,16 +16,17 @@ export function OperatorPage() {
   const [call, setCall] = useState<BackendOperatorCall | null>(null);
   const [loading, setLoading] = useState(true);
   const [joinState, setJoinState] = useState<JoinState>('idle');
-  const rtc = useRef<IAgoraRTCClient | null>(null);
-  const mic = useRef<IMicrophoneAudioTrack | null>(null);
+  const [micBlocked, setMicBlocked] = useState(false);
+  const rtc = useRef<Room | null>(null);
+  const audio = useRef(new Set<HTMLMediaElement>());
 
   const leave = useCallback(async () => {
     try {
-      mic.current?.close();
-      mic.current = null;
-      if (rtc.current) await rtc.current.leave();
+      if (rtc.current) await rtc.current.disconnect();
     } finally {
       rtc.current = null;
+      for (const element of audio.current) element.remove();
+      audio.current.clear();
       setJoinState('idle');
     }
   }, []);
@@ -37,7 +38,8 @@ export function OperatorPage() {
     }
     try {
       const result = await client.getCurrentOperatorCall();
-      setCall(result.chamada);
+      // Depois de atender, a chamada sai da fila "tocando"; enquanto a sala está aberta ela continua na tela.
+      setCall((current) => result.chamada ?? (rtc.current ? current : null));
     } catch {
       setJoinState('error');
     } finally {
@@ -56,21 +58,30 @@ export function OperatorPage() {
 
   const answer = async () => {
     if (!client || !call || joinState !== 'idle') return;
-    if (!call.app_id || !call.channel || !call.token || !call.uid) {
+    if (!call.url || !call.token) {
       setJoinState('error');
       return;
     }
     setJoinState('joining');
     try {
-      const rtcClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      rtc.current = rtcClient;
-      rtcClient.on('user-published', async (user, mediaType) => {
-        await rtcClient.subscribe(user, mediaType);
-        if (mediaType === 'audio') user.audioTrack?.play();
+      // Sala LiveKit da chamada (o agente já está nela); o token vale só para esta sala.
+      const room = new Room();
+      rtc.current = room;
+      room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+        if (track.kind !== Track.Kind.Audio) return;
+        const element = track.attach();
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        audio.current.add(element);
       });
-      await rtcClient.join(call.app_id, call.channel, call.token, call.uid);
-      mic.current = await AgoraRTC.createMicrophoneAudioTrack({ AEC: true, ANS: true, AGC: true });
-      await rtcClient.publish(mic.current);
+      await room.connect(call.url, call.token);
+      // Sem permissão de microfone o operador ainda ouve o aviso do agente: não perde a chamada.
+      try {
+        await room.localParticipant.setMicrophoneEnabled(true);
+        setMicBlocked(false);
+      } catch {
+        setMicBlocked(true);
+      }
       const answered = await client.answerOperatorCall(call.id);
       setCall((current) => current ? { ...current, ...answered } : current);
       setJoinState('active');
@@ -97,17 +108,18 @@ export function OperatorPage() {
               <p className="mt-1 text-xs text-ink-300">{t('operator.callStatus', { status: call.status })}</p>
             </div>
             {joinState === 'error' && <p role="alert" className="rounded-input border border-alert-500/40 bg-alert-500/10 p-3 text-sm text-alert-500">
-              {call.app_id ? t('operator.error') : t('operator.missingRtc')}
+              {call.token ? t('operator.error') : t('operator.missingRtc')}
             </p>}
             {joinState === 'active' ? (
               <button type="button" onClick={() => void leave()} className="rounded-input border border-ink-700 px-4 py-2.5 text-sm font-semibold">{t('operator.leave')}</button>
             ) : (
-              <button type="button" onClick={() => void answer()} disabled={joinState === 'joining' || call.status !== 'agora_tocando'}
+              <button type="button" onClick={() => void answer()} disabled={joinState === 'joining' || call.status !== 'livekit_tocando'}
                 aria-busy={joinState === 'joining'} className="rounded-input bg-brand-500 text-on-accent px-4 py-2.5 text-sm font-semibold hover:bg-brand-600 disabled:cursor-wait disabled:opacity-50">
                 {t(joinState === 'joining' ? 'operator.connecting' : 'operator.answer')}
               </button>
             )}
             {joinState === 'active' && <p className="text-sm text-ok-500">{t('operator.answered')}</p>}
+            {joinState === 'active' && micBlocked && <p role="status" className="rounded-input border border-wait-500/40 bg-wait-500/10 p-3 text-sm text-wait-500">{t('operator.micBlocked')}</p>}
           </div>
         )}
       </div>

@@ -309,18 +309,19 @@
   },
   "operator": {
     "title": "RODAR call",
-    "eyebrow": "Agora RTC fallback",
+    "eyebrow": "LiveKit RTC fallback",
     "hint": "When the PSTN call fails, the operator answers here in the browser.",
     "waiting": "Waiting for an agent call.",
     "loading": "Checking calls…",
     "answer": "Answer",
     "connecting": "Connecting audio…",
     "answered": "Call answered",
-    "missingRtc": "This call has no Agora credentials; check backend configuration.",
+    "missingRtc": "This call has no LiveKit credentials; check backend configuration.",
     "error": "Could not join the voice call.",
     "callReason": "Reason: {{reason}}",
     "callStatus": "Status: {{status}}",
-    "leave": "Leave call"
+    "leave": "Leave call",
+    "micBlocked": "Microphone blocked: you hear the agent, but it cannot hear you. Allow the browser microphone to talk."
   },
   "fleet": {
     "title": "Fleet",

@@ -16,7 +16,7 @@ export type BackendCallStatus = 'chamando' | 'em_andamento' | 'respondida' | 'na
 export type BackendTaskChannel = 'push' | 'painel' | 'ligacao';
 export type BackendDriverRequestStatus = 'coletando' | 'aguardando_cco' | 'respondido' | 'timeout';
 export type BackendDriverMessageStatus = 'enviada' | 'falada' | 'respondida' | 'offline';
-export type BackendAgentCallStatus = 'iniciada' | 'twilio_atendida' | 'agora_tocando' | 'atendida' | 'sem_resposta' | 'escalada' | 'falhou';
+export type BackendAgentCallStatus = 'iniciada' | 'twilio_atendida' | 'livekit_tocando' | 'atendida' | 'sem_resposta' | 'escalada' | 'falhou';
 
 export interface BackendRoute {
   id: number;
@@ -195,7 +195,7 @@ export interface BackendAgentCall {
   status: BackendAgentCallStatus;
   twilio_sid: string | null;
   twilio_resultado: string | null;
-  agora_canal: string | null;
+  livekit_room: string | null;
   sessao_id: number | null;
   iniciada_em: string;
   atendida_em: string | null;
@@ -203,10 +203,11 @@ export interface BackendAgentCall {
   erro: string | null;
 }
 
+/** `GET /operador/chamadas/atual`: com a sala RTC tocando, o backend manda a URL e um token LiveKit só desta sala. */
 export interface BackendOperatorCall extends BackendAgentCall {
-  app_id?: string;
-  channel?: string;
-  uid?: number;
+  url?: string;
+  room?: string;
+  identity?: string;
   token?: string;
 }
 

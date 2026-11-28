@@ -309,18 +309,19 @@
   },
   "operator": {
     "title": "Chamada do RODAR",
-    "eyebrow": "Fallback Agora RTC",
+    "eyebrow": "Fallback LiveKit RTC",
     "hint": "Quando a ligação PSTN falha, o operador atende aqui pelo navegador.",
     "waiting": "Aguardando uma chamada do agente.",
     "loading": "Verificando chamadas…",
     "answer": "Atender",
     "connecting": "Conectando áudio…",
     "answered": "Chamada atendida",
-    "missingRtc": "A chamada não possui credenciais Agora; verifique a configuração do backend.",
+    "missingRtc": "A chamada não possui credenciais LiveKit; verifique a configuração do backend.",
     "error": "Não foi possível entrar na chamada de voz.",
     "callReason": "Motivo: {{reason}}",
     "callStatus": "Status: {{status}}",
-    "leave": "Sair da chamada"
+    "leave": "Sair da chamada",
+    "micBlocked": "Microfone bloqueado: você ouve o agente, mas ele não ouve você. Libere o microfone do navegador para conversar."
   },
   "fleet": {
     "title": "Frota",

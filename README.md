@@ -327,7 +327,7 @@ ceil(max(0, espera_em_min / 60 − 5)) × toneladas × R$ 2,50
 
 React, Vite, TypeScript strict, Tailwind CSS v4, React Router, zustand, Recharts, i18next (pt-BR e en), three.js na home e no login, `lenis`. Os testes unitários usam `node:test`, sem biblioteca adicional; o smoke e2e usa `@playwright/test` (`npm run test:e2e`, veja `tests-e2e/`).
 
-Duas libs de voz no navegador, com papéis diferentes e sem sobreposição: `agora-rtc-sdk-ng` atende só em `/dashboard/operator` (seção [Telas](#telas)), o fallback de chamada do agente quando o Twilio PSTN falha; `livekit-client` é só o botão opcional **Testar ao vivo (LiveKit)** da home/`/mobile-web` (seção [Voz ao vivo na Demo](#voz-ao-vivo-na-demo)), para demonstrar a voz real do agente sem o telefone. Nenhuma das duas participa da Demo nem da simulação de voz do navegador.
+O navegador usa uma única lib de voz, `livekit-client`, em dois lugares: em `/dashboard/operator` (seção [Telas](#telas)), o operador atende o fallback RTC quando a ligação do agente pelo Twilio não completa (número inválido, ocupado ou sem resposta); e no botão opcional **Testar ao vivo (LiveKit)** da home/`/mobile-web` (seção [Voz ao vivo na Demo](#voz-ao-vivo-na-demo)), que demonstra a voz real do agente sem telefone. Nenhum dos dois participa da Demo nem da simulação de voz do navegador.
 
 ```text
 src/
