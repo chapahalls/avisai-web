@@ -105,6 +105,16 @@ export const driverAppPt = {
     advance60: '+1 h',
     ack: 'CCO assume a Task (demo)',
   },
+  receiverCall: {
+    button: 'Simular ligação ao recebedor',
+    buttonHint: 'Mostra a ligação na hora, sem esperar o relógio da demo',
+    title: 'Celular do recebedor',
+    caller: 'Agente AvisAI',
+    incoming: 'Ligação entrante · atendendo…',
+    ended: 'Ligação encerrada',
+    previewTag: 'Simulação',
+    close: 'Fechar',
+  },
   tabs: { home: 'Início', map: 'Mapa', documents: 'Documentos', messages: 'Mensagens' },
   voice: {
     agent: 'AvisAI',
@@ -288,6 +298,16 @@ export const driverAppEn: typeof driverAppPt = {
     advance20: '+20 min',
     advance60: '+1 h',
     ack: 'CCO takes the Task (demo)',
+  },
+  receiverCall: {
+    button: 'Simulate call to the receiver',
+    buttonHint: 'Shows the call right away, without waiting for the demo clock',
+    title: "Receiver's phone",
+    caller: 'AvisAI agent',
+    incoming: 'Incoming call · answering…',
+    ended: 'Call ended',
+    previewTag: 'Simulation',
+    close: 'Close',
   },
   tabs: { home: 'Home', map: 'Map', documents: 'Documents', messages: 'Messages' },
   voice: {

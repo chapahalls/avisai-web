@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useParams 
 import { useSession } from '../features/auth';
 import { Layout } from '../components/Layout';
 import { lazy, Suspense, type ReactNode } from 'react';
+import { useMode } from '../services/operations';
 
 /* Cada página vira um chunk: o painel não baixa o three.js da home e do login, e vice-versa. */
 const HomePage = lazy(() => import('../pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -29,9 +30,12 @@ function RequireSession() {
 
 function LoginRoute() {
   const session = useSession((s) => s.session);
+  const mode = useMode();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-  return session ? <Navigate to={from?.startsWith(DASHBOARD_BASE) ? from : APP_ROUTES.dashboard} replace /> : <Page><LoginPage /></Page>;
+  /* Na Demo, o login já abre o /mobile-demo: quem avalia vê a simulação com o celular na hora. No modo API, o destino padrão continua o dashboard. */
+  const fallback = mode === 'api' ? APP_ROUTES.dashboard : APP_ROUTES.mobileDemo;
+  return session ? <Navigate to={from?.startsWith(DASHBOARD_BASE) ? from : fallback} replace /> : <Page><LoginPage /></Page>;
 }
 
 /** Endereços antigos (antes de /dashboard) continuam funcionando. */

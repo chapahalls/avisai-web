@@ -6,10 +6,12 @@ import Lenis from 'lenis';
 import { Icon } from '../components/Icon';
 import { RodarLogo, RodarMark } from '../components/RodarLogo';
 import { AppIcon, AvisaiDock, CabinConversation, type OrbState, type Utterance } from '../features/driver-app';
+import { ReceiverCallPhone } from '../features/receiver-call';
 import { applyMobileDemoAction, useOps, useReceivers } from '../services/operations';
 import { connectLiveVoice, disconnectLiveVoice, toggleLiveMute, useLiveVoice } from '../services/livekit/liveVoice';
 import type { FeedEvent } from '../services/mock/engine';
-import type { TripPhase } from '../types/ops';
+import { buildCall } from '../services/mock/calls';
+import type { CallLog, Receiver, TripMetadata, TripPhase } from '../types/ops';
 import { SIMULATION } from '../lib/config';
 import { brl, clock } from '../utils/format';
 import { stayValue } from '../utils/stay';
@@ -29,6 +31,8 @@ type TourCursorPosition = { top: number; left: number; visible: boolean; clickin
 type TourSpotlight = { top: number; left: number; width: number; height: number };
 
 const profiles = ['Carlos Andrade', 'Marina Souza', 'João Pereira'];
+/** Placa fictícia usada fora do modo integrado (tour público e aviso da API). */
+const FALLBACK_PLATE = 'RST-4B21';
 const baseClockMin = 14 * 60;
 /** Falas sugeridas por etapa, como o `getQuickUtterances` do app. */
 const contextCommands: Record<Phase, VoiceCommand[]> = {
@@ -114,6 +118,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   const receivers = useReceivers();
   const mobileReceiver = integrated && mobileTrip ? receivers.find((receiver) => receiver.id === mobileTrip.receiverId) : undefined;
   const sharedFeed = useOps((state) => state.feed);
+  const sharedCalls = useOps((state) => state.calls);
   const simMinutes = useOps((state) => state.simMinutes);
   const simulationRunning = useOps((state) => state.running);
   const operatorResponsiveness = useOps((state) => state.operatorResponsiveness);
@@ -199,6 +204,42 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   const applyDriverAction = (action: 'start' | 'approach' | 'arrive' | 'occurrence' | 'message' | 'acknowledge' | 'unload' | 'advance', value?: string | number) => {
     if (integrated && mobileTripId) applyMobileDemoAction(mobileTripId, action, value);
   };
+
+  // ---------------------------------------------------------------- celular do recebedor (ligação de escalonamento)
+  const [receiverCallOpen, setReceiverCallOpen] = useState(false);
+  const [receiverCallLog, setReceiverCallLog] = useState<CallLog | null>(null);
+  const [receiverCallPreview, setReceiverCallPreview] = useState(false);
+  const shownEscalationCallRef = useRef<string | null>(null);
+  /** Receptor fictício para o fallback fora do modo integrado (tour público, aviso da API). */
+  const fallbackReceiver: Receiver = useMemo(() => ({
+    id: 'preview-receiver', name: destinationName, position: { lat: -23.2, lng: -47.3 }, typicalWaitMin: 35, answerRate: .85,
+  }), [destinationName]);
+  const escalationCall = integrated && mobileTripId
+    ? sharedCalls.find((call) => call.tripId === mobileTripId && call.moment === 'escalation')
+    : undefined;
+
+  /** A ligação real de escalonamento (depois das 3 tentativas) abre o celular do recebedor sozinha, com a transcrição de verdade. */
+  useEffect(() => {
+    if (!escalationCall || shownEscalationCallRef.current === escalationCall.id) return;
+    shownEscalationCallRef.current = escalationCall.id;
+    setReceiverCallLog(escalationCall);
+    setReceiverCallPreview(false);
+    setReceiverCallOpen(true);
+  }, [escalationCall]);
+
+  /** Botão "Simular": mostra a ligação na hora, com a mesma transcrição do CallLog, sem esperar o relógio da demo. */
+  const simulateReceiverCall = useCallback(() => {
+    const receiver = integrated && mobileReceiver ? mobileReceiver : fallbackReceiver;
+    const tripForCall: TripMetadata = integrated && mobileTrip
+      ? { plate: mobileTrip.plate, driver: mobileTrip.driver, receiverId: mobileTrip.receiverId }
+      : { plate: FALLBACK_PLATE, driver: driverName, receiverId: receiver.id };
+    setReceiverCallLog(buildCall({
+      id: `preview-${Date.now()}`, tripId: mobileTripId ?? 'preview-trip', trip: tripForCall, receiver,
+      moment: 'escalation', atMin: integrated ? simMinutes : elapsed, random: Math.random,
+    }));
+    setReceiverCallPreview(true);
+    setReceiverCallOpen(true);
+  }, [driverName, elapsed, fallbackReceiver, integrated, mobileReceiver, mobileTrip, mobileTripId, simMinutes]);
 
   const restoreTourEnvironment = useCallback(() => {
     const original = originalSimulationRef.current;
@@ -488,7 +529,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     setLocalElapsed(next);
     if (elapsed < 20 && next >= 20) addEvent('panel', 20);
     if (elapsed < 40 && next >= 40) addEvent('call', 40);
-    if (elapsed < 60 && next >= 60) addEvent('escalated', 60);
+    if (elapsed < 60 && next >= 60) { addEvent('escalated', 60); simulateReceiverCall(); }
   };
 
   // ---------------------------------------------------------------- conversa com o AvisAI
@@ -632,7 +673,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   };
 
   // ---------------------------------------------------------------- telas (espelham o rodar-mobile)
-  const plate = integrated && mobileTrip ? mobileTrip.plate : 'RST-4B21';
+  const plate = integrated && mobileTrip ? mobileTrip.plate : FALLBACK_PLATE;
   const originName = t('mobileWeb.routeOrigin');
   const firstName = driverName.split(' ')[0];
   const progress = appPhase === 'idle' ? 0 : integrated && mobileTrip ? mobileTrip.progress : phase === 'idle' ? 0 : phase === 'driving' ? 0.45 : phase === 'approaching' ? 0.86 : 1;
@@ -779,6 +820,10 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
         <div className="da-escalation">
           <span>{t(hasCcoAcknowledged ? 'driverApp.queue.ccoTook' : 'driverApp.queue.ccoEscalation')}</span>
           <ol>{steps.map(([key, done], index) => <li key={key} data-done={done || undefined} data-tour-target={key === 'push' ? 'mobile-push' : undefined}><i /><small>{index + 1} {t(`driverApp.queue.steps.${key}`)}</small></li>)}</ol>
+          <button type="button" className="da-escalation-simulate" data-tour-target="mobile-simulate-call" onClick={simulateReceiverCall}>
+            <AppIcon name="connect" size={16} />{t('driverApp.receiverCall.button')}
+          </button>
+          <small className="da-escalation-hint">{t('driverApp.receiverCall.buttonHint')}</small>
         </div>
       </section>
       {arrived && phase === 'waiting' && <div className="da-simulate"><span>{t('driverApp.queue.simulate')}</span>
@@ -883,7 +928,9 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
                 agentCaption={agentCaption} driverCaption={driverCaption} suggestions={utterances} onUtter={(id) => runVoiceCommand(id as VoiceCommand)}
                 onClose={() => setCabinOpen(false)} onTalk={() => { if (!liveActive && utterances[0]) runVoiceCommand(utterances[0].id as VoiceCommand); }} />}
             </>}
-          </div></div>
+          </div>
+          <ReceiverCallPhone open={receiverCallOpen} call={receiverCallLog} receiverName={destinationName} preview={receiverCallPreview} onClose={() => setReceiverCallOpen(false)} />
+          </div>
           {!embedded && <p className="mw-phone-caption">{t('mobileWeb.phoneLabel')}</p>}
         </section>
         {!embedded && <aside className="mw-control-panel"><div className="mw-control-heading"><span className="mw-demo-tag">DEMO</span><h2>{t('mobileWeb.controlsTitle')}</h2><p>{t('mobileWeb.controlsHint')}</p></div><div className="mw-control-status"><span>{t(`mobileWeb.phases.${phase}`)}</span><time>{currentClock}</time></div><div className="mw-control-actions">{!authenticated ? <button type="button" className="mw-control-primary" onClick={login}><span>01</span>{t('mobileWeb.enter')}<b>→</b></button> : <><button type="button" onClick={() => simulate('start')} disabled={!canStartTrip}><span>01</span>{t('mobileWeb.startTrip')}<b>→</b></button><button type="button" onClick={() => simulate('approach')} disabled={phase === 'idle' || phase === 'waiting' || phase === 'unloaded' || receiverNotified}><span>02</span>{t('mobileWeb.approach')}<b>→</b></button><button type="button" onClick={() => simulate('arrive')} disabled={phase === 'waiting' || phase === 'unloaded'}><span>03</span>{t('mobileWeb.arrival')}<b>→</b></button><button type="button" onClick={() => setCabinOpen(true)}><span>04</span>{t('mobileWeb.voiceOpen')}<b>✦</b></button><button type="button" onClick={() => simulate('unload')} disabled={!arrived || phase === 'unloaded'}><span>05</span>{t('mobileWeb.unload')}<b>✓</b></button></>}</div>{authenticated && <div className="mw-control-time"><span>{t('mobileWeb.queue.advanceHour')}</span><button type="button" onClick={() => advanceTime(60)} disabled={phase !== 'waiting'}>+60</button></div>}<button type="button" className="mw-reset-button" onClick={resetDemo}>↺ {t('mobileWeb.reset')}</button></aside>}
