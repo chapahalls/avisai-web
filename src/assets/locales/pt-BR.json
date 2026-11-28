@@ -239,7 +239,10 @@
   },
   "push": {
     "title": "Chegada sem resposta",
-    "body": "Caminhão {{plate}} parado no recebedor. Abra o painel para assumir."
+    "body": "Caminhão {{plate}} parado no recebedor. Abra o painel para assumir.",
+    "enableTitle": "Ativar notificações do navegador para chegadas sem resposta",
+    "enable": "Ativar",
+    "dismiss": "Fechar aviso de notificações"
   },
   "alerts": {
     "live": "Alertas em tempo real",

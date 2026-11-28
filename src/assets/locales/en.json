@@ -239,7 +239,10 @@
   },
   "push": {
     "title": "Unanswered arrival",
-    "body": "Truck {{plate}} waiting at the receiver. Open the dashboard to take it."
+    "body": "Truck {{plate}} waiting at the receiver. Open the dashboard to take it.",
+    "enableTitle": "Enable browser notifications for unanswered arrivals",
+    "enable": "Enable",
+    "dismiss": "Close notifications prompt"
   },
   "alerts": {
     "live": "Real-time alerts",
