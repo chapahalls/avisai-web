@@ -11,13 +11,14 @@ const trip = (overrides) => ({
 
 test('alertas: escalada é crítica e vem antes; espera acima da franquia vira alerta alto', () => {
   const trips = [
+    trip({ id: 't-escalated', phase: 'waiting', arrivedAtMin: 0 }),
     trip({ id: 't-wait', phase: 'waiting', arrivedAtMin: 0 }),
     trip({ id: 't-route' }),
   ];
   const tasks = [
     // Tentativa 1 (push, prioridade normal): só vira alerta médio, ainda não escalou no painel.
     { id: 'k1', tripId: 't-route', createdAtMin: 100, attempts: 1, status: 'open', priority: 'normal' },
-    { id: 'k2', tripId: 't-wait', createdAtMin: 50, attempts: 3, status: 'escalated', priority: 'critica', escalatedAtMin: 200 },
+    { id: 'k2', tripId: 't-escalated', createdAtMin: 50, attempts: 3, status: 'escalated', priority: 'critica', escalatedAtMin: 200 },
     { id: 'k3', tripId: 't-route', createdAtMin: 10, attempts: 1, status: 'closed' },
   ];
   const alerts = deriveAlerts({ trips, tasks, simMinutes: 6 * 60 });
@@ -51,6 +52,17 @@ test('alertas da API: sem posição e sinal desatualizado; Demo não gera alerta
     ['a2', 'staleSignal', 'critical'],
     ['a1', 'noPosition', 'medium'],
   ]);
+});
+
+test('alertas: a mesma viagem nunca repete linha na fila, só o alerta mais grave fica', () => {
+  const trips = [trip({ id: 't-wait', phase: 'waiting', arrivedAtMin: 0, source: 'api', positionKnown: false })];
+  const tasks = [
+    { id: 'k1', tripId: 't-wait', createdAtMin: 0, attempts: 3, status: 'escalated', priority: 'critica', escalatedAtMin: 2 },
+  ];
+  // t-wait gera 3 motivos (Task escalada, estadia além da franquia e posição indisponível), mas é 1 caminhão só.
+  const alerts = deriveAlerts({ trips, tasks, simMinutes: 6 * 60 });
+  assert.equal(alerts.length, 1, 'uma viagem ocupa só uma linha na fila, mesmo com vários motivos de alerta');
+  assert.equal(alerts[0].kind, 'escalated', 'fica o alerta mais grave (crítico) da viagem');
 });
 
 test('contagem da operação e espera usam só dados existentes', () => {

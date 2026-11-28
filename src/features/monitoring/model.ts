@@ -75,7 +75,14 @@ export function deriveAlerts(
       }
     }
   });
-  return alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity] || (b.sinceMin ?? 0) - (a.sinceMin ?? 0));
+  alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity] || (b.sinceMin ?? 0) - (a.sinceMin ?? 0));
+  // Um caminhão/motorista só ocupa uma linha na fila: mantém o alerta mais grave da viagem, os demais ficam implícitos nele.
+  const seenTrips = new Set<string>();
+  return alerts.filter((alert) => {
+    if (seenTrips.has(alert.tripId)) return false;
+    seenTrips.add(alert.tripId);
+    return true;
+  });
 }
 
 export interface OperationCounts {
