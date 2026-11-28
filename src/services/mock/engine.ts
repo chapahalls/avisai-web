@@ -133,7 +133,7 @@ export function createOpsStore(options: EngineOptions = {}) {
             const call = addCall(trip, 'approach', now, index, calls, feed);
             // Mesmo sem atendimento, a tentativa permanece como evidência no log.
             next = { ...next, phase: 'approaching', notifiedBeforeArrival: call.answered && progress < 1 };
-            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: progress < 1 }, 'agent'));
+            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'ligacao', delivered: call.answered, beforeArrival: progress < 1 }, 'agent'));
           }
           if (progress === 1) {
             const waitMin = Math.round(receiver.typicalWaitMin * (next.notifiedBeforeArrival ? 0.8 : 1.1) * (0.6 + waitRandom[index]() * 0.8));
@@ -176,13 +176,13 @@ export function createOpsStore(options: EngineOptions = {}) {
             const elapsed = now - task.createdAtMin;
             if (task.attempts < BUSINESS.maxCcoAttempts && elapsed >= task.attempts * BUSINESS.ccoAttemptIntervalMin) {
               const attempt = task.attempts + 1;
-              const channel = attempt === 2 ? 'panel' : 'call';
+              const channel = attempt === 2 ? 'painel' : 'ligacao';
               feed.push(event(trip, 'TaskEscalated', now, { attempt, channel, status: 'open' }, 'system'));
               const updated = autoAcknowledge({ ...task, attempts: attempt, ...escalationLevel(attempt) }, trip, now, index, state.operatorResponsiveness, feed);
               tasks = tasks.map((candidate) => candidate.id === task.id ? updated : candidate);
             } else if (task.attempts === BUSINESS.maxCcoAttempts && elapsed >= BUSINESS.maxCcoAttempts * BUSINESS.ccoAttemptIntervalMin) {
               tasks = tasks.map((candidate) => candidate.id === task.id ? { ...candidate, status: 'escalated', escalatedAtMin: now, ...escalationLevel(task.attempts) } : candidate);
-              feed.push(event(trip, 'TaskEscalated', now, { attempt: task.attempts, channel: 'call', status: 'escalated' }, 'system'));
+              feed.push(event(trip, 'TaskEscalated', now, { attempt: task.attempts, channel: 'ligacao', status: 'escalated' }, 'system'));
               addCall(trip, 'escalation', now, index, calls, feed);
             }
           }
@@ -302,7 +302,7 @@ export function createOpsStore(options: EngineOptions = {}) {
           const feed: FeedEvent[] = [event(approaching, 'ApproachDetected', now, { leftKm: BUSINESS.approachKm, source: 'mobile_demo' }, 'driver')];
           const call = addCall(approaching, 'approach', now, index, calls, feed);
           const nextTrip = { ...approaching, notifiedBeforeArrival: call.answered };
-          feed.push(event(nextTrip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: true }, 'agent'));
+          feed.push(event(nextTrip, 'ReceiverNotified', now, { channel: 'ligacao', delivered: call.answered, beforeArrival: true }, 'agent'));
           set({
             trips: state.trips.map((candidate) => candidate.id === tripId ? nextTrip : candidate),
             calls: [...calls.reverse(), ...state.calls],
@@ -321,7 +321,7 @@ export function createOpsStore(options: EngineOptions = {}) {
             const call = addCall(trip, 'approach', now, index, calls, feed);
             notifiedBeforeArrival = call.answered;
             feed.unshift(event(trip, 'ApproachDetected', now, { leftKm: BUSINESS.approachKm, source: 'mobile_demo' }, 'driver'));
-            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'call', delivered: call.answered, beforeArrival: true }, 'agent'));
+            feed.push(event(trip, 'ReceiverNotified', now, { channel: 'ligacao', delivered: call.answered, beforeArrival: true }, 'agent'));
           }
           const receiver = receiverById(trip.receiverId);
           const progress = 1;

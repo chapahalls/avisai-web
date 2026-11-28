@@ -450,8 +450,8 @@
   },
   "channels": {
     "push": "push",
-    "panel": "painel",
-    "call": "ligação",
+    "painel": "painel",
+    "ligacao": "ligação",
     "app": "app móvel"
   },
   "occurrences": {

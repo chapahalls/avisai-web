@@ -13,7 +13,7 @@ import { brl, hhmm, pct, clock } from '../.cache/tests/utils/format.js';
 import { createRoutePath, interpolateRoute } from '../.cache/tests/utils/routePath.js';
 import { distanceKm } from '../.cache/tests/utils/geo.js';
 import { splitRoute, getRouteHeading, getTrackingPosition } from '../.cache/tests/utils/tracking.js';
-import { SIMULATION } from '../.cache/tests/lib/config.js';
+import { DEFAULT_SIMULATION_SPEED, SIMULATION, SIMULATION_SPEED_OPTIONS } from '../.cache/tests/lib/config.js';
 import { getRoadRoute, loadGoogleMaps, loadTrackingMaps } from '../.cache/tests/lib/googleMaps.js';
 
 const startDate = new Date(2026, 10, 22, 21, 45);
@@ -148,11 +148,11 @@ test('sem resposta, avisos ocorrem em T0/20/40 e a escalada final em T60 uma ún
   assert.equal(taskByTrip(store, tripId).attempts, 1);
   tick(store, 1);
   assert.equal(taskByTrip(store, tripId).attempts, 2);
-  assert.equal(eventsFor(store, tripId, 'TaskEscalated')[0].payload.channel, 'panel');
+  assert.equal(eventsFor(store, tripId, 'TaskEscalated')[0].payload.channel, 'painel');
   tick(store, 20);
   assert.equal(taskByTrip(store, tripId).attempts, 3);
   assert.equal(taskByTrip(store, tripId).status, 'open');
-  assert.equal(eventsFor(store, tripId, 'TaskEscalated')[0].payload.channel, 'call');
+  assert.equal(eventsFor(store, tripId, 'TaskEscalated')[0].payload.channel, 'ligacao');
   tick(store, 19);
   assert.equal(taskByTrip(store, tripId).status, 'open');
   tick(store, 1);
@@ -183,6 +183,18 @@ test('resposta automática é avaliada novamente na segunda tentativa', () => {
   assert.equal(taskByTrip(store, tripId).attempts, 2);
   assert.equal(taskByTrip(store, tripId).status, 'acknowledged');
   assert.equal(taskByTrip(store, tripId).acknowledgedAtMin, taskByTrip(store, tripId).createdAtMin + 20);
+});
+
+test('setSpeed só aceita um dos multiplicadores de SIMULATION_SPEED_OPTIONS', () => {
+  const store = createOpsStore({ startDate });
+  assert.equal(state(store).speed, DEFAULT_SIMULATION_SPEED);
+  const other = SIMULATION_SPEED_OPTIONS.find((value) => value !== DEFAULT_SIMULATION_SPEED);
+  state(store).setSpeed(other);
+  assert.equal(state(store).speed, other);
+  state(store).setSpeed(3);
+  assert.equal(state(store).speed, other);
+  state(store).setSpeed(Number.NaN);
+  assert.equal(state(store).speed, other);
 });
 
 test('assumir uma Task aberta é idempotente e interrompe novos avisos', () => {
@@ -340,7 +352,7 @@ test('chaves semânticas das transcrições e resultados existem em PT e EN', as
   const keys = new Set([
     ...calls.flatMap((call) => call.transcript.map((line) => line.messageKey)),
     ...['dock_confirmed', 'next_day', 'no_answer'].map((result) => `calls.results.${result}`),
-    'channels.push', 'channels.panel', 'channels.call', 'occurrences.gateQueue',
+    'channels.push', 'channels.painel', 'channels.ligacao', 'occurrences.gateQueue',
   ]);
   for (const locale of locales) {
     for (const key of keys) assert.equal(typeof valueAt(locale, key), 'string', `tradução ausente: ${key}`);

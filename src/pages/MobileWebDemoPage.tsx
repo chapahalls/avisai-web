@@ -92,7 +92,7 @@ function eventKey(event: FeedEvent): EventKey | null {
     case 'TaskCreated': return 'task';
     case 'TaskEscalated': {
       if (event.payload.status === 'escalated') return 'escalated';
-      return event.payload.channel === 'panel' ? 'panel' : 'call';
+      return event.payload.channel === 'painel' ? 'panel' : 'call';
     }
     case 'TaskAcknowledged': return 'acknowledged';
     case 'OccurrenceCreated': return 'occurrence';
