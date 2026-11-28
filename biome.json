@@ -1,6 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "files": { "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.mjs", "tests/**/*.mjs"] },
+  "files": { "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.mjs", "tests/**/*.mjs", "tests-e2e/**/*.ts", "playwright.config.ts"] },
   "formatter": { "enabled": false },
   "organizeImports": { "enabled": false },
   "linter": {

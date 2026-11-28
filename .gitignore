@@ -7,6 +7,9 @@ dist/
 .cache/
 *.tsbuildinfo
 .idea/
+playwright-report/
+test-results/
+blob-report/
 
 # Modelos 3D de origem (pesados, de terceiros). Os .glb gerados ficam em src/features/home/assets.
 docs/RODAR-telas/landing-page/3d-model/
