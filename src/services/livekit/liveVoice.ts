@@ -6,10 +6,10 @@ import { ApiClient, ApiError } from '../api/client';
 import { hasLiveVoiceAgent } from './agent';
 
 /**
- * Teste de voz ao vivo da Demo do app (porta de entrada do LIVEKIT_URL).
- * Ação explícita do usuário: entra como motorista de demonstração (SSO mock) num cliente
- * próprio, pede ao backend um token curto e conecta o microfone à sala do LiveKit.
- * A chave e o segredo do LiveKit ficam no backend; nada aqui repete POST sozinho.
+ * Voz ao vivo da Demo do app, como no app do motorista (porta de entrada do LIVEKIT_URL).
+ * Ação explícita do usuário: entra com o SSO mock, abre no backend uma sessão de motorista na rota de
+ * demonstração (`POST /demo/sessao`, o agente tem as ferramentas do app) e conecta o microfone à sala.
+ * O que o agente faz chega pelo `/cco/stream` dessa rota (`routeId`). Nada aqui repete POST sozinho.
  */
 export type LiveVoiceStatus = 'idle' | 'checking' | 'unavailable' | 'unreachable' | 'unconfigured' | 'connecting' | 'requesting_microphone' | 'waiting_agent' | 'live' | 'error';
 export type LiveVoiceError = 'microphone' | 'auth' | 'token' | 'connection' | null;
@@ -19,6 +19,8 @@ interface LiveVoiceState {
   status: LiveVoiceStatus;
   url: string | null;
   room: string | null;
+  /** Rota de demonstração da sessão ao vivo: a Demo acompanha o stream dela. */
+  routeId: number | null;
   agentSpeaking: boolean;
   driverSpeaking: boolean;
   muted: boolean;
@@ -26,12 +28,13 @@ interface LiveVoiceState {
   error: LiveVoiceError;
 }
 
-const initial: LiveVoiceState = { status: 'idle', url: null, room: null, agentSpeaking: false, driverSpeaking: false, muted: false, captions: [], error: null };
+const initial: LiveVoiceState = { status: 'idle', url: null, room: null, routeId: null, agentSpeaking: false, driverSpeaking: false, muted: false, captions: [], error: null };
 export const liveVoiceStore = createStore<LiveVoiceState>(() => initial);
 export const useLiveVoice = <T,>(selector: (state: LiveVoiceState) => T) => useStore(liveVoiceStore, selector);
 
 let room: Room | null = null;
 let generation = 0;
+let session: { client: ApiClient; id: number } | null = null;
 const audioElements = new Set<HTMLMediaElement>();
 const set = (patch: Partial<LiveVoiceState>) => liveVoiceStore.setState(patch);
 
@@ -67,7 +70,7 @@ export async function connectLiveVoice() {
   const attempt = ++generation;
   set({ status: 'connecting', error: null, captions: [], muted: false });
   const client = new ApiClient(API_BASE_URL);
-  let credentials: Awaited<ReturnType<ApiClient['createLiveKitToken']>>;
+  let credentials: { url: string; token: string; sala: string; routeId: number };
   try {
     const sso = await client.authSso();
     if (attempt !== generation) return;
@@ -78,8 +81,11 @@ export async function connectLiveVoice() {
     return;
   }
   try {
-    credentials = await client.createLiveKitToken();
-    if (attempt !== generation) return;
+    const created = await client.createDemoSession();
+    session = { client, id: created.id };
+    if (attempt !== generation) { void endSession(); return; }
+    credentials = { url: created.livekit_url, token: created.token, sala: created.canal, routeId: created.rota_id };
+    set({ routeId: created.rota_id });
   } catch (failure) {
     if (attempt !== generation) return;
     set(failure instanceof ApiError && failure.status === 503 ? { status: 'unconfigured' } : { status: 'error', error: 'token' });
@@ -112,7 +118,7 @@ export async function connectLiveVoice() {
     .on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], participant?: Participant) => {
       if (room === current) segments.forEach((segment) => upsertCaption({ id: segment.id, who: participant?.isLocal ? 'driver' : 'agent', text: segment.text, final: segment.final }));
     })
-    .on(RoomEvent.Disconnected, () => { if (room === current) { generation++; cleanup(); set({ ...initial, url: liveVoiceStore.getState().url }); } });
+    .on(RoomEvent.Disconnected, () => { if (room === current) { generation++; cleanup(); set({ ...initial, url: liveVoiceStore.getState().url }); void endSession(); } });
   // Agentes recentes publicam a transcrição como fluxo de texto (tópico lk.transcription).
   try {
     current.registerTextStreamHandler('lk.transcription', async (reader, info) => {
@@ -130,6 +136,7 @@ export async function connectLiveVoice() {
     if (attempt !== generation) return;
     cleanup();
     set({ status: 'error', error: 'connection' });
+    void endSession();
     return;
   }
   if (attempt !== generation) { await current.disconnect(); return; }
@@ -141,6 +148,7 @@ export async function connectLiveVoice() {
     cleanup();
     set({ status: 'error', error: 'microphone' });
     await current.disconnect();
+    void endSession();
     return;
   }
   if (attempt !== generation) {
@@ -173,10 +181,18 @@ function cleanup() {
   room = null;
 }
 
+/** Encerra a sessão do agente no backend (sem repetir: um pedido por desligamento). */
+async function endSession() {
+  const current = session;
+  session = null;
+  if (current) await current.client.endDemoSession(current.id).catch(() => undefined);
+}
+
 export async function disconnectLiveVoice() {
   generation++;
   const current = room;
   cleanup();
   set({ ...initial, url: liveVoiceStore.getState().url });
   if (current) await current.disconnect();
+  await endSession();
 }

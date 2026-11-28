@@ -17,12 +17,14 @@ function initials(name: string) {
  * Celular simulado do recebedor (espelha o chrome do celular do motorista): mostra a ligação de
  * escalonamento como ela realmente acontece na Demo, com a mesma transcrição do CallLog.
  */
-export function ReceiverCallPhone({ open, call, receiverName, preview, onClose }: {
+export function ReceiverCallPhone({ open, call, receiverName, preview, live = false, onClose }: {
   open: boolean;
   call: CallLog | null;
   receiverName: string;
   /** A ligação foi gerada na hora pelo botão "Simular", sem esperar o relógio da demo. */
   preview: boolean;
+  /** Ligação real (Demo com o celular do visitante): as falas aparecem quando chegam do backend. */
+  live?: boolean;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -30,7 +32,7 @@ export function ReceiverCallPhone({ open, call, receiverName, preview, onClose }
   const [visibleLines, setVisibleLines] = useState(0);
 
   useEffect(() => {
-    if (!open || !call) return;
+    if (!open || !call || live) return;
     setStage('ringing');
     setVisibleLines(0);
     const timers: number[] = [];
@@ -40,16 +42,18 @@ export function ReceiverCallPhone({ open, call, receiverName, preview, onClose }
     });
     timers.push(window.setTimeout(() => setStage('ended'), RING_MS + LINE_MS * call.transcript.length + END_HOLD_MS));
     return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [open, call]);
+  }, [open, call, live]);
 
   if (!open || !call) return null;
+  const shownStage: Stage = live ? (call.status === 'ended' ? 'ended' : call.transcript.length ? 'live' : 'ringing') : stage;
+  const shownLines = live || shownStage === 'ended' ? call.transcript.length : visibleLines;
   const resultLabel = t(`calls.results.${call.resultCode}`, { dock: call.dock });
 
   return (
     <div className="rc-overlay" role="dialog" aria-modal="true" aria-label={t('driverApp.receiverCall.title')}>
       <div className="rc-phone">
         <div className="rc-phone-camera" />
-        <div className="rc-phone-screen" data-stage={stage}>
+        <div className="rc-phone-screen" data-stage={shownStage}>
           <button type="button" className="rc-close" onClick={onClose} aria-label={t('driverApp.receiverCall.close')}>
             <AppIcon name="back" size={16} />
           </button>
@@ -58,18 +62,19 @@ export function ReceiverCallPhone({ open, call, receiverName, preview, onClose }
             <strong>{receiverName}</strong>
             <small>{t('driverApp.receiverCall.caller')}</small>
             {preview && <em className="rc-preview-tag">{t('driverApp.receiverCall.previewTag')}</em>}
+            {live && <em className="rc-preview-tag rc-live-tag">{t('driverApp.receiverCall.liveTag')}</em>}
           </header>
 
-          {stage === 'ringing' && (
+          {shownStage === 'ringing' && (
             <p className="rc-ringing">
               <AuroraOrb state="listening" size={46} />
               {t('driverApp.receiverCall.incoming')}
             </p>
           )}
 
-          {stage !== 'ringing' && (
-            <ul className="rc-transcript">
-              {call.transcript.slice(0, stage === 'ended' ? call.transcript.length : visibleLines).map((line, index) => (
+          {shownStage !== 'ringing' && (
+            <ul className="rc-transcript" aria-live={live ? 'polite' : undefined}>
+              {call.transcript.slice(0, shownLines).map((line, index) => (
                 <li key={`${call.id}-${index}`} data-who={line.who}>
                   <small>{t(`calls.who.${line.who}`)}</small>
                   <p>{line.messageKey ? t(line.messageKey, line.values ?? {}) : line.text}</p>
@@ -78,7 +83,7 @@ export function ReceiverCallPhone({ open, call, receiverName, preview, onClose }
             </ul>
           )}
 
-          {stage === 'ended' && <p className="rc-result">{t('driverApp.receiverCall.ended')} · {resultLabel}</p>}
+          {shownStage === 'ended' && <p className="rc-result">{t('driverApp.receiverCall.ended')} · {resultLabel}</p>}
         </div>
       </div>
     </div>

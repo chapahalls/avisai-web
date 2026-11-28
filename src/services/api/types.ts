@@ -402,6 +402,24 @@ export interface BackendLiveKitConfig {
 }
 
 /** `POST /livekit/token`: token curto de participante assinado pelo backend. */
+/** `POST /demo/ligar`: o backend devolve só o número mascarado (nunca o que foi digitado). */
+export interface BackendDemoCall {
+  ligacao_id: number;
+  rota_id: number;
+  status: string;
+  numero: string;
+}
+
+/** `POST /demo/sessao`: sessão de motorista na rota de demonstração, com URL e token LiveKit da sala. */
+export interface BackendDemoSession {
+  id: number;
+  rota_id: number;
+  canal: string;
+  status: string;
+  livekit_url: string;
+  token: string;
+}
+
 export interface BackendLiveKitToken {
   url: string;
   token: string;

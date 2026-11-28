@@ -7,6 +7,8 @@ import {
   type BackendDriverMessage,
   type BackendDriver,
   type BackendLiveKitConfig,
+  type BackendDemoCall,
+  type BackendDemoSession,
   type BackendLiveKitToken,
   type BackendEvent,
   type BackendGeocodeResponse,
@@ -191,6 +193,14 @@ const isDriver: Guard<BackendDriver> = (value): value is BackendDriver => shape(
 const isLiveKitConfig: Guard<BackendLiveKitConfig> = (value): value is BackendLiveKitConfig => shape(value, {
   configurado: (item) => typeof item === 'boolean', url: nullable(text), agente: nullable(text),
 });
+const isDemoCall: Guard<BackendDemoCall> = (value): value is BackendDemoCall => shape(value, {
+  ligacao_id: positiveId, rota_id: positiveId, status: text, numero: text,
+});
+
+const isDemoSession: Guard<BackendDemoSession> = (value): value is BackendDemoSession => shape(value, {
+  id: positiveId, rota_id: positiveId, canal: text, status: text, livekit_url: text, token: text,
+});
+
 const isLiveKitToken: Guard<BackendLiveKitToken> = (value): value is BackendLiveKitToken => shape(value, {
   url: text, token: text, sala: text, identidade: text,
 });
@@ -342,7 +352,7 @@ export class ApiClient {
     });
   }
 
-  private async request<T>(method: 'GET' | 'POST', path: string, guard: Guard<T>, signal?: AbortSignal, body?: unknown,
+  private async request<T>(method: 'GET' | 'POST' | 'DELETE', path: string, guard: Guard<T>, signal?: AbortSignal, body?: unknown,
     read?: (response: Response) => Promise<unknown>): Promise<T> {
     if (signal?.aborted) throw new ApiError('aborted');
     const controller = new AbortController();
@@ -561,6 +571,21 @@ export class ApiClient {
   createLiveKitToken(sala?: string, signal?: AbortSignal) {
     if (sala !== undefined && !/^[A-Za-z0-9_-]{1,64}$/.test(sala)) throw new ApiError('invalid_input');
     return this.request('POST', '/livekit/token', isLiveKitToken, signal, sala === undefined ? {} : { sala });
+  }
+
+  /** Demo pública: o agente liga para o celular informado (ação explícita, com aceite; o backend limita). */
+  requestDemoCall(telefone: string, aceite: boolean, signal?: AbortSignal) {
+    if (!text(telefone) || aceite !== true) throw new ApiError('invalid_input');
+    return this.request('POST', '/demo/ligar', isDemoCall, signal, { telefone, aceite });
+  }
+
+  /** Voz ao vivo da Demo como no app: sessão de motorista na rota de demonstração (reiniciada pelo backend). */
+  createDemoSession(signal?: AbortSignal) {
+    return this.request('POST', '/demo/sessao', isDemoSession, signal, {});
+  }
+
+  endDemoSession(id: ApiId, signal?: AbortSignal) {
+    return this.request('DELETE', `/demo/sessao/${encodedId(id)}`, (value): value is unknown => record(value), signal);
   }
 
   authSso(email?: string, signal?: AbortSignal) {

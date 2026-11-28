@@ -20,6 +20,7 @@
 .rc-head strong { font-size: 14px; }
 .rc-head small { color: var(--color-ink-300); font-size: 11px; }
 .rc-preview-tag { margin-top: 2px; border-radius: 999px; background: color-mix(in srgb, var(--color-wait-500) 18%, transparent); padding: 2px 9px; color: var(--color-wait-500); font-size: 10px; font-style: normal; font-weight: 700; letter-spacing: .04em; }
+.rc-live-tag { background: color-mix(in srgb, var(--color-ok-500) 18%, transparent); color: var(--color-ok-500); }
 .rc-ringing { display: grid; justify-items: center; gap: 10px; margin-top: 6px; color: var(--color-ink-300); font-size: 12px; text-align: center; }
 .rc-transcript { display: grid; gap: 8px; overflow: auto; max-height: 190px; }
 .rc-transcript li { animation: rc-line-in 200ms ease-out; border-radius: 12px; padding: 8px 10px; font-size: 12px; line-height: 1.4; }
@@ -36,3 +37,20 @@
   .rc-phone, .rc-transcript li { animation: none !important; }
 }
 
+
+/* Ligação real da Demo: o visitante recebe a ligação do agente no próprio celular. */
+.rc-real { display: grid; gap: 8px; margin-top: 16px; border: 1px solid var(--color-ink-700); border-radius: 16px; background: var(--color-ink-900); padding: 14px; color: var(--color-ink-50); }
+.rc-real h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.rc-real-tag { margin: 0; color: var(--color-brand-500); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.rc-real-hint, .rc-real-privacy { margin: 0; color: var(--color-ink-300); font-size: 12px; line-height: 1.45; }
+.rc-real label { font-size: 12px; font-weight: 600; }
+.rc-real input[type='tel'] { border: 1px solid var(--color-ink-700); border-radius: 10px; background: var(--color-ink-950); padding: 9px 11px; color: var(--color-ink-50); font-size: 14px; }
+.rc-real input[aria-invalid='true'] { border-color: var(--color-alert-500); }
+.rc-real-consent { display: flex; align-items: flex-start; gap: 8px; font-weight: 400 !important; line-height: 1.4; }
+.rc-real-consent input { margin-top: 2px; accent-color: var(--color-brand-500); }
+.rc-real button { border-radius: 10px; background: var(--color-brand-500); padding: 10px 12px; color: var(--color-on-accent); font-size: 13px; font-weight: 700; }
+.rc-real button:disabled { cursor: wait; opacity: .6; }
+.rc-real :focus-visible { outline: 2px solid var(--color-rodar-mark); outline-offset: 2px; }
+.rc-real-status { margin: 0; min-height: 1em; font-size: 12px; font-weight: 600; }
+.rc-real-status[data-kind='ringing'] { color: var(--color-ok-500); }
+.rc-real-status[data-kind='error'] { color: var(--color-alert-500); }

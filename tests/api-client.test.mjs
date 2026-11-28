@@ -783,3 +783,16 @@ test('publicação aceita ponto com endereço e vínculo; geocodificação sem l
   }
   assert.equal(requests, 2);
 });
+
+test('requestDemoCall manda telefone e aceite e só aceita o número mascarado de volta', async () => {
+  const calls = [];
+  const api = new ApiClient('https://api.test', {
+    fetch: async (url, init) => {
+      calls.push([url, JSON.parse(init.body)]);
+      return new Response(JSON.stringify({ ligacao_id: 9, rota_id: 2, status: 'chamando', numero: '+55•••••0000' }), { status: 200 });
+    },
+  });
+  assert.deepEqual(await api.requestDemoCall('+5531991570000', true), { ligacao_id: 9, rota_id: 2, status: 'chamando', numero: '+55•••••0000' });
+  assert.deepEqual(calls[0][1], { telefone: '+5531991570000', aceite: true });
+  assert.throws(() => api.requestDemoCall('+5531991570000', false), ApiError);
+});

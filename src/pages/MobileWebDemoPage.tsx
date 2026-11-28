@@ -6,9 +6,12 @@ import Lenis from 'lenis';
 import { Icon } from '../components/Icon';
 import { RodarLogo, RodarMark } from '../components/RodarLogo';
 import { AppIcon, AvisaiDock, CabinConversation, type OrbState, type Utterance } from '../features/driver-app';
-import { ReceiverCallPhone } from '../features/receiver-call';
+import { RealCallCard, ReceiverCallPhone } from '../features/receiver-call';
 import { applyMobileDemoAction, useOps, useReceivers } from '../services/operations';
 import { connectLiveVoice, disconnectLiveVoice, toggleLiveMute, useLiveVoice } from '../services/livekit/liveVoice';
+import type { DemoBridgeEffect } from '../services/livekit/demoBridge';
+import { openDemoStream } from '../services/livekit/demoStream';
+import { API_BASE_URL } from '../lib/apiConfig';
 import type { FeedEvent } from '../services/mock/engine';
 import { buildCall } from '../services/mock/calls';
 import type { CallLog, Receiver, TripMetadata, TripPhase } from '../types/ops';
@@ -143,6 +146,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   const liveDriverSpeaking = useLiveVoice((state) => state.driverSpeaking);
   const liveMuted = useLiveVoice((state) => state.muted);
   const liveActive = liveStatus === 'live' || liveStatus === 'waiting_agent' || liveStatus === 'requesting_microphone' || liveStatus === 'connecting';
+  const liveRouteId = useLiveVoice((state) => state.routeId);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [transcript, setTranscript] = useState<ChatLine[]>([]);
   const [ccoAcknowledged, setCcoAcknowledged] = useState(false);
@@ -209,6 +213,9 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   const [receiverCallOpen, setReceiverCallOpen] = useState(false);
   const [receiverCallLog, setReceiverCallLog] = useState<CallLog | null>(null);
   const [receiverCallPreview, setReceiverCallPreview] = useState(false);
+  /** Ligação real da Demo (celular do visitante): a rota acompanhada e o celular do recebedor ao vivo. */
+  const [realCallRoute, setRealCallRoute] = useState<number | null>(null);
+  const [receiverCallLive, setReceiverCallLive] = useState(false);
   const shownEscalationCallRef = useRef<string | null>(null);
   /** Receptor fictício para o fallback fora do modo integrado (tour público, aviso da API). */
   const fallbackReceiver: Receiver = useMemo(() => ({
@@ -223,6 +230,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     if (!escalationCall || shownEscalationCallRef.current === escalationCall.id) return;
     shownEscalationCallRef.current = escalationCall.id;
     setReceiverCallLog(escalationCall);
+    setReceiverCallLive(false);
     setReceiverCallPreview(false);
     setReceiverCallOpen(true);
   }, [escalationCall]);
@@ -238,6 +246,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       moment: 'escalation', atMin: integrated ? simMinutes : elapsed, random: Math.random,
     }));
     setReceiverCallPreview(true);
+    setReceiverCallLive(false);
     setReceiverCallOpen(true);
   }, [driverName, elapsed, fallbackReceiver, integrated, mobileReceiver, mobileTrip, mobileTripId, simMinutes]);
 
@@ -672,6 +681,61 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     setPanelOpen(false);
   };
 
+  // ---------------------------------------------------------------- voz e ligação reais (backend)
+  /** Celular do recebedor com a ligação real: começa tocando e recebe as falas que o backend publica. */
+  const startRealReceiverCall = (routeId: number) => {
+    setRealCallRoute(routeId);
+    setReceiverCallLog({
+      id: `real-${Date.now()}`, tripId: `rota-${routeId}`, receiverId: 'demo-real', plate: integrated && mobileTrip ? mobileTrip.plate : FALLBACK_PLATE,
+      moment: 'approach', atMin: integrated ? simMinutes : elapsed, answered: false, result: '', resultCode: 'in_progress',
+      transcript: [], status: 'in_progress', source: 'api',
+    });
+    setReceiverCallPreview(false);
+    setReceiverCallLive(true);
+    setReceiverCallOpen(true);
+  };
+
+  /** O que o agente fez de verdade vira a mesma ação dos botões da Demo (sem repetir o que já aconteceu). */
+  const bridgeRef = useRef<(effect: DemoBridgeEffect) => void>(() => {});
+  bridgeRef.current = (effect) => {
+    switch (effect.kind) {
+      case 'screen':
+        if (!authenticated) login();
+        goTo(effect.screen);
+        break;
+      case 'trip':
+        if (!authenticated) login();
+        if (effect.command === 'start' && canStartTrip) applyCommand('start', '');
+        if (effect.command === 'approach' && appPhase === 'driving') applyCommand('approach', '');
+        if (effect.command === 'arrive' && !arrived && appPhase !== 'idle') applyCommand('arrive', '');
+        if (effect.command === 'unload' && arrived && appPhase !== 'unloaded') applyCommand('unload', '');
+        break;
+      case 'end_voice':
+        void disconnectLiveVoice();
+        break;
+      case 'receiver_line':
+        if (!receiverCallLive) return;
+        setReceiverCallLog((log) => log && { ...log, answered: true, transcript: [...log.transcript, { who: effect.who, text: effect.text }] });
+        setReceiverCallOpen(true);
+        break;
+      case 'receiver_answer':
+      case 'receiver_no_answer':
+        if (!receiverCallLive) return;
+        setReceiverCallLog((log) => log && (effect.kind === 'receiver_answer'
+          ? { ...log, answered: true, resultCode: 'dock_confirmed', dock: effect.dock ?? '—', result: [effect.dock, effect.time].filter(Boolean).join(' · '), status: 'ended' }
+          : { ...log, resultCode: 'no_answer', status: 'ended' }));
+        if (effect.kind === 'receiver_answer') addEvent('receiverCall');
+        // O agente se despede e desliga; o celular do recebedor fica com o resultado na tela.
+        window.setTimeout(() => setRealCallRoute(null), 8000);
+        break;
+    }
+  };
+  const bridgeRoute = liveActive && liveRouteId ? liveRouteId : realCallRoute;
+  useEffect(() => {
+    if (!bridgeRoute || !API_BASE_URL) return;
+    return openDemoStream(API_BASE_URL, bridgeRoute, (effect) => bridgeRef.current(effect));
+  }, [bridgeRoute]);
+
   // ---------------------------------------------------------------- telas (espelham o rodar-mobile)
   const plate = integrated && mobileTrip ? mobileTrip.plate : FALLBACK_PLATE;
   const originName = t('mobileWeb.routeOrigin');
@@ -929,11 +993,12 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
                 onClose={() => setCabinOpen(false)} onTalk={() => { if (!liveActive && utterances[0]) runVoiceCommand(utterances[0].id as VoiceCommand); }} />}
             </>}
           </div>
-          <ReceiverCallPhone open={receiverCallOpen} call={receiverCallLog} receiverName={destinationName} preview={receiverCallPreview} onClose={() => setReceiverCallOpen(false)} />
+          <ReceiverCallPhone open={receiverCallOpen} call={receiverCallLog} receiverName={destinationName} preview={receiverCallPreview} live={receiverCallLive} onClose={() => setReceiverCallOpen(false)} />
           </div>
           {!embedded && <p className="mw-phone-caption">{t('mobileWeb.phoneLabel')}</p>}
+          {embedded && <RealCallCard onCallStarted={(routeId) => startRealReceiverCall(routeId)} />}
         </section>
-        {!embedded && <aside className="mw-control-panel"><div className="mw-control-heading"><span className="mw-demo-tag">DEMO</span><h2>{t('mobileWeb.controlsTitle')}</h2><p>{t('mobileWeb.controlsHint')}</p></div><div className="mw-control-status"><span>{t(`mobileWeb.phases.${phase}`)}</span><time>{currentClock}</time></div><div className="mw-control-actions">{!authenticated ? <button type="button" className="mw-control-primary" onClick={login}><span>01</span>{t('mobileWeb.enter')}<b>→</b></button> : <><button type="button" onClick={() => simulate('start')} disabled={!canStartTrip}><span>01</span>{t('mobileWeb.startTrip')}<b>→</b></button><button type="button" onClick={() => simulate('approach')} disabled={phase === 'idle' || phase === 'waiting' || phase === 'unloaded' || receiverNotified}><span>02</span>{t('mobileWeb.approach')}<b>→</b></button><button type="button" onClick={() => simulate('arrive')} disabled={phase === 'waiting' || phase === 'unloaded'}><span>03</span>{t('mobileWeb.arrival')}<b>→</b></button><button type="button" onClick={() => setCabinOpen(true)}><span>04</span>{t('mobileWeb.voiceOpen')}<b>✦</b></button><button type="button" onClick={() => simulate('unload')} disabled={!arrived || phase === 'unloaded'}><span>05</span>{t('mobileWeb.unload')}<b>✓</b></button></>}</div>{authenticated && <div className="mw-control-time"><span>{t('mobileWeb.queue.advanceHour')}</span><button type="button" onClick={() => advanceTime(60)} disabled={phase !== 'waiting'}>+60</button></div>}<button type="button" className="mw-reset-button" onClick={resetDemo}>↺ {t('mobileWeb.reset')}</button></aside>}
+        {!embedded && <aside className="mw-control-panel"><div className="mw-control-heading"><span className="mw-demo-tag">DEMO</span><h2>{t('mobileWeb.controlsTitle')}</h2><p>{t('mobileWeb.controlsHint')}</p></div><div className="mw-control-status"><span>{t(`mobileWeb.phases.${phase}`)}</span><time>{currentClock}</time></div><div className="mw-control-actions">{!authenticated ? <button type="button" className="mw-control-primary" onClick={login}><span>01</span>{t('mobileWeb.enter')}<b>→</b></button> : <><button type="button" onClick={() => simulate('start')} disabled={!canStartTrip}><span>01</span>{t('mobileWeb.startTrip')}<b>→</b></button><button type="button" onClick={() => simulate('approach')} disabled={phase === 'idle' || phase === 'waiting' || phase === 'unloaded' || receiverNotified}><span>02</span>{t('mobileWeb.approach')}<b>→</b></button><button type="button" onClick={() => simulate('arrive')} disabled={phase === 'waiting' || phase === 'unloaded'}><span>03</span>{t('mobileWeb.arrival')}<b>→</b></button><button type="button" onClick={() => setCabinOpen(true)}><span>04</span>{t('mobileWeb.voiceOpen')}<b>✦</b></button><button type="button" onClick={() => simulate('unload')} disabled={!arrived || phase === 'unloaded'}><span>05</span>{t('mobileWeb.unload')}<b>✓</b></button></>}</div>{authenticated && <div className="mw-control-time"><span>{t('mobileWeb.queue.advanceHour')}</span><button type="button" onClick={() => advanceTime(60)} disabled={phase !== 'waiting'}>+60</button></div>}<button type="button" className="mw-reset-button" onClick={resetDemo}>↺ {t('mobileWeb.reset')}</button><RealCallCard onCallStarted={(routeId) => startRealReceiverCall(routeId)} /></aside>}
       </div>
       {!embedded && <p className="mw-page-footer">{t('mobileWeb.footer')}</p>}
     </main>
