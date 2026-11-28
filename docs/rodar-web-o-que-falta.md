@@ -79,7 +79,7 @@ As cinco alegações apontadas no relatório original foram corrigidas em pt-BR 
 | Login e autorização reais | **Parcial** | `/auth/sso` ainda é login simulado, sem senha. No backend, `AUTH_OBRIGATORIA=true` é padrão: toda escrita exige JWT, ações da central exigem papel `cco`, e o motorista só age na rota atribuída | Login real (OIDC/senha/SMS), além de proteger as leituras; GET, SSE e WebSocket continuam abertos |
 | NF-e e CT-e | **Parcial (declarado)** | Metadados permanecem MOCK (`mock:true`); anexos reais enviados pelo CCO são um fluxo separado | Implementação fiscal ficou fora do escopo |
 | Acessibilidade do painel | **Ok, sem auditoria** | O relatório original registra atributos `aria-*`, `prefers-reduced-motion` no login e contraste documentado em `docs/DESIGN.md` | Rodar auditoria automatizada (axe ou Lighthouse) |
-| Documentação da integração | **Pendente** | `docs/INTEGRACAO-BACKEND.md` ainda contém caminho absoluto local `/home/henry/Documents/rodar-backend/backend` | Trocar por referência portátil ao repositório e remover dependência do caminho de uma máquina |
+| Documentação da integração | **Feito** | `docs/INTEGRACAO-BACKEND.md`, `docs/ARQUITETURA.md` e `CLAUDE.md` agora referenciam o repositório `rodar-backend` (pasta `backend/`), sem caminho absoluto de máquina | — |
 
 ---
 

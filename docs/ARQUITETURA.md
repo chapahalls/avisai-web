@@ -81,7 +81,7 @@ O dossiê consulta `/api/documents` para os metadados fiscais MOCK, `/rotas/{id}
 
 Arquivos reais têm listagem/upload em `/rotas/{id}/arquivos` e download por ID. `arquivo_adicionado` sinaliza refetch, sem carregar binário no SSE. Metadados ficam no banco; conteúdo em `ARQUIVOS_DIR`, montado no Compose em `/app/data/arquivos`. Reset preserva anexos e não existe DELETE/versionamento. Banco e volume precisam de backup conjunto; não há transação atômica completa entre banco e filesystem.
 
-O backend alterado é `/home/henry/Documents/rodar-backend/backend`, fora do checkout web. O modelo mobile em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md) usa IDs do backend, WS por motorista, leitura autoritativa da rota e download `Blob`; não constitui um app mobile completo.
+O backend alterado é o repositório [rodar-backend](https://github.com/rodarglobal/rodar-backend) (pasta `backend/`), fora do checkout web. O modelo mobile em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md) usa IDs do backend, WS por motorista, leitura autoritativa da rota e download `Blob`; não constitui um app mobile completo.
 
 ## Fluxo de dados da Demo
 

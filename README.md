@@ -29,10 +29,10 @@
 |---|---|
 | **Trilha** | Logística & automação |
 | **Em uma frase** | Um agente de voz que avisa o recebedor antes da chegada, conta a estadia do caminhão parado (Lei 11.442) e só chama a central quando alguém precisa decidir. |
-| **Demo no ar** | [rodar-web-beta.vercel.app/home](https://rodar-web-beta.vercel.app/home): site e painel do CCO no modo Demo, com deploy automático na Vercel (clique em **Entrar com SSO**) · [app do motorista no navegador](https://rodarglobal.github.io/rodar-mobile/) |
+| **Demo no ar** | [rodar-web-beta.vercel.app/home](https://rodar-web-beta.vercel.app/home): site e painel do CCO no modo Demo, com deploy automático na Vercel (clique em **Entrar com SSO**) · [app do motorista no navegador](https://rodar-web-beta.vercel.app/mobile-web) |
 | **Ver sem instalar nada** | [tour em vídeo de 1 min](https://github.com/rodarglobal/rodar-web/blob/main/docs/assets/readme/tour.mp4) do site e do painel · [tour do app do motorista (1 min)](https://github.com/rodarglobal/rodar-mobile/blob/main/docs/assets/readme/tour.mp4) · [validação ponta a ponta com a api real: 33 de 33 etapas](https://github.com/rodarglobal/rodar-backend/blob/main/evidence/validacao.md) · [telas do app](https://github.com/rodarglobal/rodar-mobile#telas-do-aplicativo) |
 | **Repositórios** | [rodar-backend](https://github.com/rodarglobal/rodar-backend) · [rodar-web](https://github.com/rodarglobal/rodar-web) (este) · [rodar-mobile](https://github.com/rodarglobal/rodar-mobile) |
-| **Qualidade** | CI configurado neste repositório (lint, typecheck, testes e build a cada push/PR na `main`, veja o badge no topo) · deploy contínuo na Vercel · 554 testes automatizados: 318 no backend, 127 no web, 109 no mobile |
+| **Qualidade** | CI configurado neste repositório (lint, typecheck, testes e build a cada push/PR na `main`, veja o badge no topo) · deploy contínuo na Vercel · 572 testes automatizados: 318 no backend, 145 no web, 109 no mobile |
 | **Segurança** | JWT assinado no login, papel `cco` nas ações da central, CORS restrito, segredo do LLM e limite de ligações ([detalhes](https://github.com/rodarglobal/rodar-backend#segurança)) |
 | **O que é simulado** | login sem senha, GPS da rota, documentos fiscais e o modo Demo do painel: [lista completa](#o-que-é-simulado) |
 | **Glossário** | **CCO**: a central de operações da transportadora · **recebedor**: quem descarrega (CD, atacado, loja) · **doca**: o portão de descarga · **estadia**: o valor que a lei manda pagar pelo caminhão parado além de 5 h (a **franquia**; Lei 11.442) · **geocerca**: o raio em volta do destino que marca a chegada · **Task**: o pedido que o CCO precisa responder |
@@ -233,7 +233,7 @@ Se a API falhar, o painel mostra o erro e **Tentar novamente**. A troca para **U
 
 ## CI/CD e deploy
 
-- **CI (`.github/workflows/ci.yml`):** a cada push e pull request na `main`, o GitHub Actions roda lint (Biome), typecheck, testes e build. O badge no topo do README mostra o status da última execução.
+- **CI (`.github/workflows/ci.yml`):** a cada push e pull request na `main`, o GitHub Actions roda lint (Biome), typecheck, testes, build e um smoke e2e com Playwright (login na Demo → painel → troca de idioma → logout, sem backend). O badge no topo do README mostra o status da última execução.
 - **Deploy: só a Vercel.** [rodar-web-beta.vercel.app/home](https://rodar-web-beta.vercel.app/home) publica o painel no modo Demo a cada push na `main`, lendo `vercel.json` e servindo a partir da raiz do domínio (`base: '/'` em `vite.config.ts`). O GitHub Pages foi removido: hospedava o mesmo build num subcaminho (`/rodar-web/`) e divergia da configuração da Vercel, causando risco de deploy duplicado; a página já não respondia (404) quando foi desativada.
 
 O deploy usa o modo Demo (sem `VITE_API_BASE_URL`): não chama uma API real.
@@ -325,7 +325,9 @@ ceil(max(0, espera_em_min / 60 − 5)) × toneladas × R$ 2,50
 
 ### Dependências
 
-React, Vite, TypeScript strict, Tailwind CSS v4, React Router, zustand, Recharts, i18next (pt-BR e en), three.js na home e no login, `agora-rtc-sdk-ng` e `lenis`. Os testes usam `node:test`, sem biblioteca adicional.
+React, Vite, TypeScript strict, Tailwind CSS v4, React Router, zustand, Recharts, i18next (pt-BR e en), three.js na home e no login, `lenis`. Os testes unitários usam `node:test`, sem biblioteca adicional; o smoke e2e usa `@playwright/test` (`npm run test:e2e`, veja `tests-e2e/`).
+
+Duas libs de voz no navegador, com papéis diferentes e sem sobreposição: `agora-rtc-sdk-ng` atende só em `/dashboard/operator` (seção [Telas](#telas)), o fallback de chamada do agente quando o Twilio PSTN falha; `livekit-client` é só o botão opcional **Testar ao vivo (LiveKit)** da home/`/mobile-web` (seção [Voz ao vivo na Demo](#voz-ao-vivo-na-demo)), para demonstrar a voz real do agente sem o telefone. Nenhuma das duas participa da Demo nem da simulação de voz do navegador.
 
 ```text
 src/

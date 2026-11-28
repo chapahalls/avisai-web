@@ -101,7 +101,7 @@ Upload multipart exige `arquivo`; descrição tem até 1.000 caracteres. Limite 
 
 Metadados ficam no banco, conteúdo em `ARQUIVOS_DIR` (padrão `data/arquivos`; Docker `/app/data/arquivos` com volume `./backend/data/arquivos:/app/data/arquivos`). Backup exige banco e arquivos juntos. Reset operacional preserva os anexos; não há DELETE/versionamento nesta entrega. Uma interrupção abrupta pode deixar arquivo órfão; o contrato não promete atomicidade completa entre banco e filesystem.
 
-Upload/download persiste conteúdo real, mas não registra autor autenticado nem autoriza acesso por motorista/empresa. NF-e/CT-e MOCK são independentes. O backend alterado fica em `/home/henry/Documents/rodar-backend/backend`, fora deste repositório web; sua migration e volume precisam acompanhar a execução. O modelo de consumo do motorista está em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md).
+Upload/download persiste conteúdo real, mas não registra autor autenticado nem autoriza acesso por motorista/empresa. NF-e/CT-e MOCK são independentes. O backend alterado fica no repositório [rodar-backend](https://github.com/rodarglobal/rodar-backend) (pasta `backend/`), fora deste repositório web; sua migration e volume precisam acompanhar a execução. O modelo de consumo do motorista está em [CONTRATO-MOBILE.md](CONTRATO-MOBILE.md).
 
 ## APIs existentes que o painel não expõe
 
