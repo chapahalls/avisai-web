@@ -20,6 +20,7 @@ export function HomePage() {
   const { t, i18n } = useTranslation();
   const { progress, phase, reducedMotion } = useHomeIntro();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: i18n.resolvedLanguage garante o título atualizado ao trocar pt-BR/en.
   useEffect(() => {
     const previous = document.title;
     document.title = t('home.pageTitle');

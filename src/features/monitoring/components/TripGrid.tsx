@@ -62,6 +62,7 @@ export function TripGrid({ selectedTripId, onSelect, onlyTripId }: { selectedTri
                   : eta === null ? '—' : clock(simMinutes + eta);
               const selected = trip.id === selectedTripId;
               return (
+                // biome-ignore lint/a11y/useKeyWithClickEvents: onClick é um alvo extra para mouse; o botão da placa já cobre a mesma ação pelo teclado.
                 <tr key={trip.id} data-selected={selected} aria-selected={selected} onClick={() => onSelect(trip.id)}>
                   <th scope="row"><button type="button" className="mon-plate" onClick={(event) => { event.stopPropagation(); onSelect(trip.id); }}>{trip.plate}</button></th>
                   <td><span>{driverName(trip, t)}</span>{selected && <span className="mon-focus-badge">{t('monitoring.selection.focus')}</span>}</td>

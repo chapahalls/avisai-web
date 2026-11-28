@@ -34,7 +34,7 @@ export function AnalyticsCharts({ deliveries, calls, occurrences, today, period,
               <li key={step.key} data-step={step.key}>
                 <span>{t(`analytics.funnel.steps.${step.key}`)}</span>
                 <strong>{step.value} · {percent(step.share)}</strong>
-                <i aria-hidden="true"><b style={{ width: `${step.share * 100}%` }} /></i>
+                <i><b style={{ width: `${step.share * 100}%` }} /></i>
               </li>
             ))}
           </ol>
@@ -47,8 +47,8 @@ export function AnalyticsCharts({ deliveries, calls, occurrences, today, period,
         {apiMode ? <p className="anl-empty">{t('analytics.daily.empty')}</p> : (
           <>
             <ul className="anl-legend">
-              <li><i data-series="calls" aria-hidden="true" />{t('analytics.daily.calls')}</li>
-              <li><i data-series="escalations" aria-hidden="true" />{t('analytics.daily.escalations')}</li>
+              <li><i data-series="calls" />{t('analytics.daily.calls')}</li>
+              <li><i data-series="escalations" />{t('analytics.daily.escalations')}</li>
             </ul>
             <ol className="anl-bars">
               {series.map((point) => (
@@ -72,7 +72,7 @@ export function AnalyticsCharts({ deliveries, calls, occurrences, today, period,
             {types.map((type) => (
               <li key={type.key} data-kind={type.key.split(':')[0]}>
                 <span>{typeLabel(type.key)}</span>
-                <i aria-hidden="true"><b style={{ width: `${(type.count / maxType) * 100}%` }} /></i>
+                <i><b style={{ width: `${(type.count / maxType) * 100}%` }} /></i>
                 <strong>{type.count}</strong>
               </li>
             ))}

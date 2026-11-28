@@ -34,7 +34,7 @@ export function DashboardPage({ initialTripId, onlyTripId }: { initialTripId?: s
 
   useEffect(() => {
     if (activePage >= pageCount) setActivePage(0);
-  }, [activePage, pageCount]);
+  }, [activePage]);
 
   // Seleção inicial: o alerta mais grave; sem alertas, a primeira viagem ativa.
   useEffect(() => {

@@ -174,6 +174,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cria o mapa só quando apiKey/mode/rota/tema mudam; dados ao vivo (receivers, allRoutePoints, updateTrucks) chegam via `latest.current` para não recriar o mapa a cada tick.
   useEffect(() => {
     if (!apiKey || !container.current) return;
     const host = container.current;
@@ -300,12 +301,15 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
     };
   }, [retry, mode, routeSignature, theme]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: updateTrucks é recriada a cada render (lê latest.current); incluí-la rodaria o efeito sempre.
   useEffect(() => { updateTrucks(); }, [trips, allTrips, running, selected?.vehicleId, t]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: só o id do veículo decide o reenquadramento; o objeto `selected` muda a cada tick de posição.
   useEffect(() => {
     const map = resources.current?.map;
     if (!map || status !== 'ready') return;
     if (following && selected && selected.positionKnown !== false) { map.setZoom(14); map.panTo(selected.position); }
   }, [following, status, selected?.vehicleId]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fitRequest é o gatilho (contador); allRoutePoints é lido no momento do disparo, não precisa fazer o efeito rodar de novo.
   useEffect(() => {
     if (resources.current && status === 'ready') fitRouteBounds(resources.current.map, allRoutePoints);
   }, [fitRequest, status]);
@@ -411,6 +415,7 @@ export function FleetMap({ tripId, selectedTripId, onSelectTrip }: {
       selectionInitialized.current = true;
     }
   }, [tripId, activeTrips]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: só o id do veículo decide; `selected` muda a cada tick de posição.
   useEffect(() => { if (!selected) setFollowing(false); }, [selected?.vehicleId]);
   const selectTruck = (vehicleId: string) => {
     if (onSelectTrip) {

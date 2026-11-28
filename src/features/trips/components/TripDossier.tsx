@@ -49,6 +49,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const componentId = useId();
   const visibleTabs = apiComplement ? tabs.filter((tab) => tab !== 'communications') : tabs;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: campos escolhidos de propósito (não o objeto trip inteiro) para não recalcular o dossiê a cada tick de GPS/relógio.
   const dossier = useMemo(() => trip ? buildTripDossier(apiComplement ? { ...trip, id: `complement-${trip.id}`, capacityTons: 14, receiverId: 'r1' } : trip) : undefined, [trip?.id, trip?.capacityTons, trip?.receiverId, apiComplement]);
   const communications = useMemo(() => trip && !apiComplement ? buildTripCommunications(trip, events, simMinutes) : [], [trip, events, simMinutes, apiComplement]);
   const communicationsPageCount = Math.max(1, Math.ceil(communications.length / COMMUNICATIONS_PAGE_SIZE));
@@ -59,6 +60,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
   );
   const communicationsRangeStart = communications.length ? currentCommunicationsPage * COMMUNICATIONS_PAGE_SIZE + 1 : 0;
   const communicationsRangeEnd = Math.min((currentCommunicationsPage + 1) * COMMUNICATIONS_PAGE_SIZE, communications.length);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: tripId não é lido no corpo, mas reseta aba/paginação ao trocar de viagem.
   useEffect(() => { setActiveTab('cargo'); setCommunicationsPage(0); }, [tripId]);
   const number = (value: number) => value.toLocaleString(locale);
   const handleTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -105,6 +107,7 @@ function MockTripDossier({ tripId, compact, apiComplement = false, showCommercia
           </button>
         ))}
       </div>
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: tabpanel sem elemento focável (ex.: aba "cargo") precisa ficar alcançável pelo teclado (WAI-ARIA APG, padrão Tabs). */}
       <div key={activeTab} role="tabpanel" id={`${componentId}-panel-${activeTab}`} aria-labelledby={`${componentId}-tab-${activeTab}`} tabIndex={0} className={compact ? 'space-y-4 p-4' : 'space-y-5 p-5'}>
         {activeTab === 'cargo' && (
           <>

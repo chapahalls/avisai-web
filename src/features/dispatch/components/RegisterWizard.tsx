@@ -34,6 +34,7 @@ export function RegisterWizard({ kind }: { kind: RegisterKind }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   // Ao trocar de etapa, o foco vai para o título dela (leitores de tela anunciam a etapa).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: step não é lido no corpo, só dispara o foco ao trocar de etapa.
   useEffect(() => { heading.current?.focus(); }, [step]);
 
   const index = STEPS.indexOf(step);

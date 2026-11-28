@@ -20,6 +20,7 @@ export function RouteFiles({ routeId, editable = false }: { routeId: number; edi
   const generation = useRef(0);
   const busy = useRef(false);
   const client = getApiClient();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revision não é lido no corpo, só força repetir a busca após upload/remoção.
   useEffect(() => {
     const version = ++generation.current;
     const controller = new AbortController();

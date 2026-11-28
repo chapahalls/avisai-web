@@ -77,6 +77,7 @@ export function TripTimeline({ tripId, compact = false }: { tripId: string; comp
                   <button type="button" className="trv-link" aria-expanded={open === item.key} onClick={() => setOpen(open === item.key ? null : item.key)}>
                     {t(open === item.key ? 'tripView.timeline.hideTranscript' : 'tripView.timeline.transcript')}
                   </button>
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: transcrição fechada do evento, sem id próprio por linha. */}
                   {open === item.key && <ol className="trv-transcript">{item.transcript.map((line, index) => <li key={index}><strong>{line.who}</strong> · {line.text}</li>)}</ol>}
                 </>
               )}

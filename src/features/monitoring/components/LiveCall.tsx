@@ -20,10 +20,12 @@ export function LiveCall({ tripId }: { tripId: string | null }) {
       {!call ? <p className="mon-empty">{t('monitoring.call.none')}</p> : (
         <>
           <p className="mon-call-to">{t('monitoring.call.to', { receiver: receiverById(call.receiverId).name, plate: call.plate })}</p>
+          {/* biome-ignore lint/suspicious/noArrayIndexKey: barras decorativas fixas (28), sem dado para uma key estável. */}
           <div className="mon-wave" aria-hidden="true">{Array.from({ length: 28 }, (_, index) => <i key={index} style={{ animationDelay: `${(index % 7) * 0.09}s` }} />)}</div>
           <ol className="mon-transcript">
-            {call.transcript.slice(-4).map((line, index) => (
-              <li key={index} data-who={line.who}>
+            {call.transcript.slice(-4).map((line, index, visible) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: key usa a posição absoluta na transcrição (length - visible.length + index), estável apesar da janela deslizante de 4 linhas.
+              <li key={call.transcript.length - visible.length + index} data-who={line.who}>
                 <strong>{t(`monitoring.call.who.${line.who}`)}</strong> · {isApi || !line.messageKey ? line.text : t(line.messageKey, line.values ?? {})}
               </li>
             ))}

@@ -24,7 +24,7 @@ export function HomeAudience() {
       <h2 id="home-audience-title" className="home-light-title">{t('home.audience.title')}</h2>
       <ul className="home-audience-grid">
         {AUDIENCE.map((key) => (
-          <li key={key} tabIndex={0}>
+          <li key={key}>
             <h3>{t(`home.audience.items.${key}.title`)}</h3>
             <p>{t(`home.audience.items.${key}.body`)}</p>
           </li>

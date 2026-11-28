@@ -13,6 +13,7 @@ export function useDispatchDrivers() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [reload, setReload] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload não é lido no corpo, só força repetir a busca.
   useEffect(() => {
     if (!client || mode !== 'api') { setDrivers([]); setProfiles([]); setLoading(false); return; }
     const controller = new AbortController();
@@ -44,6 +45,7 @@ export function useOperators() {
   const [profiles, setProfiles] = useState<BackendUserProfile[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [reload, setReload] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload não é lido no corpo, só força repetir a busca.
   useEffect(() => {
     if (!client || mode !== 'api') return;
     const controller = new AbortController();

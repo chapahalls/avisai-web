@@ -53,7 +53,7 @@ export function LoginGlobe() {
   return (
     <figure className="login-globe" data-state={state} aria-label={t('auth.globe.label')}>
       <div className="login-globe-halo" aria-hidden="true" />
-      <canvas ref={canvasRef} className="login-globe-canvas" aria-hidden="true" />
+      <canvas ref={canvasRef} className="login-globe-canvas" />
       <figcaption className="login-globe-legend">
         <p className="login-globe-title">{t('auth.globe.title')}</p>
         {stats ? <p className="login-globe-stats">{t('auth.globe.stats', stats)}</p> : null}

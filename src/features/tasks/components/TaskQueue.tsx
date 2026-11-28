@@ -48,6 +48,7 @@ export function TaskQueue() {
                 <p className="mt-1 text-sm text-ink-300">{waited === undefined ? t('api.tasks.waitingUnavailable') : t('tasks.waiting', { time: hhmm(waited, locale) })}{stay !== undefined ? ` · ${brl(stay, locale)}` : ''}</p>
                 <div className="mt-3 flex items-center gap-1" aria-label={t(isApi ? 'api.tasks.attempts' : 'tasks.attempts', { n: task.attempts, max: BUSINESS.maxCcoAttempts })}>
                   {!isApi && Array.from({ length: BUSINESS.maxCcoAttempts }).map((_, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: traços decorativos fixos (BUSINESS.maxCcoAttempts), sem dado para uma key estável.
                     <span key={i} aria-hidden="true" className={`h-1.5 w-7 rounded-full ${i < task.attempts ? (task.status === 'acknowledged' ? 'bg-ok-500' : task.status === 'escalated' ? 'bg-alert-500' : 'bg-wait-500') : 'bg-ink-700'}`} />
                   ))}
                   <span className="ml-2 text-xs text-ink-300">{t(isApi ? 'api.tasks.attempts' : 'tasks.attempts', { n: task.attempts, max: BUSINESS.maxCcoAttempts })}</span>

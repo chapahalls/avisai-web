@@ -52,6 +52,7 @@ export function RouteRequests({ routeId }: { routeId: number }) {
   const [reload, setReload] = useState(0);
   const busy = useRef(false);
   const generation = useRef(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload não é lido no corpo, só força repetir a busca.
   useEffect(() => {
     const version = ++generation.current;
     const controller = new AbortController();

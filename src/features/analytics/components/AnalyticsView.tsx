@@ -100,6 +100,7 @@ export function AnalyticsView() {
             <button type="button" className="anl-link" aria-expanded={open} onClick={() => setOpenTranscript(open ? null : call.id)}>{t(open ? 'analytics.hideTranscript' : 'analytics.showTranscript')}</button>,
           ],
           detail: open ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: transcrição fechada da ligação, só cresce ao fim; sem id próprio por linha.
             call.transcript.length ? <ol className="anl-transcript">{call.transcript.map((line, index) => <li key={index} data-who={line.who}><strong>{t(`monitoring.call.who.${line.who}`)}</strong> · {isApi || !line.messageKey ? line.text : t(line.messageKey, line.values ?? {})}</li>)}</ol>
               : <p className="anl-empty">{t('analytics.noTranscript')}</p>
           ) : undefined,
@@ -233,6 +234,7 @@ export function AnalyticsView() {
               {!active.rows.length && <tr><td colSpan={active.columns.length} className="anl-empty">{t('analytics.tabs.empty')}</td></tr>}
               {active.rows.map((row) => (
                 <Fragment key={row.key}>
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: colunas da tabela, ordem e contagem fixas por linha. */}
                   <tr>{row.cells.map((cell, index) => index === 0 ? <th key={index} scope="row">{cell}</th> : <td key={index}>{cell}</td>)}</tr>
                   {row.detail && <tr className="anl-detail"><td colSpan={active.columns.length}>{row.detail}</td></tr>}
                 </Fragment>

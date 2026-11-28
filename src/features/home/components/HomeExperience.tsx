@@ -89,7 +89,7 @@ function HomeSceneCanvas({
     };
   }, [onStateChange, reducedMotion]);
 
-  return <canvas ref={canvasRef} className="home-story-canvas" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="home-story-canvas" />;
 }
 
 function TypedHeadline({

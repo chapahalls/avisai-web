@@ -42,6 +42,7 @@ export function DriverMessages({ tripId, routeId, driverName, highlighted = fals
   const messageField = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { setRemetente(session?.name ?? ''); }, [session?.name]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: routeId não é lido no corpo, mas refaz o scroll/foco ao trocar de viagem.
   useEffect(() => {
     if (!highlighted) return;
     const frame = window.requestAnimationFrame(() => {

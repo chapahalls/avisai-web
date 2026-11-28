@@ -30,11 +30,13 @@ export function RouteEditor({ row, drivers, trips, onClose, onSaved }: {
   const busy = useRef(false);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trip.id não é lido no corpo, mas reseta o formulário ao trocar de viagem.
   useEffect(() => { setDriverId(currentDriverId === null ? '' : String(currentDriverId)); setError(null); }, [trip.id, currentDriverId]);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [cancelPending, setCancelPending] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trip.id não é lido no corpo, mas reseta o cancelamento ao trocar de viagem.
   useEffect(() => { setCancelOpen(false); setReason(''); setCancelError(null); }, [trip.id]);
   const apiTrips = trips.filter((item) => item.source === 'api');
   const reasonValid = reason.trim().length >= CANCEL_REASON_MIN && reason.trim().length <= CANCEL_REASON_MAX;

@@ -17,6 +17,7 @@ export function LoginPage() {
   const [profiles, setProfiles] = useState<BackendUserProfile[]>([]);
   const [profilesStatus, setProfilesStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [reload, setReload] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reload não é lido no corpo, só força repetir a busca.
   useEffect(() => {
     if (mode !== 'api') return;
     const controller = new AbortController();

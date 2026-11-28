@@ -11,6 +11,7 @@ export function HomeLoader({ progress, phase }: { progress: number; phase: Loade
   const { t } = useTranslation();
   if (phase === 'done') return null;
   return (
+    // biome-ignore lint/a11y/useFocusableInteractive: progressbar é status somente leitura, sem interação; não entra na ordem de tabulação (WAI-ARIA).
     <div
       className="home-loader"
       data-phase={phase}

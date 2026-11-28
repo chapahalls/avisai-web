@@ -20,6 +20,7 @@ export function useSmoothScroll(enabled: boolean, locked: boolean) {
     };
   }, [enabled]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: enabled não é lido no corpo, mas reaplica o bloqueio ao criar/destruir o Lenis.
   useEffect(() => {
     const lenis = lenisRef.current;
     if (lenis) {

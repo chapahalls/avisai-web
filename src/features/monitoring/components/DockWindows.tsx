@@ -53,7 +53,7 @@ export function DockWindows({ onSelect, onlyTripId }: { onSelect: (tripId: strin
         <div className="mon-docks-tools">
           <label className="mon-search"><span className="sr-only">{t('monitoring.docks.search')}</span><input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(0); }} placeholder={t('monitoring.docks.search')} /></label>
           <ul className="mon-legend">
-            {(['waiting', 'unloaded', 'planned'] as const).map((kind) => <li key={kind}><i data-kind={kind} aria-hidden="true" />{t(`monitoring.docks.legend.${kind}`)}</li>)}
+            {(['waiting', 'unloaded', 'planned'] as const).map((kind) => <li key={kind}><i data-kind={kind} />{t(`monitoring.docks.legend.${kind}`)}</li>)}
           </ul>
         </div>
       </header>

@@ -77,7 +77,7 @@ function DockCanvas({ progress, reducedMotion }: { progress: number; reducedMoti
     };
   }, [reducedMotion]);
 
-  return <canvas ref={canvasRef} className="home-how-canvas" data-failed={failed} aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="home-how-canvas" data-failed={failed} />;
 }
 
 /** "Como funciona": quatro etapas guiadas pelo scroll, com o caminhão 3D da hero na doca. */

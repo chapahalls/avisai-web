@@ -66,6 +66,7 @@ export function ApiTripDossier({ trip, compact, showCommercialValues = true, moc
           {t(`dossier.tabs.${tab}`)}
         </button>)}
       </div>
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: tabpanel sem elemento focável precisa ficar alcançável pelo teclado (WAI-ARIA APG, padrão Tabs). */}
       <div key={`${trip.id}-${activeTab}`} role="tabpanel" id={`${componentId}-panel-${activeTab}`} aria-labelledby={`${componentId}-tab-${activeTab}`} tabIndex={0} className={compact ? 'space-y-4 p-4' : 'space-y-5 p-5'}>
         {activeTab === 'cargo' && <>
           <div className="rounded-input border border-ink-700 bg-ink-950/40 p-4">
