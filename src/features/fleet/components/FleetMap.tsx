@@ -6,8 +6,8 @@ import { RECEIVERS as DEMO_RECEIVERS } from '../../../services/mock/data';
 import { MOCK_ROAD_ROUTES, getMockRoadRoute } from '../../../services/mock/routes';
 import { buildTripDossier } from '../../../services/mock/dossier';
 import {
-  loadTrackingMaps, onGoogleMapsAuthFailure,
-  type GoogleMap, type TrackingMapsLibraries, type GoogleMarker, type GooglePolyline,
+  loadTrackingMaps, loadGoogleMaps, getRoadRoute, onGoogleMapsAuthFailure,
+  type GoogleMap, type TrackingMapsLibraries, type GoogleMapsLibraries, type GoogleMarker, type GooglePolyline,
 } from '../../../lib/googleMaps';
 import { getTrackingPosition, splitRoute } from '../../../utils/tracking';
 import { getTripRoute } from '../../../utils/tripRoute';
@@ -53,6 +53,11 @@ interface MapResources {
   listeners: { remove(): void }[];
   dirty: boolean;
   renderedRoute: string;
+  /** Carregada só no modo API, depois do mapa: a Demo não exige a permissão da Routes API. */
+  routesApi?: GoogleMapsLibraries;
+  /** Encaixe visual por viagem: a distância, o ETA e o GPS continuam os do backend. */
+  snapped: Map<string, ReturnType<typeof getTripRoute>>;
+  snapping: Set<string>;
 }
 
 const demoRoutePoints = DEMO_RECEIVERS.flatMap((receiver) => getMockRoadRoute(receiver.id).points);
@@ -95,6 +100,31 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
   const [status, setStatus] = useState<MapStatus>(apiKey ? 'loading' : 'key_missing');
   const [retry, setRetry] = useState(0);
 
+  /**
+   * No modo API, o traçado desenhado pode ser ajustado à malha viária via Google Maps, uma vez
+   * por rota e em cache (nunca por tick). O `trip.routePoints` enviado pelo backend, a distância,
+   * o ETA e a posição GPS continuam intactos: só a linha mostrada no mapa muda.
+   */
+  const visualRoute = (trip: Trip) => {
+    const base = getTripRoute(trip);
+    const mapRes = resources.current;
+    if (trip.source !== 'api' || !mapRes?.routesApi || base.points.length < 2) return base;
+    const snapped = mapRes.snapped.get(trip.id);
+    if (snapped) return snapped;
+    if (!mapRes.snapping.has(trip.id)) {
+      mapRes.snapping.add(trip.id);
+      getRoadRoute(mapRes.routesApi, base.points[0], base.points[base.points.length - 1]).then((road) => {
+        if (resources.current !== mapRes) return;
+        mapRes.snapped.set(trip.id, road.geometry);
+        mapRes.snapping.delete(trip.id);
+        mapRes.dirty = true;
+        if (mapRes.renderedRoute.startsWith(`${trip.id}:`)) mapRes.renderedRoute = '';
+        mapRes.base.get(trip.receiverId)?.setPath(road.geometry.points);
+      }).catch(() => { mapRes.snapping.delete(trip.id); });
+    }
+    return base;
+  };
+
   const updateTrucks = () => {
     const current = resources.current;
     if (!current) return;
@@ -102,7 +132,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
     const now = performance.now();
     const visible = new Set(latest.current.trips.map((trip) => trip.vehicleId));
     for (const trip of latest.current.allTrips) {
-      const path = getTripRoute(trip);
+      const path = visualRoute(trip);
       let truck = current.trucks.get(trip.vehicleId);
       if (trip.positionKnown === false) {
         if (truck) {
@@ -207,11 +237,11 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
       const remaining = new api.Polyline({ map, path: [], strokeColor: brand, strokeOpacity: 0, strokeWeight: 4, zIndex: 3, clickable: true,
         icons: [{ icon: { path: 'M 0,-1 0,1', strokeColor: brand, strokeOpacity: 1, strokeWeight: 3, scale: 3 }, offset: '0', repeat: '15px' }],
       });
-      owned = { api, map, trucks: new Map(), places: [], base: new Map(), traveled, remaining, listeners: [], dirty: true, renderedRoute: '' };
+      owned = { api, map, trucks: new Map(), places: [], base: new Map(), traveled, remaining, listeners: [], dirty: true, renderedRoute: '', snapped: new Map(), snapping: new Set() };
       resources.current = owned;
       for (const receiver of receivers) {
         const route = latest.current.allTrips.find((trip) => trip.receiverId === receiver.id);
-        const line = new api.Polyline({ map, path: route ? getTripRoute(route).points : [], strokeColor: muted, strokeWeight: 2, strokeOpacity: 0.35, clickable: true, zIndex: 1 });
+        const line = new api.Polyline({ map, path: route ? visualRoute(route).points : [], strokeColor: muted, strokeWeight: 2, strokeOpacity: 0.35, clickable: true, zIndex: 1 });
         owned.base.set(receiver.id, line);
         owned.listeners.push(line.addListener('click', () => {
           const current = latest.current;
@@ -238,6 +268,14 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
       fitRouteBounds(map, allRoutePoints);
       updateTrucks();
       setStatus('ready');
+      // Biblioteca Routes carregada em separado e só no modo API: a Demo não exige essa permissão.
+      if (mode === 'api') {
+        void loadGoogleMaps(apiKey, initialLanguage.current).then((routesApi) => {
+          if (cancelled || resources.current !== owned) return;
+          owned!.routesApi = routesApi;
+          updateTrucks();
+        }).catch(() => { /* sem Routes API: o traçado do backend continua desenhado como veio. */ });
+      }
       const draw = (timestamp: number) => {
         if (cancelled || authFailed || resources.current !== owned) return;
         frame = requestAnimationFrame(draw);
@@ -251,7 +289,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
           const progress = truck.from + (truck.target - truck.from) * ratio;
           if (progress === truck.displayed && !owned!.dirty) continue;
           truck.displayed = progress;
-          const tracking = getTrackingPosition(getTripRoute(trip), truck.displayed);
+          const tracking = getTrackingPosition(visualRoute(trip), truck.displayed);
           if (trip.source === 'api') {
             if (trip.positionKnown !== false) truck.marker.position = trip.position;
           } else if (tracking.position) truck.marker.position = tracking.position;
@@ -265,7 +303,7 @@ function RoadMap({ trips, selected, onSelect, following, fitRequest, tripId }: {
           const progress = trip.source === 'api' ? trip.progress : truck?.displayed ?? trip.progress;
           const key = `${trip.id}:${progress}`;
           if (key !== owned!.renderedRoute) {
-            const path = splitRoute(getTripRoute(trip), progress);
+            const path = splitRoute(visualRoute(trip), progress);
             owned!.traveled.setPath(path.traveled);
             owned!.remaining.setPath(path.remaining);
             owned!.renderedRoute = key;
