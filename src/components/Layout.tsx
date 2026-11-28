@@ -12,11 +12,12 @@ import '../cco.css';
 import { APP_ROUTES } from '../lib/routes';
 import { useTheme } from '../lib/theme';
 
+/* Demo mobile vem primeiro: é a página de entrada da Demo (login cai direto nela). No modo API, o link some (filtro abaixo). */
 const links = [
+  { to: APP_ROUTES.mobileDemo, key: 'nav.mobileDemo', icon: 'mobile' },
   { to: APP_ROUTES.dashboard, key: 'nav.monitoring', icon: 'truck' },
   { to: APP_ROUTES.dispatch, key: 'nav.dispatch', icon: 'dashboard' },
   { to: APP_ROUTES.metrics, key: 'nav.analytics', icon: 'metrics' },
-  { to: APP_ROUTES.mobileDemo, key: 'nav.mobileDemo', icon: 'mobile' },
 ] as const;
 
 const initials = (name: string) => name.split(/\s+/).map((part) => part.replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('');
