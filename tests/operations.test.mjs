@@ -199,13 +199,16 @@ test('posição ausente fica indisponível; projeção de progresso não desloca
 test('projeção deduplica IDs e preserva texto do backend sem criar histórico ou eventos locais', () => {
   const snapshot = sample();
   snapshot.eventos = [event, { ...event }, {
-    ...event, id: 8, tipo: 'novo_evento', mensagem: 'Texto original do backend', dados: { campo: 'fixture' },
+    ...event, id: 8, tipo: 'novo_evento', mensagem: 'Texto original do backend', dados: { campo: 'fixture', canal: 'painel' },
   }];
   const result = projectSnapshot(snapshot, new Map(), now);
   assert.equal(result.feed.length, 2);
   assert.equal(new Set(result.feed.map((entry) => entry.id)).size, 2);
   assert.equal(result.feed.find((entry) => entry.id === 'api-event-8').payload.backendMessage, 'Texto original do backend');
   assert.equal(result.feed.find((entry) => entry.id === 'api-event-8').payload.backendType, 'novo_evento');
+  // canal_atual/canal do backend (dados.canal) tem que chegar como payload.channel: é o que TaskPushNotifications
+  // e o rótulo de canal na linha do tempo leem, em pt-BR (push/painel/ligacao), sem tradução.
+  assert.equal(result.feed.find((entry) => entry.id === 'api-event-8').payload.channel, 'painel');
   assert.equal(Object.hasOwn(result, 'history'), false);
   assert.equal(Object.hasOwn(result, 'historicalCalls'), false);
 });

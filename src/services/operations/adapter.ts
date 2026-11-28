@@ -186,7 +186,8 @@ export function projectSnapshot(snapshot: BackendSnapshot, details: ReadonlyMap<
       id: `api-event-${event.id}`, idempotencyKey: `api-event-${event.id}`, tripId: event.rota_id === null ? '' : routeKey(event.rota_id),
       occurredAt: backendDate(event.timestamp).toISOString(), receivedAt: now.toISOString(),
       type: eventType[event.tipo] ?? 'OccurrenceCreated', source: eventSource[event.tipo] ?? 'system', simMin: atMinute(event.timestamp),
-      payload: { ...event.dados, backendType: event.tipo, backendMessage: event.mensagem, plate: event.rota_id === null ? '' : metadata[routeKey(event.rota_id)]?.plate },
+      payload: { ...event.dados, backendType: event.tipo, backendMessage: event.mensagem, plate: event.rota_id === null ? '' : metadata[routeKey(event.rota_id)]?.plate,
+        channel: event.dados.canal },
     }));
   return { trips, tasks, calls, feed, tripMeta: metadata, receivers, simMinutes: (now.getTime() - base) / 60_000 };
 }
