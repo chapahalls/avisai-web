@@ -290,11 +290,11 @@ VITE_GOOGLE_MAPS_API_KEY=
 VITE_GOOGLE_MAPS_MAP_ID=DEMO_MAP_ID
 ```
 
-Habilite **Maps JavaScript API** no Google Cloud e restrinja a chave por **HTTP referrers** e por API. Variáveis `VITE_` entram no bundle: a chave é pública e depende dessas restrições. `.env` é ignorada pelo Git; nunca registre o valor no repositório.
+No Google Cloud, habilite **Maps JavaScript API** e **Routes API** (com cobrança ativa no projeto) e restrinja a chave por **HTTP referrers** e pelas duas APIs. Sem a Routes API habilitada, o traçado do modo API continua aparecendo, mas como reta entre os extremos do `trajeto`, sem encaixe na via. Variáveis `VITE_` entram no bundle: a chave é pública e depende dessas restrições. `.env` é ignorada pelo Git; nunca registre o valor no repositório.
 
-O Google Maps é só o mapa base. A Demo usa snapshots rodoviários OSRM versionados e o modo API usa o trajeto e o GPS do backend. Não há Routes API nem rota recalculada a cada tick. Sem chave, o painel mostra um aviso traduzido e mantém a visão local, a lista da frota e a seleção de viagens.
+O Google Maps é o mapa base nos dois modos. A Demo usa snapshots rodoviários OSRM versionados; o modo API usa o trajeto e o GPS do backend e, só nesse modo, pode consultar a Routes API (`Route.computeRoutes`, origem→destino do próprio trajeto, uma consulta por rota e em cache, nunca por tick) para ajustar visualmente a linha à via — sem recalcular distância, ETA, progresso ou substituir o GPS do backend. Se a chave faltar, a Routes API falhar ou não estiver habilitada, o painel mostra um aviso traduzido (sem mapa) ou mantém o traçado como veio do backend (com mapa), preservando a lista da frota e a seleção de viagens.
 
-Referências: [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/load-maps-js-api), [segurança de chaves](https://developers.google.com/maps/api-security-best-practices), [OSRM](https://project-osrm.org/) e [OpenStreetMap](https://www.openstreetmap.org/copyright).
+Referências: [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/load-maps-js-api), [começando com a Routes Library](https://developers.google.com/maps/documentation/javascript/routes/start), [segurança de chaves](https://developers.google.com/maps/api-security-best-practices), [OSRM](https://project-osrm.org/) e [OpenStreetMap](https://www.openstreetmap.org/copyright).
 </details>
 
 ## O que é simulado
