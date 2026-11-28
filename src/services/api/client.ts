@@ -125,7 +125,7 @@ const isStay: Guard<BackendStay> = (value): value is BackendStay => shape(value,
 
 const isCall: Guard<BackendCall> = (value): value is BackendCall => shape(value, {
   id: positiveId, rota_id: positiveId, task_id: nullable(positiveId),
-  motivo: oneOf('aproximacao', 'cco_sem_resposta'), modo: oneOf('rtc', 'sip'),
+  motivo: oneOf('aproximacao', 'cco_sem_resposta', 'atraso'), modo: oneOf('rtc', 'sip'),
   numero: text, canal: nullable(text), sessao_id: nullable(positiveId), agent_id: nullable(text),
   status: oneOf('chamando', 'em_andamento', 'respondida', 'nao_atendida', 'falhou'),
   iniciada_em: timestamp, encerrada_em: nullable(timestamp), atendida: boolean,

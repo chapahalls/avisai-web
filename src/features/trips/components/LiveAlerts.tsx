@@ -10,6 +10,7 @@ type AlertToast = {
   title: string;
   summary: string;
   priority: 'info' | 'atencao' | 'critico';
+  plate: string;
 };
 
 const priorityClass = {
@@ -72,11 +73,13 @@ export function LiveAlerts({ onAlertSelect, onlyTripId }: { onAlertSelect?: (tri
         : typeof event.payload.backendMessage === 'string'
           ? event.payload.backendMessage
           : t('alerts.received');
-      return [{ id: event.id, tripId: event.tripId, title, summary, priority }];
+      const plate = typeof event.payload.plate === 'string' ? event.payload.plate : '';
+      return [{ id: event.id, tripId: event.tripId, title, summary, priority, plate }];
     });
     if (!alertToasts.length) return;
     if (alertToasts.some((toast) => toast.priority === 'critico')) playCriticalTone();
-    setToasts((current) => [...alertToasts, ...current].slice(0, 4));
+    // Um mesmo veículo não acumula mais de um toast; o mais recente substitui o anterior.
+    setToasts((current) => [...alertToasts, ...current.filter((toast) => !alertToasts.some((created) => created.tripId === toast.tripId))].slice(0, 6));
     const timer = window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => !alertToasts.some((created) => created.id === toast.id)));
     }, 12_000);
@@ -84,20 +87,27 @@ export function LiveAlerts({ onAlertSelect, onlyTripId }: { onAlertSelect?: (tri
   }, [feed, t, onlyTripId]);
 
   if (!toasts.length) return null;
+  const visible = toasts.slice(0, 3);
+  const overflow = toasts.length - visible.length;
   return (
-    <aside className="fixed right-4 top-16 z-50 grid w-[min(26rem,calc(100vw-2rem))] gap-3 sm:top-4" aria-live="assertive" aria-label={t('alerts.live')}>
-      {toasts.map((toast, index) => (
-        <article key={toast.id} className={`rounded-card border-l-4 p-4 shadow-xl shadow-depth/40 ${index > 0 ? 'max-sm:hidden' : ''} ${priorityClass[toast.priority]}`}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="font-display text-sm font-semibold">{toast.title}</p>
-              <p className="mt-1 text-sm text-ink-100">{toast.summary}</p>
-              <p className="mt-2 text-xs text-ink-200">{t(`alerts.priority.${toast.priority}`)}</p>
+    // `pointer-events-none` no contêiner e `pointer-events-auto` em cada toast: a pilha nunca bloqueia cliques
+    // nos painéis abaixo, mesmo quando sua altura (limitada, com rolagem) chega a sobrepor outro conteúdo.
+    <aside className="pointer-events-none fixed right-4 top-16 z-50 flex max-h-[min(70vh,32rem)] w-[min(22rem,calc(100vw-2rem))] flex-col gap-2.5 overflow-y-auto pb-1 sm:top-4" aria-live="assertive" aria-label={t('alerts.live')}>
+      {visible.map((toast) => (
+        <article key={toast.id} className={`pointer-events-auto rounded-card border-l-4 p-3.5 shadow-xl shadow-depth/40 ${priorityClass[toast.priority]}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="font-display text-sm font-semibold">{toast.title}</span>
+                {toast.plate && <span className="rounded bg-ink-950/30 px-1.5 py-0.5 font-mono text-xs font-semibold text-ink-50">{toast.plate}</span>}
+                <span className="text-xs text-ink-200">{t(`alerts.priority.${toast.priority}`)}</span>
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm text-ink-100">{toast.summary}</p>
             </div>
             <button type="button" onClick={() => setToasts((current) => current.filter((item) => item.id !== toast.id))}
-              className="rounded p-1 text-ink-200 hover:bg-ink-950/30" aria-label={t('alerts.dismiss')}>×</button>
+              className="shrink-0 rounded p-1 text-ink-200 hover:bg-ink-950/30" aria-label={t('alerts.dismiss')}>×</button>
           </div>
-          <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
+          <div className="mt-2.5 flex flex-wrap gap-3 text-xs font-semibold">
             {toast.tripId && <Link className="text-ink-50 underline" to={APP_ROUTES.trip(toast.tripId)}>{t('alerts.openTrip')}</Link>}
             {toast.tripId && onAlertSelect && <button type="button" onClick={() => {
               onAlertSelect(toast.tripId);
@@ -107,6 +117,9 @@ export function LiveAlerts({ onAlertSelect, onlyTripId }: { onAlertSelect?: (tri
           </div>
         </article>
       ))}
+      {overflow > 0 && <p className="pointer-events-auto rounded-card border border-ink-700 bg-ink-900/90 px-3.5 py-2 text-center text-xs font-semibold text-ink-300 shadow-xl shadow-depth/40">
+        {t('alerts.more', { count: overflow })}
+      </p>}
     </aside>
   );
 }

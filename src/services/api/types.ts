@@ -112,7 +112,7 @@ export interface BackendCall {
   id: number;
   rota_id: number;
   task_id: number | null;
-  motivo: 'aproximacao' | 'cco_sem_resposta';
+  motivo: 'aproximacao' | 'cco_sem_resposta' | 'atraso';
   modo: 'rtc' | 'sip';
   numero: string;
   canal: string | null;

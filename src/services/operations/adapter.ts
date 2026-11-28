@@ -173,7 +173,8 @@ export function projectSnapshot(snapshot: BackendSnapshot, details: ReadonlyMap<
   }));
   const calls: CallLog[] = snapshot.ligacoes.map((call) => ({
     id: `api-call-${call.id}`, source: 'api', tripId: routeKey(call.rota_id), receiverId: `api-receiver-${call.rota_id}`,
-    plate: metadata[routeKey(call.rota_id)]?.plate ?? '', moment: call.motivo === 'aproximacao' ? 'approach' : 'escalation',
+    plate: metadata[routeKey(call.rota_id)]?.plate ?? '',
+    moment: call.motivo === 'aproximacao' ? 'approach' : call.motivo === 'atraso' ? 'delay' : 'escalation',
     atMin: atMinute(call.iniciada_em), occurredAt: backendDate(call.iniciada_em).toISOString(), status: call.status,
     answered: call.atendida, result: call.resposta_resumo ?? '',
     resultCode: call.status === 'falhou' ? 'failed' : ['chamando', 'em_andamento'].includes(call.status) ? 'in_progress'

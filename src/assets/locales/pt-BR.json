@@ -241,12 +241,15 @@
     "title": "Chegada sem resposta",
     "body": "Caminhão {{plate}} parado no recebedor. Abra o painel para assumir.",
     "enableTitle": "Ativar notificações do navegador para chegadas sem resposta",
+    "enableHint": "Diferente dos alertas na tela: avisa mesmo com esta aba em segundo plano. Sem ativar, os alertas aqui no painel continuam aparecendo normalmente.",
     "enable": "Ativar",
     "dismiss": "Fechar aviso de notificações"
   },
   "alerts": {
     "live": "Alertas em tempo real",
     "received": "Alerta recebido do backend.",
+    "more_one": "+{{count}} outro alerta",
+    "more_other": "+{{count}} outros alertas",
     "dismiss": "Fechar alerta",
     "openTrip": "Abrir viagem",
     "sendMessage": "Responder ao motorista",
@@ -739,7 +742,8 @@
       "statusLabel": "Estado:",
       "moment": {
         "approach": "aviso de aproximação",
-        "escalation": "contato após falta de resposta do CCO"
+        "escalation": "contato após falta de resposta do CCO",
+        "delay": "aviso de atraso"
       },
       "results": {
         "dock_confirmed": "Doca {{dock}} informada",

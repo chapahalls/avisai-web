@@ -241,12 +241,15 @@
     "title": "Unanswered arrival",
     "body": "Truck {{plate}} waiting at the receiver. Open the dashboard to take it.",
     "enableTitle": "Enable browser notifications for unanswered arrivals",
+    "enableHint": "Different from the on-screen alerts: this reaches you even with this tab in the background. Without it, the alerts here in the dashboard keep appearing normally.",
     "enable": "Enable",
     "dismiss": "Close notifications prompt"
   },
   "alerts": {
     "live": "Real-time alerts",
     "received": "Alert received from the backend.",
+    "more_one": "+{{count}} other alert",
+    "more_other": "+{{count}} other alerts",
     "dismiss": "Dismiss alert",
     "openTrip": "Open trip",
     "sendMessage": "Reply to driver",
@@ -739,7 +742,8 @@
       "statusLabel": "Status:",
       "moment": {
         "approach": "approach notification",
-        "escalation": "contact after no control center response"
+        "escalation": "contact after no control center response",
+        "delay": "delay notification"
       },
       "results": {
         "dock_confirmed": "Dock {{dock}} reported",

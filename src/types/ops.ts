@@ -98,7 +98,7 @@ export interface CallLog {
   tripId: string;
   receiverId: string;
   plate: string;
-  moment: 'approach' | 'escalation';
+  moment: 'approach' | 'escalation' | 'delay';
   atMin: number;
   answered: boolean;
   result: string;

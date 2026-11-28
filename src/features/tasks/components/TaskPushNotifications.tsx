@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOps } from '../../../services/operations';
 
+const DISMISSED_KEY = 'rodar:push-prompt-dismissed';
+
 /**
  * Nível 1/3 do escalonamento do CCO (R4): "push" é uma notificação do navegador, via Notification API.
  * Não depende de backend nem de serviço de push; só funciona com a aba aberta e permissão concedida.
  * A permissão só é pedida a partir de um gesto do CCO (clique em "Ativar"); navegadores ignoram ou
- * bloqueiam o pedido feito sozinho, sem gesto, ao carregar a página.
+ * bloqueiam o pedido feito sozinho, sem gesto, ao carregar a página. Esse aviso é distinto dos toasts
+ * de `LiveAlerts`: aqueles aparecem só com a aba aberta e em foco; isto cobre a aba em segundo plano.
+ * O descarte é lembrado (localStorage) para não repetir o pedido a cada troca de tela do Dashboard.
  */
 export function TaskPushNotifications() {
   const { t } = useTranslation();
@@ -16,7 +20,9 @@ export function TaskPushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() => (
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
   ));
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(DISMISSED_KEY) === '1'; } catch { return false; }
+  });
 
   useEffect(() => {
     if (!initialized.current) {
@@ -44,6 +50,10 @@ export function TaskPushNotifications() {
     if (typeof Notification === 'undefined') return;
     void Notification.requestPermission().then(setPermission);
   };
+  const dismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem(DISMISSED_KEY, '1'); } catch { /* armazenamento indisponível: só dura a sessão */ }
+  };
 
   if (permission !== 'default' || dismissed) return null;
   return (
@@ -58,9 +68,10 @@ export function TaskPushNotifications() {
       </span>
       <div className="flex-1">
         <p className="font-semibold leading-snug text-ink-50">{t('push.enableTitle')}</p>
+        <p className="mt-1 text-xs leading-snug text-ink-300">{t('push.enableHint')}</p>
         <button type="button" onClick={enable} className="mt-2 rounded-input bg-brand-500 px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand-600">{t('push.enable')}</button>
       </div>
-      <button type="button" onClick={() => setDismissed(true)} className="shrink-0 rounded p-1 text-ink-300 hover:bg-ink-950/30" aria-label={t('push.dismiss')}>×</button>
+      <button type="button" onClick={dismiss} className="shrink-0 rounded p-1 text-ink-300 hover:bg-ink-950/30" aria-label={t('push.dismiss')}>×</button>
     </aside>
   );
 }
