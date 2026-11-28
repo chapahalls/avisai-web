@@ -411,6 +411,13 @@ export interface BackendDemoCall {
 }
 
 /** `POST /demo/sessao`: sessão de motorista na rota de demonstração, com URL e token LiveKit da sala. */
+/** Tour guiado por voz da Demo (`POST /demo/tour`): sala só do visitante com o agente no modo guia. */
+export interface BackendDemoTour {
+  url: string;
+  token: string;
+  sala: string;
+}
+
 export interface BackendDemoSession {
   id: number;
   rota_id: number;

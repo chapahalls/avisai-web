@@ -6,11 +6,12 @@ import Lenis from 'lenis';
 import { Icon } from '../components/Icon';
 import { RodarLogo, RodarMark } from '../components/RodarLogo';
 import { AppIcon, AvisaiDock, CabinConversation, type OrbState, type Utterance } from '../features/driver-app';
-import { RealCallCard, ReceiverCallPhone } from '../features/receiver-call';
+import { RealCallCard, ReceiverCallPhone, extractBrazilianMobile, formatBrazilianMobile, normalizeBrazilianMobile, requestRealCall, type RealCallError } from '../features/receiver-call';
 import { applyMobileDemoAction, useOps, useReceivers } from '../services/operations';
 import { connectLiveVoice, disconnectLiveVoice, toggleLiveMute, useLiveVoice } from '../services/livekit/liveVoice';
 import type { DemoBridgeEffect } from '../services/livekit/demoBridge';
 import { openDemoStream } from '../services/livekit/demoStream';
+import { clearTourHeard, connectTourVoice, disconnectTourVoice, sayTour, setTourMuted, tourVoiceStore, useTourVoice } from '../services/livekit/tourVoice';
 import { API_BASE_URL } from '../lib/apiConfig';
 import type { FeedEvent } from '../services/mock/engine';
 import { buildCall } from '../services/mock/calls';
@@ -32,6 +33,9 @@ type TourPlacement = 'above' | 'below' | 'left' | 'right';
 type TourPosition = { top: number; left: number; placement: TourPlacement };
 type TourCursorPosition = { top: number; left: number; visible: boolean; clicking: boolean };
 type TourSpotlight = { top: number; left: number; width: number; height: number };
+/** Tour com voz: escolha (voz ou texto), celular para a ligação final e as etapas narradas pelo AvisAI. */
+type TourStage = 'choose' | 'voice' | 'steps';
+type TourCallState = { kind: 'calling'; masked: string } | { kind: 'error'; error: RealCallError } | null;
 
 const profiles = ['Carlos Andrade', 'Marina Souza', 'João Pereira'];
 /** Placa fictícia usada fora do modo integrado (tour público e aviso da API). */
@@ -70,6 +74,18 @@ const mobileTourSteps: MobileTourStep[] = [
   { target: 'mobile-orb', title: 'orbUnload', body: 'orbUnload', delay: 5000 },
   { target: 'mobile-utterance-unload', title: 'sayUnload', body: 'sayUnload', delay: 7000 },
 ];
+/** Etapa do escalonamento em que, no tour com voz, o AvisAI liga de verdade para o celular confirmado. */
+const REAL_CALL_STEP = 'call';
+/** Teto de espera pela ligação real (o backend encerra em 180 s) antes de o tour seguir sozinho. */
+const REAL_CALL_WAIT_MS = 210_000;
+
+function waitUntil(check: () => boolean, maxMs: number) {
+  return new Promise<void>((resolve) => {
+    const started = Date.now();
+    const tick = () => { if (check() || Date.now() - started >= maxMs) resolve(); else window.setTimeout(tick, 500); };
+    tick();
+  });
+}
 
 /** Identificador curto e estável para os cartões de mensagem (como o ID da fila do app). */
 function shortId(seed: string) {
@@ -162,6 +178,30 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   const [tourCursor, setTourCursor] = useState<TourCursorPosition>({ top: 0, left: 0, visible: false, clicking: false });
   const [tourSpotlight, setTourSpotlight] = useState<TourSpotlight | null>(null);
   const tourCardRef = useRef<HTMLElement | null>(null);
+  const tourPlacedRef = useRef(false);
+  const [tourPlaced, setTourPlaced] = useState(false);
+  const voiceTourAvailable = guided && Boolean(API_BASE_URL);
+  const [tourStage, setTourStage] = useState<TourStage>(voiceTourAvailable ? 'choose' : 'steps');
+  const [tourPhone, setTourPhone] = useState('');
+  const [tourPhoneEdited, setTourPhoneEdited] = useState(false);
+  const [tourConfirmedPhone, setTourConfirmedPhone] = useState<string | null>(null);
+  const [tourCall, setTourCall] = useState<TourCallState>(null);
+  const tourVoiceStatus = useTourVoice((state) => state.status);
+  const tourVoiceError = useTourVoice((state) => state.error);
+  const tourMuted = useTourVoice((state) => state.muted);
+  const tourHeard = useTourVoice((state) => state.heard);
+  const tourAgentCaption = useTourVoice((state) => state.agentCaption);
+  const tourMicBlocked = useTourVoice((state) => state.micBlocked);
+  /** O AvisAI narra as etapas só enquanto a voz do guia está ao vivo; se cair, o tour segue em texto. */
+  const voiceGuiding = tourStage === 'steps' && tourVoiceStatus === 'live';
+  /** Narrações em fila (uma por etapa, nunca repetida quando o efeito roda de novo) e a ligação real, uma por tour. */
+  const narrationRef = useRef<{ index: number; done: Promise<void> } | null>(null);
+  const tourRealCallRef = useRef<{ state: 'idle' | 'calling' | 'done'; promise: Promise<void> | null; skip: boolean }>({ state: 'idle', promise: null, skip: false });
+  /** Depois da ligação real do tour, a ligação simulada do escalonamento não abre por cima. */
+  const realCallUsedRef = useRef(false);
+  const tourHelpersRef = useRef<{ narrateStep: (step: MobileTourStep) => Promise<void>; narrateDone: () => Promise<void>; realCall: () => Promise<void> }>({
+    narrateStep: async () => undefined, narrateDone: async () => undefined, realCall: async () => undefined,
+  });
   const originalSimulationRef = useRef<{ running: boolean; responsiveness: number } | null>(null);
   const currentSimulationRef = useRef({ running: simulationRunning, responsiveness: operatorResponsiveness, toggle: toggleSimulation, setResponsiveness });
   currentSimulationRef.current = { running: simulationRunning, responsiveness: operatorResponsiveness, toggle: toggleSimulation, setResponsiveness };
@@ -216,6 +256,8 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   /** Ligação real da Demo (celular do visitante): a rota acompanhada e o celular do recebedor ao vivo. */
   const [realCallRoute, setRealCallRoute] = useState<number | null>(null);
   const [receiverCallLive, setReceiverCallLive] = useState(false);
+  const realCallRouteRef = useRef(realCallRoute);
+  realCallRouteRef.current = realCallRoute;
   const shownEscalationCallRef = useRef<string | null>(null);
   /** Receptor fictício para o fallback fora do modo integrado (tour público, aviso da API). */
   const fallbackReceiver: Receiver = useMemo(() => ({
@@ -229,6 +271,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
   useEffect(() => {
     if (!escalationCall || shownEscalationCallRef.current === escalationCall.id) return;
     shownEscalationCallRef.current = escalationCall.id;
+    if (realCallUsedRef.current) return;
     setReceiverCallLog(escalationCall);
     setReceiverCallLive(false);
     setReceiverCallPreview(false);
@@ -292,6 +335,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       setTourPlaying(false);
       setTourDone(true);
       restoreTourEnvironment();
+      if (voiceGuiding) void tourHelpersRef.current.narrateDone();
       return;
     }
     if (tourPlaying && !tourPaused && integrated && !originalSimulationRef.current) {
@@ -305,7 +349,11 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     }
 
     const step = mobileTourSteps[tourIndex];
-    const targetName = step.target === 'dashboard-task-action' && (!integrated || !dashboardVisible) ? 'mobile-task-ack' : step.target;
+    const runningSteps = tourPlaying && !tourPaused && tourStage === 'steps';
+    // Antes das etapas (escolha da voz e celular), o cartão fica ao lado do celular, sem avançar sozinho.
+    const targetName = tourStage !== 'steps' ? 'mobile-phone'
+      : step.target === 'dashboard-task-action' && (!integrated || !dashboardVisible) ? 'mobile-task-ack' : step.target;
+    let cancelled = false;
     const selector = `[data-tour-target="${targetName}"]`;
     let waitTimer: number | undefined;
     let stepTimer: number | undefined;
@@ -325,7 +373,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
           setTourSpotlight(null);
           setTourCursor((current) => current.visible ? { ...current, visible: false } : current);
         }
-        if (tourPlaying && !tourPaused && Date.now() - waitStartedAt >= 12000) {
+        if (runningSteps && Date.now() - waitStartedAt >= 12000) {
           setTourIndex((index) => index + 1);
           return;
         }
@@ -360,7 +408,12 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       const updateTourCardPosition = () => {
         const card = tourCardRef.current;
         if (!card) return;
-        const targetRect = target.getBoundingClientRect();
+        // O alvo pode sair da tela no meio da etapa (o balão do AvisAI some sozinho). Medir o elemento
+        // removido dá um retângulo zerado e jogava o cartão para o canto esquerdo e de volta: mede o alvo
+        // atual ou deixa o cartão onde está.
+        const liveTarget = target.isConnected ? target : document.querySelector<HTMLElement>(selector);
+        if (!liveTarget || !liveTarget.getClientRects().length) return;
+        const targetRect = liveTarget.getBoundingClientRect();
         const cardRect = card.getBoundingClientRect();
         const margin = 12;
         const gap = 16;
@@ -368,7 +421,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
         let visibleLeft = Math.max(0, targetRect.left);
         let visibleRight = Math.min(window.innerWidth, targetRect.right);
         let visibleBottom = Math.min(window.innerHeight, targetRect.bottom);
-        let ancestor = target.parentElement;
+        let ancestor = liveTarget.parentElement;
         while (ancestor) {
           const style = getComputedStyle(ancestor);
           const ancestorRect = ancestor.getBoundingClientRect();
@@ -432,6 +485,11 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
         top = Math.round(top);
         left = Math.round(left);
         setTourPosition((current) => current.top === top && current.left === left && current.placement === placement ? current : { top, left, placement });
+        // A primeira posição entra sem animar: o cartão não desliza do canto (16, 16) até o alvo.
+        if (!tourPlacedRef.current) {
+          tourPlacedRef.current = true;
+          window.requestAnimationFrame(() => setTourPlaced(true));
+        }
         setTourCursor((current) => current.top === cursorTop && current.left === cursorLeft && current.visible === Boolean(spotlight)
           ? current
           : { ...current, top: cursorTop, left: cursorLeft, visible: Boolean(spotlight) });
@@ -444,7 +502,17 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       if (tourCardRef.current) resizeObserver.observe(tourCardRef.current);
       scrollTargetIntoView();
       positionFrame = window.requestAnimationFrame(updateTourCardPosition);
-      if (tourPlaying && !tourPaused) stepTimer = window.setTimeout(() => {
+      if (!runningSteps) return;
+      if (voiceGuiding && narrationRef.current?.index !== tourIndex) {
+        // Em fila: a fala desta etapa só sai depois da anterior (e da abertura do tour).
+        const previous = narrationRef.current?.done ?? Promise.resolve();
+        narrationRef.current = { index: tourIndex, done: previous.then(() => tourHelpersRef.current.narrateStep(step)) };
+      }
+      stepTimer = window.setTimeout(() => void (async () => {
+        // Com voz, a etapa só avança quando o AvisAI termina de explicar; na etapa da ligação, quando ela termina.
+        if (voiceGuiding) await narrationRef.current?.done;
+        if (voiceGuiding && step.title === REAL_CALL_STEP) await tourHelpersRef.current.realCall();
+        if (cancelled) return;
         const currentTarget = document.querySelector<HTMLElement>(selector);
         if (step.click !== false && currentTarget && !('disabled' in currentTarget && currentTarget.disabled)) {
           setTourCursor((current) => ({ ...current, clicking: true }));
@@ -456,11 +524,12 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
           return;
         }
         setTourIndex((index) => index + 1);
-      }, step.delay);
+      })(), step.delay);
     };
     focusAndRunStep();
 
     return () => {
+      cancelled = true;
       if (waitTimer !== undefined) window.clearTimeout(waitTimer);
       if (stepTimer !== undefined) window.clearTimeout(stepTimer);
       if (clickResetTimer !== undefined) window.clearTimeout(clickResetTimer);
@@ -473,7 +542,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
         window.removeEventListener('resize', positionTourCard);
       }
     };
-  }, [dashboardVisible, guided, integrated, restoreTourEnvironment, tourDone, tourDismissed, tourIndex, tourPaused, tourPlaying]);
+  }, [dashboardVisible, guided, integrated, restoreTourEnvironment, tourDone, tourDismissed, tourIndex, tourPaused, tourPlaying, tourStage, voiceGuiding]);
 
   useEffect(() => () => restoreTourEnvironment(), [restoreTourEnvironment]);
 
@@ -538,7 +607,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     setLocalElapsed(next);
     if (elapsed < 20 && next >= 20) addEvent('panel', 20);
     if (elapsed < 40 && next >= 40) addEvent('call', 40);
-    if (elapsed < 60 && next >= 60) { addEvent('escalated', 60); simulateReceiverCall(); }
+    if (elapsed < 60 && next >= 60) { addEvent('escalated', 60); if (!realCallUsedRef.current) simulateReceiverCall(); }
   };
 
   // ---------------------------------------------------------------- conversa com o AvisAI
@@ -634,6 +703,9 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
 
   const currentTourStep = mobileTourSteps[Math.min(tourIndex, mobileTourSteps.length - 1)];
   const tourVisible = guided && !tourDismissed;
+  const tourVoiceFailed = tourVoiceStatus === 'error' || tourVoiceStatus === 'ended';
+  const tourPhoneValid = Boolean(normalizeBrazilianMobile(tourPhone));
+  const tourPhoneHeard = !tourPhoneEdited && tourPhoneValid && Boolean(extractBrazilianMobile(tourHeard));
 
   const submitMessage = () => {
     const clean = messageDraft.trim();
@@ -731,6 +803,85 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     }
   };
   const bridgeRoute = liveActive && liveRouteId ? liveRouteId : realCallRoute;
+
+  // ---------------------------------------------------------------- tour guiado pela voz do AvisAI
+  const tourStepKey = (step: MobileTourStep) => step.title === 'acknowledge' && (!integrated || !dashboardVisible) ? 'acknowledgeLocal' : step.title;
+
+  /** A ligação real do tour: uma vez, com o microfone do guia fechado (ele não ouve a ligação), e espera terminar. */
+  const runTourRealCall = () => {
+    const call = tourRealCallRef.current;
+    const phone = tourConfirmedPhone;
+    if (!phone || call.state === 'done') return Promise.resolve();
+    if (call.state === 'calling' && call.promise) return call.promise;
+    call.state = 'calling';
+    call.skip = false;
+    call.promise = (async () => {
+      const wasMuted = tourVoiceStore.getState().muted;
+      await setTourMuted(true);
+      const result = await requestRealCall(phone, true);
+      if (result.ok) {
+        realCallUsedRef.current = true;
+        setTourCall({ kind: 'calling', masked: result.masked });
+        startRealReceiverCall(result.routeId);
+        realCallRouteRef.current = result.routeId;
+        // A ligação acaba quando o recebedor responde ou não atende (o stream da rota avisa) ou no teto.
+        await waitUntil(() => realCallRouteRef.current === null || tourRealCallRef.current.skip, REAL_CALL_WAIT_MS);
+        setTourCall(null);
+        await sayTour(t('mobileDemo.voiceTour.say.callDone'));
+      } else {
+        setTourCall({ kind: 'error', error: result.error });
+        await sayTour(t('mobileDemo.voiceTour.say.callFailed'));
+      }
+      await setTourMuted(wasMuted);
+      call.state = 'done';
+    })();
+    return call.promise;
+  };
+  tourHelpersRef.current = {
+    narrateStep: (step) => sayTour([
+      t(`mobileDemo.tour.steps.${tourStepKey(step)}.say`),
+      step.title === REAL_CALL_STEP && tourConfirmedPhone ? t('mobileDemo.voiceTour.say.callNow') : '',
+    ].filter(Boolean).join(' ')),
+    narrateDone: () => sayTour(t('mobileDemo.voiceTour.say.done')),
+    realCall: runTourRealCall,
+  };
+
+  const startVoiceTour = () => {
+    setTourStage('voice');
+    setTourPhone('');
+    setTourPhoneEdited(false);
+    clearTourHeard();
+    void connectTourVoice(isEn ? 'en' : 'pt-BR');
+  };
+
+  /** Começa as etapas; com voz, o AvisAI abre com uma frase e o microfone fecha (o visitante liga para perguntar). */
+  const beginTourSteps = (phone: string | null) => {
+    setTourConfirmedPhone(phone);
+    setTourCall(null);
+    tourRealCallRef.current = { state: 'idle', promise: null, skip: false };
+    narrationRef.current = tourVoiceStore.getState().status === 'live'
+      ? { index: -1, done: sayTour(t(phone ? 'mobileDemo.voiceTour.say.start' : 'mobileDemo.voiceTour.say.startNoCall')) }
+      : null;
+    void setTourMuted(true);
+    setTourStage('steps');
+  };
+
+  const confirmTourPhone = () => {
+    const phone = normalizeBrazilianMobile(tourPhone);
+    if (phone) beginTourSteps(phone);
+  };
+
+  // O número dito ao AvisAI aparece no campo para conferir (sem sobrescrever o que o visitante digitou).
+  const beginTourStepsRef = useRef(beginTourSteps);
+  beginTourStepsRef.current = beginTourSteps;
+  useEffect(() => {
+    if (tourStage !== 'voice' || tourPhoneEdited || !tourHeard) return;
+    const heard = extractBrazilianMobile(tourHeard);
+    if (heard) setTourPhone(formatBrazilianMobile(heard));
+    else if (/\b(pular|pula|pule|skip)\b/i.test(tourHeard)) beginTourStepsRef.current(null);
+  }, [tourHeard, tourPhoneEdited, tourStage]);
+
+  useEffect(() => () => { void disconnectTourVoice(); }, []);
   useEffect(() => {
     if (!bridgeRoute || !API_BASE_URL) return;
     return openDemoStream(API_BASE_URL, bridgeRoute, (effect) => bridgeRef.current(effect));
@@ -929,6 +1080,8 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     setTourPlaying(false);
     setTourDismissed(true);
     restoreTourEnvironment();
+    tourRealCallRef.current.skip = true;
+    void disconnectTourVoice();
   };
 
   const restartTour = () => {
@@ -939,6 +1092,12 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     setTourDismissed(false);
     setTourPaused(false);
     setTourPlaying(true);
+    setTourCall(null);
+    tourRealCallRef.current = { state: 'idle', promise: null, skip: true };
+    realCallUsedRef.current = false;
+    narrationRef.current = null;
+    // Com a voz do guia ainda ao vivo, o tour recomeça narrado; sem ela, volta à escolha.
+    setTourStage(tourVoiceStore.getState().status === 'live' ? 'steps' : voiceTourAvailable ? 'choose' : 'steps');
   };
 
   return <div className={`mobile-web-page${embedded ? ' mw-embedded' : ''}`}>
@@ -947,21 +1106,63 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       {embedded ? <h1 className="sr-only">{t('mobileWeb.title')}</h1> : <section className="mw-intro"><p className="mw-eyebrow"><span />{t('mobileWeb.eyebrow')}</p><h1>{t('mobileWeb.title')}</h1><p className="mw-intro-copy">{t('mobileWeb.intro')}</p><span className="mw-demo-badge">◉ {t('mobileWeb.mockNote')}</span></section>}
       {tourVisible && createPortal(<>
       {!tourDone && tourSpotlight && <div className="mw-tour-spotlight" style={tourSpotlight} aria-hidden="true" />}
-      <section ref={tourCardRef} className="mw-tour-card" data-placement={tourPosition.placement} style={{ top: tourPosition.top, left: tourPosition.left }} aria-live="polite" aria-atomic="true">
+      <section ref={tourCardRef} className="mw-tour-card" data-placement={tourPosition.placement} data-placed={tourPlaced || undefined} style={{ top: tourPosition.top, left: tourPosition.left }} aria-live="polite" aria-atomic="true">
         <div className="mw-tour-copy">
-          <div className="mw-tour-meta"><span>{t('mobileDemo.tour.label')}</span>{tourDone ? <span>{t('mobileDemo.tour.complete')}</span> : <span>{t('mobileDemo.tour.step', { current: tourIndex + 1, total: mobileTourSteps.length })}</span>}</div>
-          <div className="mw-tour-progress" aria-hidden="true"><span style={{ width: `${tourDone ? 100 : (tourIndex / mobileTourSteps.length) * 100}%` }} /></div>
-          <h2>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneTitle') : t(`mobileDemo.tour.steps.${currentTourStep.title === 'acknowledge' && (!integrated || !dashboardVisible) ? 'acknowledgeLocal' : currentTourStep.title}.title`)}</h2>
-          <p>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneBody') : t(`mobileDemo.tour.steps.${currentTourStep.title === 'acknowledge' && (!integrated || !dashboardVisible) ? 'acknowledgeLocal' : currentTourStep.body}.body`)}</p>
+          <div className="mw-tour-meta"><span>{t('mobileDemo.tour.label')}</span>{tourStage !== 'steps'
+            ? tourVoiceStatus === 'live' && <span className="mw-tour-live"><i />{t('mobileDemo.voiceTour.live')}</span>
+            : tourDone ? <span>{t('mobileDemo.tour.complete')}</span> : <span>{t('mobileDemo.tour.step', { current: tourIndex + 1, total: mobileTourSteps.length })}</span>}</div>
+          <div className="mw-tour-progress" aria-hidden="true"><span style={{ width: `${tourStage !== 'steps' ? 0 : tourDone ? 100 : (tourIndex / mobileTourSteps.length) * 100}%` }} /></div>
+          {tourStage === 'choose' && <><h2>{t('mobileDemo.voiceTour.chooseTitle')}</h2><p>{t('mobileDemo.voiceTour.chooseBody')}</p></>}
+          {tourStage === 'voice' && <>
+            <h2>{t('mobileDemo.voiceTour.phoneTitle')}</h2>
+            {tourVoiceFailed
+              ? <p role="alert">{t(`mobileDemo.voiceTour.errors.${tourVoiceStatus === 'ended' ? 'ended' : tourVoiceError ?? 'connection'}`)}</p>
+              : <p>{tourVoiceStatus === 'connecting' ? t('mobileDemo.voiceTour.connecting') : tourVoiceStatus === 'waiting_agent' ? t('mobileDemo.voiceTour.waitingAgent') : t('mobileDemo.voiceTour.phoneBody')}</p>}
+            {tourMicBlocked && <p className="mw-tour-status" role="status">{t('mobileDemo.voiceTour.micBlocked')}</p>}
+            {tourVoiceStatus === 'live' && tourAgentCaption && <p className="mw-tour-caption">{t('mobileDemo.voiceTour.agentSays', { text: tourAgentCaption })}</p>}
+            <form className="mw-tour-phone" onSubmit={(event) => { event.preventDefault(); confirmTourPhone(); }}>
+              <label><span>{t('mobileDemo.voiceTour.phoneLabel')}</span>
+                <input type="tel" inputMode="tel" autoComplete="tel" value={tourPhone} placeholder={t('driverApp.realCall.phonePlaceholder')}
+                  aria-invalid={Boolean(tourPhone) && !tourPhoneValid} onChange={(event) => { setTourPhone(event.target.value); setTourPhoneEdited(true); }} />
+              </label>
+              {tourPhoneHeard && <output>{t('mobileDemo.voiceTour.phoneHeard')}</output>}
+              <small>{t('mobileDemo.voiceTour.consent')}</small>
+            </form>
+          </>}
+          {tourStage === 'steps' && <>
+            <h2>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneTitle') : t(`mobileDemo.tour.steps.${tourStepKey(currentTourStep)}.title`)}</h2>
+            <p>{tourDone || !currentTourStep ? t('mobileDemo.tour.doneBody') : t(`mobileDemo.tour.steps.${tourStepKey(currentTourStep)}.body`)}</p>
+            {tourCall?.kind === 'calling' && <p className="mw-tour-status" role="status">{t('mobileDemo.voiceTour.calling', { phone: tourCall.masked })}</p>}
+            {tourCall?.kind === 'error' && <p className="mw-tour-status" role="alert">{t(`driverApp.realCall.errors.${tourCall.error}`)}</p>}
+            {tourVoiceStatus === 'ended' && <p className="mw-tour-status" role="status">{t('mobileDemo.voiceTour.errors.ended')}</p>}
+          </>}
         </div>
         <div className="mw-tour-actions">
-          {!tourDone ? <>
+          {tourStage === 'choose' && <>
+            <button type="button" className="mw-tour-pause" onClick={startVoiceTour}>{t('mobileDemo.voiceTour.startVoice')}</button>
+            <button type="button" className="mw-tour-skip" onClick={() => setTourStage('steps')}>{t('mobileDemo.voiceTour.textOnly')}</button>
+            <button type="button" className="mw-tour-skip" onClick={skipTour}>{t('mobileDemo.tour.skip')}</button>
+          </>}
+          {tourStage === 'voice' && (tourVoiceFailed ? <>
+            <button type="button" className="mw-tour-pause" onClick={startVoiceTour}>{t('mobileDemo.voiceTour.retry')}</button>
+            <button type="button" className="mw-tour-skip" onClick={() => { void disconnectTourVoice(); setTourStage('steps'); }}>{t('mobileDemo.voiceTour.textOnly')}</button>
+          </> : <>
+            <button type="button" className="mw-tour-pause" onClick={confirmTourPhone} disabled={!tourPhoneValid}>{t('mobileDemo.voiceTour.confirm')}</button>
+            <button type="button" className="mw-tour-skip" onClick={() => beginTourSteps(null)}>{t('mobileDemo.voiceTour.noCall')}</button>
+          </>)}
+          {tourStage === 'steps' && (!tourDone ? <>
             <button type="button" className="mw-tour-pause" onClick={() => setTourPaused((paused) => !paused)}>{t(tourPaused ? 'mobileDemo.tour.resume' : 'mobileDemo.tour.pause')}</button>
+            {tourCall?.kind === 'calling' && <button type="button" className="mw-tour-skip" onClick={() => { tourRealCallRef.current.skip = true; }}>{t('mobileDemo.voiceTour.skipWait')}</button>}
             <button type="button" className="mw-tour-skip" onClick={skipTour}>{t('mobileDemo.tour.skip')}</button>
           </> : <>
             <button type="button" className="mw-tour-pause" onClick={restartTour}>{t('mobileDemo.tour.replay')}</button>
             <button type="button" className="mw-tour-skip" onClick={skipTour}>{t('mobileDemo.tour.close')}</button>
-          </>}
+          </>)}
+          {tourStage === 'steps' && tourVoiceStatus === 'live' && !tourMicBlocked && tourCall?.kind !== 'calling' && (
+            <button type="button" className="mw-tour-skip mw-tour-mic" aria-pressed={!tourMuted} onClick={() => void setTourMuted(!tourMuted)}>
+              {t(tourMuted ? 'mobileDemo.voiceTour.micOff' : 'mobileDemo.voiceTour.micOn')}
+            </button>
+          )}
         </div>
       </section>
       {!tourDone && <svg className={`mw-tour-cursor${tourCursor.clicking ? ' is-clicking' : ''}${tourCursor.visible ? '' : ' is-hidden'}`} style={{ top: tourCursor.top, left: tourCursor.left }} viewBox="0 0 28 34" aria-hidden="true">
@@ -973,7 +1174,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
       <div className={`mw-demo-grid${embedded ? ' mw-demo-grid-embedded' : ''}`}>
         {!embedded && <aside className="mw-guide-panel"><p className="mw-guide-label">{t('mobileWeb.systemTitle')}</p><ul>{(t('mobileWeb.systemItems', { returnObjects: true }) as string[]).map((item, index) => <li key={item}><span>{String(index + 1).padStart(2, '0')}</span>{item}</li>)}</ul><p className="mw-guide-foot">{t('mobileWeb.systemFoot')}</p><Link to="/login" className="mw-guide-link">{t('mobileWeb.ccoLink')} ↗</Link></aside>}
         <section className="mw-phone-column" aria-label={t('mobileWeb.phoneLabel')}>
-          <div className="mw-phone-frame"><div className="mw-phone-camera" /><div className="mw-phone-screen da-app" ref={phoneScreenRef}>
+          <div className="mw-phone-frame" data-tour-target="mobile-phone"><div className="mw-phone-camera" /><div className="mw-phone-screen da-app" ref={phoneScreenRef}>
           <div className="mw-phone-status"><span>{integrated ? currentClock : '9:41'}</span><span>●●●　◖　▰</span></div>
             {!authenticated ? renderLogin() : <>
               <div className={`mw-app-content da-content${screen === 'map' ? ' da-content-map' : ''}`} key={screen}>{renderScreen()}</div>

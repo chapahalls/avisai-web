@@ -54,81 +54,137 @@
       "steps": {
         "login": {
           "title": "Driver sign in",
-          "body": "The app opens with a simulated sign in and no password. The tour signs in as the trip's driver and AvisAI greets them in the bubble."
+          "body": "The app opens with a simulated sign in and no password. The tour signs in as the trip's driver and AvisAI greets them in the bubble.",
+          "say": "This is the driver's app. Sign in here is simulated, no password. I'll sign in as the trip's driver."
         },
         "orb": {
           "title": "AvisAI, the voice copilot",
-          "body": "The green orb is AvisAI. It floats over every screen and can be dragged. The tour taps it to talk."
+          "body": "The green orb is AvisAI. It floats over every screen and can be dragged. The tour taps it to talk.",
+          "say": "See that little green ball? That's me, AvisAI. I float over every screen, and the driver talks to me without typing anything."
         },
         "sayStart": {
           "title": "Conversation: trip start",
-          "body": "The driver says “Got the load, truck ok”. AvisAI listens, confirms the pickup and starts the trip."
+          "body": "The driver says “Got the load, truck ok”. AvisAI listens, confirms the pickup and starts the trip.",
+          "say": "Now the driver says: got the load, truck's ok. I confirm the pickup and start the trip."
         },
         "reply": {
           "title": "Agent reply",
-          "body": "The reply shows in the bubble next to the orb and is spoken on the phone. The trip already shows on the dashboard."
+          "body": "The reply shows in the bubble next to the orb and is spoken on the phone. The trip already shows on the dashboard.",
+          "say": "My answer shows up here in the bubble and is spoken on the phone. And look: the trip is already on the control center dashboard."
         },
         "approach": {
           "title": "Approaching the destination",
-          "body": "At 8 km, AvisAI notifies the receiver and tells the driver the confirmed dock."
+          "body": "At 8 km, AvisAI notifies the receiver and tells the driver the confirmed dock.",
+          "say": "Getting close to the destination, about eight kilometers out, I call the receiver, say the truck is coming and confirm the dock."
         },
         "cabin": {
           "title": "Talking while driving",
-          "body": "With the truck moving, the driver talks without touching the screen. The tour opens AvisAI again."
+          "body": "With the truck moving, the driver talks without touching the screen. The tour opens AvisAI again.",
+          "say": "With the truck moving, the driver doesn't need to touch the screen. I'll open the conversation again."
         },
         "openCabin": {
           "title": "Full screen",
-          "body": "The full-screen conversation shows the large orb and the last line, readable at a glance."
+          "body": "The full-screen conversation shows the large orb and the last line, readable at a glance.",
+          "say": "This is the full-screen conversation: the big orb and the last line, easy to read at a glance without looking away from the road."
         },
         "sayArrive": {
           "title": "Conversation: arrival",
-          "body": "He says “I arrived at the receiver”. AvisAI checks in, creates the CCO Task and starts counting the wait."
+          "body": "He says “I arrived at the receiver”. AvisAI checks in, creates the CCO Task and starts counting the wait.",
+          "say": "Then the driver says: I'm at the receiver. I check in, open a task for the control center and start counting the wait."
         },
         "closeCabin": {
           "title": "Back home",
-          "body": "Closing the conversation brings the orb back to float over the app."
+          "body": "Closing the conversation brings the orb back to float over the app.",
+          "say": "Closing the conversation, I go back to floating over the app."
         },
         "queue": {
           "title": "Unloading queue",
-          "body": "Here are the expected dock, time stopped, the 5 h free time and accrued detention."
+          "body": "Here are the expected dock, time stopped, the 5 h free time and accrued detention.",
+          "say": "This is the unloading queue: expected dock, time stopped and the five hour free time. After that, detention starts counting."
         },
         "push": {
           "title": "Escalation to the CCO",
-          "body": "Notices to the CCO move in steps: immediate push, panel and call."
+          "body": "Notices to the CCO move in steps: immediate push, panel and call.",
+          "say": "If nobody at the control center acts, the notice moves up: first a push, then the panel, then a call."
         },
         "panel": {
           "title": "Control panel update",
-          "body": "If the wait continues, the operation records a panel update for the control center to follow."
+          "body": "If the wait continues, the operation records a panel update for the control center to follow.",
+          "say": "Some time goes by and nothing? The notice goes up to the panel, so the control center can follow it."
         },
         "call": {
           "title": "Phone contact",
-          "body": "If it remains unresolved, the workflow records a call attempt linked to the trip."
+          "body": "If it remains unresolved, the workflow records a call attempt linked to the trip.",
+          "say": "Still no answer after a while, and the call comes."
         },
         "escalation": {
           "title": "Task escalated",
-          "body": "After one hour, the Task is escalated and AvisAI tells the driver by voice."
+          "body": "After one hour, the Task is escalated and AvisAI tells the driver by voice.",
+          "say": "After an hour, the task is escalated and I tell the driver by voice."
         },
         "acknowledge": {
           "title": "Control center action",
-          "body": "The tour takes the Task on the dashboard. AvisAI tells the driver the CCO took over."
+          "body": "The tour takes the Task on the dashboard. AvisAI tells the driver the CCO took over.",
+          "say": "Now the control center takes the task on the dashboard, and I tell the driver they're on it."
         },
         "acknowledgeLocal": {
           "title": "CCO takes the Task",
-          "body": "The tour records that the CCO took over. AvisAI tells the driver in the bubble."
+          "body": "The tour records that the CCO took over. AvisAI tells the driver in the bubble.",
+          "say": "Now the control center takes the task, and I tell the driver they're on it."
         },
         "home": {
           "title": "Trip summary",
-          "body": "On the home screen, the driver sees the route, status and the journey of recorded events."
+          "body": "On the home screen, the driver sees the route, status and the journey of recorded events.",
+          "say": "Back on the home screen: the driver sees the route, the status and everything that happened on the trip."
         },
         "orbUnload": {
           "title": "Unloading by voice",
-          "body": "With unloading done, the driver calls AvisAI again."
+          "body": "With unloading done, the driver calls AvisAI again.",
+          "say": "Done unloading? Just call me again."
         },
         "sayUnload": {
           "title": "Conversation: unloading",
-          "body": "He says “I unloaded”. AvisAI closes the detention, notifies the CCO and the delivery joins the metrics."
+          "body": "He says “I unloaded”. AvisAI closes the detention, notifies the CCO and the delivery joins the metrics.",
+          "say": "The driver says: unloaded. I close the detention, tell the control center, and the delivery goes into the metrics."
         }
       }
+    },
+    "voiceTour": {
+      "chooseTitle": "Want the tour with the AvisAI voice?",
+      "chooseBody": "AvisAI explains each step out loud. First it asks for your mobile number: at the end of the tour it calls you and you play the receiver of the load.",
+      "startVoice": "Start with voice",
+      "textOnly": "Text only",
+      "connecting": "Calling AvisAI…",
+      "waitingAgent": "AvisAI is joining…",
+      "phoneTitle": "Your mobile for the final call",
+      "phoneBody": "Say your Brazilian mobile number with area code to AvisAI, or type it here. At the end of the tour it calls, and you answer as the receiver.",
+      "phoneLabel": "Mobile with area code",
+      "phoneHeard": "I heard this number. Check it before confirming.",
+      "consent": "By confirming, you state the number is yours and agree to receive a demo call from AvisAI. It is only used to dial.",
+      "confirm": "It's mine, call me",
+      "noCall": "Continue without the call",
+      "micOn": "Turn microphone off",
+      "micOff": "Ask AvisAI",
+      "live": "Live voice",
+      "agentSays": "AvisAI: {{text}}",
+      "calling": "Calling {{phone}}. Pick up and answer as the receiver: dock and time. The tour continues when the call ends.",
+      "skipWait": "Continue the tour",
+      "retry": "Try again",
+      "errors": {
+        "unavailable": "The guide voice is not available on this server.",
+        "rate_limited": "Too many voice tours right now. Try again later.",
+        "connection": "Couldn't reach AvisAI.",
+        "ended": "The guide voice ended. The tour continues as text."
+      },
+      "say": {
+        "start": "Great! Now keep an eye on the phone right here, and I'll show you everything.",
+        "startNoCall": "No problem, we'll go without the call. Keep an eye on the phone right here, and I'll show you everything.",
+        "callNow": "And this call is real: I'm calling your phone right now. Pick up as if you were the receiver of the load and tell me the dock and the time.",
+        "callDone": "Thanks! That's how the receiver learns the truck is arriving. Let's keep going.",
+        "callFailed": "I couldn't complete the call right now, but the tour goes on.",
+        "done": "That's RODAR! Feel free to explore the app and the dashboard. If you want to ask me something, just turn on the microphone."
+      },
+      "micBlocked": "No microphone access: AvisAI still narrates, and you type the number here."
     }
   },
   "auth": {

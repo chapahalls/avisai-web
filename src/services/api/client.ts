@@ -9,6 +9,7 @@ import {
   type BackendLiveKitConfig,
   type BackendDemoCall,
   type BackendDemoSession,
+  type BackendDemoTour,
   type BackendLiveKitToken,
   type BackendEvent,
   type BackendGeocodeResponse,
@@ -199,6 +200,10 @@ const isDemoCall: Guard<BackendDemoCall> = (value): value is BackendDemoCall => 
 
 const isDemoSession: Guard<BackendDemoSession> = (value): value is BackendDemoSession => shape(value, {
   id: positiveId, rota_id: positiveId, canal: text, status: text, livekit_url: text, token: text,
+});
+
+const isDemoTour: Guard<BackendDemoTour> = (value): value is BackendDemoTour => shape(value, {
+  url: text, token: text, sala: text,
 });
 
 const isLiveKitToken: Guard<BackendLiveKitToken> = (value): value is BackendLiveKitToken => shape(value, {
@@ -577,6 +582,11 @@ export class ApiClient {
   requestDemoCall(telefone: string, aceite: boolean, signal?: AbortSignal) {
     if (!text(telefone) || aceite !== true) throw new ApiError('invalid_input');
     return this.request('POST', '/demo/ligar', isDemoCall, signal, { telefone, aceite });
+  }
+
+  /** Tour guiado pela voz do agente: sala própria do visitante, sem rota nem registro no backend. */
+  createDemoTour(idioma: 'pt-BR' | 'en', signal?: AbortSignal) {
+    return this.request('POST', '/demo/tour', isDemoTour, signal, { idioma });
   }
 
   /** Voz ao vivo da Demo como no app: sessão de motorista na rota de demonstração (reiniciada pelo backend). */

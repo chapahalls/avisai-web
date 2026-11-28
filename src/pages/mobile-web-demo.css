@@ -133,6 +133,20 @@
 .mw-tour-replay { position: fixed; z-index: 1000; right: 18px; bottom: 18px; min-height: 40px; padding: 0 14px; border: 1px solid #70874e; border-radius: 999px; color: #14200f; background: #a2f200; box-shadow: 0 8px 26px #0009; font-size: 11px; font-weight: 800; }
 .mw-tour-replay:hover { filter: brightness(1.08); }
 .mw-tour-replay:focus-visible { outline: 2px solid #f3ffd6; outline-offset: 3px; }
+.mw-tour-card:not([data-placed]) { visibility: hidden; transition: none; }
+.mw-tour-live { display: inline-flex; align-items: center; gap: 6px; color: #2f6b1f; }
+.mw-tour-live i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: mw-tour-pulse 1.4s ease-in-out infinite; }
+@keyframes mw-tour-pulse { 50% { opacity: .35; } }
+.mw-tour-card .mw-tour-caption { margin-top: 10px; padding: 8px 10px; border-left: 3px solid #496d91; border-radius: 6px; color: #24384b; background: #e9eef3; font-size: 13px; }
+.mw-tour-card .mw-tour-status { margin-top: 10px; padding: 8px 10px; border: 1px solid #c4cfda; border-radius: 8px; color: #24384b; background: #eef2f6; font-size: 13px; }
+.mw-tour-phone { display: grid; gap: 6px; margin-top: 12px; }
+.mw-tour-phone label { display: grid; gap: 4px; color: #40546a; font-size: 12px; font-weight: 700; }
+.mw-tour-phone input { min-height: 42px; padding: 0 12px; border: 1px solid #8a9bad; border-radius: 8px; color: #17212b; background: #fff; font: 600 16px var(--font-mono); }
+.mw-tour-phone input:focus-visible { outline: 2px solid #326b9e; outline-offset: 1px; }
+.mw-tour-phone input[aria-invalid="true"] { border-color: #a4432f; }
+.mw-tour-phone small, .mw-tour-phone output { color: #4a5b6c; font-size: 12px; line-height: 1.4; }
+.mw-tour-actions button:disabled { cursor: not-allowed; opacity: .5; }
+.mw-tour-actions .mw-tour-mic[aria-pressed="true"] { border-color: #536b82; }
 .mw-tour-cursor { position: fixed; z-index: 1020; width: 28px; height: 34px; overflow: visible; pointer-events: none; opacity: 1; filter: drop-shadow(0 2px 4px #000); transform: translate(-2px, -2px); transition: top 1.6s cubic-bezier(.2,.75,.25,1), left 1.6s cubic-bezier(.2,.75,.25,1), transform .18s ease-out, opacity .25s ease-out; }
 .mw-tour-cursor.is-clicking { transform: translate(-1px, 0) scale(.88); }
 .mw-tour-cursor.is-hidden { opacity: 0; }
@@ -141,5 +155,6 @@
   .mw-tour-card { transition: none; }
   .mw-tour-progress span { transition: none; }
   .mw-tour-cursor { transition: none; }
+  .mw-tour-live i { animation: none; }
   .mw-tour-spotlight { transition: none; }
 }

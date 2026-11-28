@@ -54,81 +54,137 @@
       "steps": {
         "login": {
           "title": "Acesso do motorista",
-          "body": "O app abre com um acesso simulado, sem senha. O tour entra com o motorista da viagem e o AvisAI já cumprimenta no balão."
+          "body": "O app abre com um acesso simulado, sem senha. O tour entra com o motorista da viagem e o AvisAI já cumprimenta no balão.",
+          "say": "Esse é o app do motorista. O acesso aqui é simulado, sem senha. Vou entrar com o motorista da viagem."
         },
         "orb": {
           "title": "AvisAI, o copiloto de voz",
-          "body": "A bola verde é o AvisAI. Ela flutua sobre qualquer tela e pode ser arrastada. O tour toca nela para falar."
+          "body": "A bola verde é o AvisAI. Ela flutua sobre qualquer tela e pode ser arrastada. O tour toca nela para falar.",
+          "say": "Tá vendo essa bolinha verde? Sou eu, o AvisAI. Eu fico em cima de qualquer tela, e o motorista fala comigo sem digitar nada."
         },
         "sayStart": {
           "title": "Conversa: início da viagem",
-          "body": "O motorista diz “Peguei a carga, caminhão ok”. O AvisAI ouve, confirma a retirada e inicia a viagem."
+          "body": "O motorista diz “Peguei a carga, caminhão ok”. O AvisAI ouve, confirma a retirada e inicia a viagem.",
+          "say": "Agora o motorista fala: peguei a carga, caminhão ok. Eu confirmo a retirada e já começo a viagem."
         },
         "reply": {
           "title": "Resposta do agente",
-          "body": "A resposta aparece no balão ao lado da bola e é falada no celular. A viagem já aparece no dashboard."
+          "body": "A resposta aparece no balão ao lado da bola e é falada no celular. A viagem já aparece no dashboard.",
+          "say": "Minha resposta aparece aqui no balão e é falada no celular. E repara: a viagem já aparece no painel da central."
         },
         "approach": {
           "title": "Aproximação do destino",
-          "body": "A 8 km, o AvisAI avisa o recebedor e conta ao motorista a doca confirmada."
+          "body": "A 8 km, o AvisAI avisa o recebedor e conta ao motorista a doca confirmada.",
+          "say": "Chegando perto do destino, a uns oito quilômetros, eu ligo pro recebedor, aviso que o caminhão tá chegando e confirmo a doca."
         },
         "cabin": {
           "title": "Conversa em movimento",
-          "body": "Com o caminhão andando, o motorista fala sem tocar na tela. O tour abre o AvisAI de novo."
+          "body": "Com o caminhão andando, o motorista fala sem tocar na tela. O tour abre o AvisAI de novo.",
+          "say": "Com o caminhão andando, o motorista não precisa tocar na tela. Vou abrir a conversa de novo."
         },
         "openCabin": {
           "title": "Tela cheia",
-          "body": "A conversa em tela cheia mostra a esfera grande e a última fala, para ler de relance."
+          "body": "A conversa em tela cheia mostra a esfera grande e a última fala, para ler de relance.",
+          "say": "Essa é a conversa em tela cheia: a esfera grande e a última fala, pra ler de relance sem tirar o olho da estrada."
         },
         "sayArrive": {
           "title": "Conversa: chegada",
-          "body": "Ele diz “Cheguei no recebedor”. O AvisAI faz o check-in, cria a Task no CCO e começa a contar a espera."
+          "body": "Ele diz “Cheguei no recebedor”. O AvisAI faz o check-in, cria a Task no CCO e começa a contar a espera.",
+          "say": "Aí ele avisa: cheguei no recebedor. Eu faço o check-in, abro uma tarefa pra central e começo a contar a espera."
         },
         "closeCabin": {
           "title": "De volta ao início",
-          "body": "Ao fechar a conversa, a bola volta a flutuar sobre o app."
+          "body": "Ao fechar a conversa, a bola volta a flutuar sobre o app.",
+          "say": "Fechando a conversa, eu volto a ficar flutuando em cima do app."
         },
         "queue": {
           "title": "Fila de descarga",
-          "body": "Aqui ficam a doca prevista, o tempo parado, a franquia de 5 h e a estadia acumulada."
+          "body": "Aqui ficam a doca prevista, o tempo parado, a franquia de 5 h e a estadia acumulada.",
+          "say": "Aqui é a fila de descarga: doca prevista, tempo parado e a franquia de cinco horas. Passou disso, começa a contar a estadia."
         },
         "push": {
           "title": "Escalonamento ao CCO",
-          "body": "Os avisos ao CCO avançam em etapas: push imediato, painel e ligação."
+          "body": "Os avisos ao CCO avançam em etapas: push imediato, painel e ligação.",
+          "say": "Se ninguém da central age, o aviso vai subindo de nível: primeiro um push, depois o painel, depois uma ligação."
         },
         "panel": {
           "title": "Acompanhamento no painel",
-          "body": "Se a espera continua, a operação registra uma atualização no painel para o CCO acompanhar."
+          "body": "Se a espera continua, a operação registra uma atualização no painel para o CCO acompanhar.",
+          "say": "Passou um tempo e nada? O aviso sobe pro painel, pra central acompanhar."
         },
         "call": {
           "title": "Contato por telefone",
-          "body": "Sem resolução, o fluxo registra uma tentativa de ligação ligada à viagem."
+          "body": "Sem resolução, o fluxo registra uma tentativa de ligação ligada à viagem.",
+          "say": "Mais um tempo sem resposta, e vem a ligação."
         },
         "escalation": {
           "title": "Task escalada",
-          "body": "Passada uma hora, a Task é escalada e o AvisAI avisa o motorista por voz."
+          "body": "Passada uma hora, a Task é escalada e o AvisAI avisa o motorista por voz.",
+          "say": "Passou uma hora, a tarefa é escalada e eu aviso o motorista por voz."
         },
         "acknowledge": {
           "title": "Ação do CCO",
-          "body": "O tour assume a Task no dashboard. O AvisAI conta ao motorista que o CCO assumiu o caso."
+          "body": "O tour assume a Task no dashboard. O AvisAI conta ao motorista que o CCO assumiu o caso.",
+          "say": "Agora a central assume a tarefa lá no painel, e eu conto pro motorista que o caso tá com eles."
         },
         "acknowledgeLocal": {
           "title": "CCO assume a Task",
-          "body": "O tour registra que o CCO assumiu. O AvisAI conta ao motorista no balão."
+          "body": "O tour registra que o CCO assumiu. O AvisAI conta ao motorista no balão.",
+          "say": "Agora a central assume a tarefa, e eu conto pro motorista que o caso tá com eles."
         },
         "home": {
           "title": "Resumo da viagem",
-          "body": "No início, o motorista vê a rota, o status e a jornada de eventos registrados."
+          "body": "No início, o motorista vê a rota, o status e a jornada de eventos registrados.",
+          "say": "De volta ao início: o motorista vê a rota, o status e tudo o que aconteceu na viagem."
         },
         "orbUnload": {
           "title": "Descarga por voz",
-          "body": "Terminada a descarga, o motorista chama o AvisAI de novo."
+          "body": "Terminada a descarga, o motorista chama o AvisAI de novo.",
+          "say": "Terminou a descarga? É só me chamar de novo."
         },
         "sayUnload": {
           "title": "Conversa: descarga",
-          "body": "Ele diz “Descarreguei”. O AvisAI encerra a estadia, avisa o CCO e a entrega entra nos indicadores."
+          "body": "Ele diz “Descarreguei”. O AvisAI encerra a estadia, avisa o CCO e a entrega entra nos indicadores.",
+          "say": "Ele diz: descarreguei. Eu fecho a estadia, aviso a central, e a entrega entra nos indicadores."
         }
       }
+    },
+    "voiceTour": {
+      "chooseTitle": "Quer o tour com a voz do AvisAI?",
+      "chooseBody": "O AvisAI explica cada passo falando. Antes, ele pede o seu celular: no fim do tour ele liga e você faz o papel do recebedor da carga.",
+      "startVoice": "Começar com voz",
+      "textOnly": "Só texto",
+      "connecting": "Chamando o AvisAI…",
+      "waitingAgent": "O AvisAI está entrando…",
+      "phoneTitle": "Seu celular para a ligação final",
+      "phoneBody": "Fale o número com DDD para o AvisAI ou digite aqui. No fim do tour ele liga, e você responde como o recebedor.",
+      "phoneLabel": "Celular com DDD",
+      "phoneHeard": "Ouvi este número. Confira antes de confirmar.",
+      "consent": "Ao confirmar, você declara que o número é seu e aceita receber uma ligação de demonstração do AvisAI. Ele só é usado para discar.",
+      "confirm": "É meu, pode ligar",
+      "noCall": "Seguir sem ligação",
+      "micOn": "Desligar microfone",
+      "micOff": "Perguntar ao AvisAI",
+      "live": "Voz ao vivo",
+      "agentSays": "AvisAI: {{text}}",
+      "calling": "Ligando para {{phone}}. Atenda e responda como o recebedor: doca e horário. O tour segue quando a ligação terminar.",
+      "skipWait": "Seguir o tour",
+      "retry": "Tentar de novo",
+      "errors": {
+        "unavailable": "A voz do guia não está disponível neste servidor.",
+        "rate_limited": "Muitos tours com voz por agora. Tente mais tarde.",
+        "connection": "Não consegui chamar o AvisAI.",
+        "ended": "A voz do guia encerrou. O tour segue em texto."
+      },
+      "say": {
+        "start": "Fechado! Agora presta atenção no celular aqui do lado, que eu vou te mostrando tudo.",
+        "startNoCall": "Sem problema, seguimos sem a ligação. Presta atenção no celular aqui do lado, que eu vou te mostrando tudo.",
+        "callNow": "E essa ligação é de verdade: tô ligando agora pro seu celular. Atende como se fosse o recebedor da carga e me fala a doca e o horário.",
+        "callDone": "Valeu! Foi assim que o recebedor fica sabendo da chegada. Vamos continuar.",
+        "callFailed": "Não consegui completar a ligação agora, mas o tour segue.",
+        "done": "Pronto, esse é o RODAR! Fica à vontade pra explorar o app e o painel. Se quiser me perguntar algo, é só ligar o microfone."
+      },
+      "micBlocked": "Sem acesso ao microfone: o AvisAI narra mesmo assim, e você digita o número aqui."
     }
   },
   "auth": {
