@@ -10,6 +10,9 @@ test('login na Demo abre o painel, troca de idioma funciona e logout volta ao lo
   await page.goto('/login');
   await page.getByRole('button', { name: 'Entrar com SSO' }).click();
 
+  // A Demo abre direto na simulação do app do motorista (70a2414); o painel do CCO vem pela aba.
+  await expect(page).toHaveURL(/\/dashboard\/mobile-demo$/);
+  await page.getByRole('link', { name: 'Monitoramento', exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: 'Fila de alertas' })).toBeVisible();
   await expect(page.getByText('Nenhum alerta aberto. A operação está em dia.')).toBeVisible();
