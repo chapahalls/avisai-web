@@ -269,8 +269,12 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
     const focusAndRunStep = () => {
       const target = document.querySelector<HTMLElement>(selector);
       if (!target || !target.getClientRects().length || getComputedStyle(target).visibility === 'hidden') {
-        setTourSpotlight(null);
-        setTourCursor((current) => current.visible ? { ...current, visible: false } : current);
+        // Entre passos, o próximo alvo costuma aparecer em menos de 1s (clique, troca de aba). Só
+        // escondemos cursor/realce depois desse prazo, senão o cursor pisca e "teleporta" sem transição.
+        if (Date.now() - waitStartedAt >= 900) {
+          setTourSpotlight(null);
+          setTourCursor((current) => current.visible ? { ...current, visible: false } : current);
+        }
         if (tourPlaying && !tourPaused && Date.now() - waitStartedAt >= 12000) {
           setTourIndex((index) => index + 1);
           return;
@@ -851,7 +855,7 @@ export function MobileWebDemoPage({ embedded = false, integrated = false, guided
           </>}
         </div>
       </section>
-      {!tourDone && tourCursor.visible && <svg className={`mw-tour-cursor${tourCursor.clicking ? ' is-clicking' : ''}`} style={{ top: tourCursor.top, left: tourCursor.left }} viewBox="0 0 28 34" aria-hidden="true">
+      {!tourDone && <svg className={`mw-tour-cursor${tourCursor.clicking ? ' is-clicking' : ''}${tourCursor.visible ? '' : ' is-hidden'}`} style={{ top: tourCursor.top, left: tourCursor.left }} viewBox="0 0 28 34" aria-hidden="true">
         <path d="M3 2v21l5.5-5.3 4.1 10 4.2-1.8-4.2-9.9H23L3 2Z" fill="#a2f200" stroke="#071007" strokeWidth="2.5" strokeLinejoin="round" />
         <path d="m5.4 6.2 12.2 8.5h-6.1l4.1 9.7-1.5.7-4-9.8-4.7 4.4V6.2Z" fill="#efffc9" opacity=".8" />
       </svg>}
