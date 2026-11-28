@@ -47,20 +47,10 @@ export function TaskPushNotifications() {
 
   if (permission !== 'default' || dismissed) return null;
   return (
-    <aside role="status" className="fixed bottom-4 left-4 z-50 flex max-w-md items-start gap-3 rounded-card border-2 border-wait-500 bg-ink-900 p-4 text-sm shadow-2xl shadow-depth/60 ring-4 ring-wait-500/20" aria-label={t('push.enableTitle')}>
-      <span className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center" aria-hidden="true">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-wait-500/40" />
-        <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-wait-500/20 text-wait-500">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-            <path d="M12 2a6 6 0 0 0-6 6v3.1c0 .9-.3 1.8-.86 2.5L4 15.5c-.7.9-.06 2.2 1.06 2.2h13.9c1.12 0 1.76-1.3 1.06-2.2l-1.14-1.9A4.3 4.3 0 0 1 18 11.1V8a6 6 0 0 0-6-6Zm0 20a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Z" />
-          </svg>
-        </span>
-      </span>
-      <div className="flex-1">
-        <p className="font-semibold leading-snug text-ink-50">{t('push.enableTitle')}</p>
-        <button type="button" onClick={enable} className="mt-2 rounded-input bg-brand-500 px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand-600">{t('push.enable')}</button>
-      </div>
-      <button type="button" onClick={() => setDismissed(true)} className="shrink-0 rounded p-1 text-ink-300 hover:bg-ink-950/30" aria-label={t('push.dismiss')}>×</button>
+    <aside className="fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-card border border-ink-700 bg-ink-900 p-3 text-sm shadow-xl shadow-depth/40" aria-label={t('push.enableTitle')}>
+      <p className="text-ink-100">{t('push.enableTitle')}</p>
+      <button type="button" onClick={enable} className="shrink-0 rounded-input bg-brand-500 px-3 py-1.5 text-xs font-semibold text-on-accent hover:bg-brand-600">{t('push.enable')}</button>
+      <button type="button" onClick={() => setDismissed(true)} className="rounded p-1 text-ink-300 hover:bg-ink-950/30" aria-label={t('push.dismiss')}>×</button>
     </aside>
   );
 }
